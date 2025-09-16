@@ -6,10 +6,26 @@ export default function TariffCalc() {
   const [product, setProduct] = useState("");
   const [result, setResult] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const payload = {
+      fromCountry,
+      toCountry,
+      product,
+    };
+    const res = await fetch("api/tariff/calculate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setResult({ total: data.totalPrice });
+    } else {
+      setResult({ total: "Error calculating tariff" });
+    }
     // TODO: later call backend API
-    setResult({ total: 123.45 });
+    // setResult({ total: 123.45 });
   };
 
   return (
@@ -43,3 +59,5 @@ export default function TariffCalc() {
     </div>
   );
 }
+
+
