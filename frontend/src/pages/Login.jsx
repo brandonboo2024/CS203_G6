@@ -1,12 +1,51 @@
-export default function Login() {
+import { useState } from "react";
+import "../App.css"; // assuming your CSS lives here
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // TODO: Replace with your backend API call
+    console.log("Login submitted:", { email, password });
+  };
+
   return (
-    <div>
-      <h1>Login</h1>
-      <form style={{ display: "grid", gap: "1rem", maxWidth: "300px" }}>
-        <input type="email" placeholder="Email" />
-        <input type="password" placeholder="Password" />
-        <button>Login</button>
-      </form>
+    <div className="login-wrapper">
+      <div className="login-card">
+        <h1>Login</h1>
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <label htmlFor="email">Email:</label>
+            <input
+              type="text"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+            />
+          </div>
+
+          <div className="form-row">
+            <label htmlFor="password">Password:</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <div className="form-actions">
+            <button type="submit">Login</button>
+            <p className="register-link">
+              Don’t have an account? <a href="/register">Register</a>
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
