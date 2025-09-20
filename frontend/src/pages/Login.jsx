@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../App.css"; // assuming your CSS lives here
+import "../App.css"; 
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -7,7 +7,7 @@ export default function LoginPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Replace with your backend API call
+    // TODO: Replace with your backend API call (Hi brandon :) )
     console.log("Login submitted:", { email, password });
   };
 

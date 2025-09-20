@@ -225,14 +225,14 @@ button:hover {
   width: 350px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
-.login-card h1 { text-align: center; margin-bottom: 1.5rem; color: var(--accent); }
+.login-card h1 { text-align: center; margin-bottom: 1.5rem; color: var(--accent); font-size: 2rem;}
 .form-actions { text-align: center; margin-top: 1rem; }
 .form-actions button {
   background: var(--accent);
   border: none;
   padding: 10px 20px;
   color: #fff;
-  font-size: 1rem;
+  font-size: rem;
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.3s ease;
