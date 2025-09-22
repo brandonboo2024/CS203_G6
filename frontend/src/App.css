@@ -352,3 +352,142 @@ button:hover {
   color: var(--text-light);
 }
 .history-table tr:hover { background: #1a1a1a; }
+
+
+/* =========================
+   Enhanced Results Section
+========================= */
+.results-wrapper {
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.results-wrapper h2 {
+  color: var(--text-light);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Main Total Cost Card */
+.total-cost-card {
+  background: var(--accent);
+  color: #000;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: left;
+  margin-bottom: 2rem;
+  border: 3px solid var(--accent);
+}
+
+.total-label {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.total-amount {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.route {
+  font-size: 1.1rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* Cost Breakdown Section */
+.breakdown-section {
+  margin-bottom: 2rem;
+}
+
+.breakdown-section h3 {
+  color: var(--text-light);
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.breakdown-table {
+  background: var(--bg-card-alt);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 2px solid var(--accent);
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0;
+  color: var(--text-muted);
+}
+
+.breakdown-row span:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+
+.breakdown-row span:last-child {
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.breakdown-row.total-row {
+  border-top: 1px solid #555;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--text-light);
+}
+
+.breakdown-row.total-row span {
+  font-weight: bold;
+  color: var(--text-light);
+}
+
+/* Action Buttons */
+.result-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.secondary-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px solid #555;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin: 0;
+}
+
+.secondary-btn:hover {
+  background: var(--accent); /* Orange background on hover */
+  color: #000; /* Black text on hover */
+  border-color: var(--accent); /* Orange border on hover */
+  transform: translateY(-1px);
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, var(--accent), #ffb84d);
+  color: #000;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  margin: 0;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(255, 136, 0, 0.4);
+}
