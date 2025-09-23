@@ -1,13 +1,25 @@
-package com.example.tariffkey.model;
+package com.example.tariffkey.entity;
 
-import java.util.List;
+import jakarta.persistence.*;
 
-public class TariffRequest {
+@Entity
+@Table(name = "route_tariff_override")
+public class RouteTariffOverride {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String productCode;
     private String originCountry;
     private String destCountry;
-    private int quantity;
-    private List<String> fees;
+    private double ratePercent;
+
+    public Long getId() {
+        return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getProductCode() {
         return productCode;
@@ -30,18 +42,10 @@ public class TariffRequest {
         this.destCountry = destCountry;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public double getRatePercent() {
+        return ratePercent;
     }
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public List<String> getFees() {
-        return fees;
-    }
-    public void setFees(List<String> fees) {
-        this.fees = fees;
+    public void setRatePercent(double ratePercent) {
+        this.ratePercent = ratePercent;
     }
 }
-

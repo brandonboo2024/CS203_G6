@@ -1,20 +1,38 @@
 package com.example.tariffkey.service;
 
-import com.example.tariffkey.model.TariffRequest;
-import com.example.tariffkey.model.TariffResponse;
+import com.example.tariffkey.entity.*;
+import com.example.tariffkey.repository.*;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class TariffService {
 
-    public TariffResponse calculate(TariffRequest request) {
-        double tariffAmount = request.getItemPrice() * request.getTariffRate();
-        double total = request.getItemPrice() + tariffAmount;
+    private final ProductTariffDefaultRepository productTariffDefaultRepository;
+    private final RouteTariffOverrideRepository routeTariffOverrideRepository;
+    private final FeeScheduleRepository feeScheduleRepository;
 
-        TariffResponse response = new TariffResponse();
-        response.setItemPrice(request.getItemPrice());
-        response.setTariffRate(request.getTariffRate());
-        response.setTotalPrice(total);
-        return response;
+    public TariffService(ProductTariffDefaultRepository productTariffDefaultRepository,
+                         RouteTariffOverrideRepository routeTariffOverrideRepository,
+                         FeeScheduleRepository feeScheduleRepository) {
+        this.productTariffDefaultRepository = productTariffDefaultRepository;
+        this.routeTariffOverrideRepository = routeTariffOverrideRepository;
+        this.feeScheduleRepository = feeScheduleRepository;
+    }
+
+    public double calculateTariff(String productCode, String originCountry, String destCountry, double basePrice) {
+        double ratePercent = routeTariffOverrideRepository
+            .findByProductCodeAndOriginCountryAndDestCountry(productCode, originCountry, destCountry)
+            .map(RouteTariffOverride::getRatePercent)
+            .orElseGet(() -> productTariffDefaultRepository.findById(productCode)
+                .map(ProductTariffDefault::getRatePercent)
+                .orElse(0.0)
+            );
+
+        return basePrice * ratePercent / 100.0;
+    }
+
+    public List<FeeSchedule> getAllFees() {
+        return feeScheduleRepository.findAll();
     }
 }

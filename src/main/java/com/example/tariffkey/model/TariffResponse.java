@@ -1,26 +1,52 @@
 package com.example.tariffkey.model;
 
 public class TariffResponse {
-    private double itemPrice;
-    private double tariffRate;
-    private double totalPrice;
+    private double basePrice;
+    private double tariffPercent;
+    private double tariffAmount;
+    private double feeTotal;
+    private double finalCost;
+    private String currency = "SGD";
 
-    public double getItemPrice() {
-        return itemPrice;
+    public double getBasePrice() {
+        return basePrice;
     }
-    public void setItemPrice(double itemPrice) {
-        this.itemPrice = itemPrice;
+    public void setBasePrice(double basePrice) {
+        this.basePrice = basePrice;
     }
-    public double getTariffRate() {
-        return tariffRate;
+
+    public double getTariffPercent() {
+        return tariffPercent;
     }
-    public void setTariffRate(double tariffRate) {
-        this.tariffRate = tariffRate;
+    public void setTariffPercent(double tariffPercent) {
+        this.tariffPercent = tariffPercent;
     }
-    public double getTotalPrice() {
-        return totalPrice;
+
+    public double getTariffAmount() {
+        return tariffAmount;
     }
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
+    public void setTariffAmount(double tariffAmount) {
+        this.tariffAmount = tariffAmount;
+    }
+
+    public double getFeeTotal() {
+        return feeTotal;
+    }
+    public void setFeeTotal(double feeTotal) {
+        this.feeTotal = feeTotal;
+    }
+
+    public double getFinalCost() {
+        return finalCost;
+    }
+    public void setFinalCost(double finalCost) {
+        this.finalCost = finalCost;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 }
