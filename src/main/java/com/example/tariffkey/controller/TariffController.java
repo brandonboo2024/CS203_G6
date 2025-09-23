@@ -1,10 +1,8 @@
 package com.example.tariffkey.controller;
 
-import com.example.tariffkey.entity.FeeSchedule;
+import com.example.tariffkey.entity.*;
 import com.example.tariffkey.service.TariffService;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -23,15 +21,22 @@ public class TariffController {
             @RequestParam String productCode,
             @RequestParam String originCountry,
             @RequestParam String destCountry,
-            @RequestParam BigDecimal basePrice
+            @RequestParam double basePrice,
+            @RequestParam(required = false) List<String> fees
     ) {
-        BigDecimal tariff = tariffService.calculateTariff(productCode, originCountry, destCountry, basePrice);
+        double tariffAmount = tariffService.calculateTariff(productCode, originCountry, destCountry, basePrice);
+        double feeTotal = tariffService.calculateFees(fees);
+
+        double finalCost = basePrice + tariffAmount + feeTotal;
+
         return Map.of(
                 "productCode", productCode,
                 "originCountry", originCountry,
                 "destCountry", destCountry,
                 "basePrice", basePrice,
-                "tariff", tariff
+                "tariffAmount", tariffAmount,
+                "feeTotal", feeTotal,
+                "finalCost", finalCost
         );
     }
 
