@@ -23,65 +23,108 @@ export default function TariffCalc() {
   //   setResult({ total: Math.floor(Math.random() * 500) + 100 }); // fake result for demo
   // };
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
-  
-  // Base prices per unit by product type (more realistic pricing)
-  const basePrices = {
-    'electronics': 100,
-    'clothing': 25,
-    'furniture': 200,
-    'food': 5,
-    'books': 15,
-    'toys': 30,
-    'tools': 75,
-    'beauty': 40,
-    'sports': 60,
-    'automotive': 150
-  };
-  
-  const basePrice = basePrices[product] || 50;
-  const productValue = parseFloat(quantity) * basePrice;
-  
-  // Tariff rates by product type
-  const tariffRates = {
-    'electronics': 15,
-    'clothing': 12,
-    'furniture': 8,
-    'food': 5,
-    'books': 0,
-    'toys': 10,
-    'tools': 7,
-    'beauty': 8,
-    'sports': 6,
-    'automotive': 20
-  };
-  
-  const tariffRate = tariffRates[product] || 10;
-  const tariffAmount = productValue * (tariffRate / 100);
-  
-  // Fee calculations
-  const handlingFee = fees.handling ? 25.00 : 0;
-  const processingFee = fees.processing ? 8.00 : 0;
-  const inspectionFee = fees.inspection ? 15.00 : 0;
-  const othersFee = fees.others ? 10.50 : 0;
-  
-  const totalCost = productValue + tariffAmount + handlingFee + processingFee + inspectionFee + othersFee;
-  
-  setResult({
-    breakdown: {
-      productValue,
-      tariffRate,
-      tariffAmount,
-      handlingFee,
-      processingFee,
-      inspectionFee,
-      othersFee,
-      totalCost
-    }
-  });
-};
+  const handleSubmit = async(e) => {
+    e.preventDefault();
+      const request = {
+          fromCountry,
+          toCountry,
+          product,
+          quantity: parseInt(quantity),
+          handling: fees.handling,
+          inspection: fees.inspection,
+          processing: fees.processing,
+          others: fees.others,
+      };
 
+      try {
+          console.log("Submitting:", request);
+          const response = await fetch("http://localhost:8080/api/tariff/calculate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(request),
+          });
+
+          if (!response.ok) throw new Error("Request failed");
+
+          const data = await response.json();
+
+          // normalize snake_case to camelCase
+          const breakdown = {
+            itemPrice:   data.itemPrice   ?? data.item_price   ?? 0,
+            tariffRate:     data.tariffRate     ?? data.tariff_rate     ?? 0,
+            tariffAmount:   data.tariffAmount   ?? data.tariff_amount   ?? 0,
+            handlingFee:    data.handlingFee    ?? data.handling_fee    ?? 0,
+            processingFee:  data.processingFee  ?? data.processing_fee  ?? 0,
+            inspectionFee:  data.inspectionFee  ?? data.inspection_fee  ?? 0,
+            othersFee:      data.othersFee      ?? data.others_fee      ?? 0,
+            totalPrice:      data.totalPrice      ?? data.total_price      ?? 0,
+          };
+
+          setResult({ breakdown });
+      } catch (err) {
+          console.error(err);
+      }
+
+  };
+  // const handleSubmit = (e) => {
+  // e.preventDefault();
+  //
+  // // Base prices per unit by product type (more realistic pricing)
+  // const basePrices = {
+  //   'electronics': 100,
+  //   'clothing': 25,
+  //   'furniture': 200,
+  //   'food': 5,
+  //   'books': 15,
+  //   'toys': 30,
+  //   'tools': 75,
+  //   'beauty': 40,
+  //   'sports': 60,
+  //   'automotive': 150
+  // };
+  //
+  // const basePrice = basePrices[product] || 50;
+  // const itemPrice = parseFloat(quantity) * basePrice;
+  //
+  // // Tariff rates by product type
+  // const tariffRates = {
+  //   'electronics': 15,
+  //   'clothing': 12,
+  //   'furniture': 8,
+  //   'food': 5,
+  //   'books': 0,
+  //   'toys': 10,
+  //   'tools': 7,
+  //   'beauty': 8,
+  //   'sports': 6,
+  //   'automotive': 20
+  // };
+  
+//   const tariffRate = tariffRates[product] || 10;
+//   const tariffAmount = itemPrice * (tariffRate / 100);
+//
+//   // Fee calculations
+//   const handlingFee = fees.handling ? 25.00 : 0;
+//   const processingFee = fees.processing ? 8.00 : 0;
+//   const inspectionFee = fees.inspection ? 15.00 : 0;
+//   const othersFee = fees.others ? 10.50 : 0;
+//
+//   const totalPrice = itemPrice + tariffAmount + handlingFee + processingFee + inspectionFee + othersFee;
+//
+//   setResult({
+//     breakdown: {
+//       itemPrice,
+//       tariffRate,
+//       tariffAmount,
+//       handlingFee,
+//       processingFee,
+//       inspectionFee,
+//       othersFee,
+//       totalPrice
+//     }
+//   });
+// };
+//
   // helper function to get country names
   const getCountryName = (code) => {
   const countries = {
@@ -188,10 +231,33 @@ export default function TariffCalc() {
           <div className="form-row">
             <label>Fees:</label>
             <div className="fees">
-              <label><input type="checkbox" /> Handling Fee</label>
-              <label><input type="checkbox" /> Inspection Fee</label>
-              <label><input type="checkbox" /> Processing Fee</label>
-              <label><input type="checkbox" /> Others</label>
+              <label><input 
+                type="checkbox"
+                checked={fees.handling}
+                onChange={() => toggleFee("handling")}
+                /> Handling Fee
+              </label>
+              <label>
+                  <input
+                    type="checkbox"
+                    checked={fees.inspection}
+                    onChange={() => toggleFee("inspection")}
+                  /> Inspection Fee
+            </label>
+            <label>
+                  <input
+                    type="checkbox"
+                    checked={fees.processing}
+                    onChange={() => toggleFee("processing")}
+                  /> Processing Fee
+           </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={fees.others}
+                onChange={() => toggleFee("others")}
+              /> Others
+            </label>
             </div>
           </div>
 
@@ -206,7 +272,7 @@ export default function TariffCalc() {
             {/* Main Result Card */}
             <div className="total-cost-card">
               <div className="total-label">Total Import Cost</div>
-              <div className="total-amount">${result.breakdown.totalCost.toFixed(2)}</div>
+              <div className="total-amount">${Number(result.breakdown.totalPrice|| 0).toFixed(2)}</div>
               <div className="route">{getCountryName(fromCountry)} → {getCountryName(toCountry)}</div>
             </div>
 
@@ -216,39 +282,39 @@ export default function TariffCalc() {
               <div className="breakdown-table">
                 <div className="breakdown-row">
                   <span>Product Value ({quantity} x {product})</span>
-                  <span>${result.breakdown.productValue.toFixed(2)}</span>
+                  <span>${Number(result.breakdown.itemPrice || 0).toFixed(2)}</span>
                 </div>
                 <div className="breakdown-row">
                   <span>Tariff ({result.breakdown.tariffRate}%)</span>
-                  <span>${result.breakdown.tariffAmount.toFixed(2)}</span>
+                  <span>${Number(result.breakdown.tariffAmount || 0).toFixed(2)}</span>
                 </div>
                 {fees.handling && (
                   <div className="breakdown-row">
                     <span>Handling Fee</span>
-                    <span>${result.breakdown.handlingFee.toFixed(2)}</span>
+                    <span>${Number(result.breakdown.handlingFee || 0).toFixed(2)}</span>
                   </div>
                 )}
                 {fees.processing && (
                   <div className="breakdown-row">
                     <span>Processing Fee</span>
-                    <span>${result.breakdown.processingFee.toFixed(2)}</span>
+                    <span>${Number(result.breakdown.processingFee || 0).toFixed(2)}</span>
                   </div>
                 )}
                 {fees.inspection && (
                   <div className="breakdown-row">
                     <span>Inspection Fee</span>
-                    <span>${result.breakdown.inspectionFee.toFixed(2)}</span>
+                    <span>${Number(result.breakdown.inspectionFee || 0).toFixed(2)}</span>
                   </div>
                 )}
                 {fees.others && (
                   <div className="breakdown-row">
                     <span>Miscellaneous Charges</span>
-                    <span>${result.breakdown.othersFee.toFixed(2)}</span>
+                    <span>${Number(result.breakdown.othersFee || 0).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="breakdown-row total-row">
                   <span>Total Cost</span>
-                  <span>${result.breakdown.totalCost.toFixed(2)}</span>
+                  <span>${Number(result.breakdown.totalPrice || 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>

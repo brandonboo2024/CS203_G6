@@ -4,21 +4,11 @@ public class TariffRequest {
     private String fromCountry;
     private String toCountry;
     private String product;
-    // private double itemPrice;
-    // private double tariffRate; // e.g., 0.15 for 15%
-
-    // public double getItemPrice() {
-    //     return itemPrice;
-    // }
-    // public void setItemPrice(double itemPrice) {
-    //     this.itemPrice = itemPrice;
-    // }
-    // public double getTariffRate() {
-    //     return tariffRate;
-    // }
-    // public void setTariffRate(double tariffRate) {
-    //     this.tariffRate = tariffRate;
-    // }
+    private int quantity;
+    private boolean handling;
+    private boolean inspection;
+    private boolean processing;
+    private boolean others;
     public String getFromCountry() {
         return fromCountry;
     }
@@ -37,5 +27,36 @@ public class TariffRequest {
     public void setProduct(String product) {
         this.product = product;
     }
+    public int getQuantity() {
+        return quantity;
+    }
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+    public boolean isHandling() {
+        return handling;
+    }
+    public void setHandling(boolean handling) {
+        this.handling = handling;
+    }
+    public boolean isInspection() {
+        return inspection;
+    }
+    public void setInspection(boolean inspection) {
+        this.inspection = inspection;
+    }
+    public boolean isProcessing() {
+        return processing;
+    }
+    public void setProcessing(boolean processing) {
+        this.processing = processing;
+    }
+    public boolean isOthers() {
+        return others;
+    }
+    public void setOthers(boolean others) {
+        this.others = others;
+    }
+
     
 }
