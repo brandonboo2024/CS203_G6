@@ -12,7 +12,7 @@ import Simulation from "./pages/Simulation.jsx";
 
 import "./index.css";
 
-// 🔒 Inline ProtectedRoute
+// Inline ProtectedRoute
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -26,8 +26,14 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
+      // Redirect root "/" to /login
+      { index: true, element: <Navigate to="login" replace /> },
+
+      { path: "login", element: <Login /> },
+      { path: "register", element: <Register /> },
+
       {
-        path: "/dashboard", 
+        path: "dashboard",
         element: (
           <ProtectedRoute>
             <Dashboard />
@@ -35,7 +41,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/tariffs", 
+        path: "tariffs",
         element: (
           <ProtectedRoute>
             <TariffCalc />
@@ -43,17 +49,15 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/profile", 
+        path: "profile",
         element: (
           <ProtectedRoute>
             <Profile />
           </ProtectedRoute>
         ),
       },
-      { path: "/login", element: <Login /> },
-      { path: "/register", element: <Register /> },
       {
-        path: "/history", 
+        path: "history",
         element: (
           <ProtectedRoute>
             <History />
@@ -61,7 +65,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/simulation", 
+        path: "simulation",
         element: (
           <ProtectedRoute>
             <Simulation />

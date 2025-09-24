@@ -19,7 +19,7 @@ export default function App() {
     >
       {/* Navigation */}
       <nav className="nav" style={{ display: "flex", gap: "1rem" }}>
-        <Link to="/">Dashboard</Link>
+        <Link to="/dashboard">Dashboard</Link>
         <Link to="/tariffs">Tariff Calc</Link>
         <Link to="/history">History</Link>
         <Link to="/simulation">Simulation</Link>
