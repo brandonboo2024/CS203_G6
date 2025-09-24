@@ -50,3 +50,14 @@ SELECT
   t.rate_percent AS default_tariff_percent
 FROM product p
 LEFT JOIN product_tariff_default t ON t.product_code = p.code;
+
+-- Users table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'USER',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

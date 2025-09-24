@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import App from "./App.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -12,22 +12,65 @@ import Simulation from "./pages/Simulation.jsx";
 
 import "./index.css";
 
+// 🔒 Inline ProtectedRoute
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
-      { path: "/", element: <Dashboard /> },
-      { path: "/tariffs", element: <TariffCalc /> },
-      { path: "/profile", element: <Profile /> },
+      {
+        path: "/dashboard", 
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/tariffs", 
+        element: (
+          <ProtectedRoute>
+            <TariffCalc />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/profile", 
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },
       { path: "/login", element: <Login /> },
-      { path: "/register", element: <Register /> }, 
-      { path: "/history", element: <History /> },
-      { path: "/simulation", element: <Simulation /> }
+      { path: "/register", element: <Register /> },
+      {
+        path: "/history", 
+        element: (
+          <ProtectedRoute>
+            <History />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/simulation", 
+        element: (
+          <ProtectedRoute>
+            <Simulation />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
-
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

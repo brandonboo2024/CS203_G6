@@ -55,3 +55,15 @@ INSERT INTO fee_schedule (fee, amount) VALUES
 ('others', 10.50)
 ON CONFLICT (fee) DO UPDATE SET
   amount = EXCLUDED.amount;
+
+-- Admin user (password = "admin123")
+INSERT INTO users (username, email, password_hash, role) 
+VALUES ('admin', 'admin@example.com', 
+        '$2a$10$Dow1zXbH2Eu7IhTUMw6f/.I.3AueNDkBq6iXr1UZRmvMgmW5C98P6', 
+        'ADMIN');
+
+-- Normal user (password = "user123")
+INSERT INTO users (username, email, password_hash, role) 
+VALUES ('testuser', 'user@example.com', 
+        '$2a$10$0GczbI8O6mMGZx7HFS43xuwIGPWiFv6N0eqFj9M96js71VuU/oPIq', 
+        'USER');
