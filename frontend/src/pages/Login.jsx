@@ -1,14 +1,33 @@
 import { useState } from "react";
-import "../App.css"; 
+import { useNavigate } from "react-router-dom";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
+export default function Login() {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Replace with your backend API call (Hi brandon :) )
-    console.log("Login submitted:", { email, password });
+
+    try {
+      const res = await fetch("http://localhost:8080/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Login failed");
+      }
+
+      const data = await res.json();
+      localStorage.setItem("token", data.token); // Save JWT for later
+
+      // Redirect to dashboard immediately
+      navigate("/dashboard");
+    } catch (err) {
+      alert("Invalid username or password"); // Show error message
+    }
   };
 
   return (
@@ -17,13 +36,13 @@ export default function LoginPage() {
         <h1>Login</h1>
         <form onSubmit={handleSubmit}>
           <div className="form-row">
-            <label htmlFor="email">Email:</label>
+            <label htmlFor="username">Username:</label>
             <input
               type="text"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
             />
           </div>
 
@@ -34,7 +53,7 @@ export default function LoginPage() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              required
             />
           </div>
 

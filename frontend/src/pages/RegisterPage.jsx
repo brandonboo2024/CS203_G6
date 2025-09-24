@@ -2,12 +2,12 @@ import { useState } from "react";
 import "../App.css";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -15,8 +15,23 @@ export default function RegisterPage() {
       return;
     }
 
-    // TODO: Replace with your backend API call
-    console.log("Register submitted:", { name, email, password });
+    try {
+      const res = await fetch("http://localhost:8080/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      if (res.ok) {
+        alert("Registration successful! Please log in.");
+        window.location.href = "/login";
+      } else {
+        alert("Registration failed");
+      }
+    } catch (err) {
+      console.error("Register error:", err);
+      alert("Something went wrong");
+    }
   };
 
   return (
@@ -25,13 +40,13 @@ export default function RegisterPage() {
         <h1>Register</h1>
         <form onSubmit={handleSubmit}>
           <div className="form-row">
-            <label htmlFor="name">Name:</label>
+            <label htmlFor="username">Username:</label>
             <input
               type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
               required
             />
           </div>
