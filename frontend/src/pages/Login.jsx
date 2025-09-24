@@ -21,7 +21,9 @@ export default function Login() {
       }
 
       const data = await res.json();
-      localStorage.setItem("token", data.token); // Save JWT for later
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.username);
+      localStorage.setItem("email", data.email);
 
       // Redirect to dashboard immediately
       navigate("/dashboard");

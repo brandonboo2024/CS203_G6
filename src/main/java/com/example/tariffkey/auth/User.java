@@ -1,5 +1,7 @@
 package com.example.tariffkey.auth;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.*;
 

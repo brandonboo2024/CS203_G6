@@ -1,5 +1,5 @@
 export default function Dashboard() {
-  const userName = "Jane"; // replace with logged in user from context later
+  const userName = localStorage.getItem("username") || "Guest";
   const recentCalculations = [
     { date: "13/09/25", route: "CN → SG", product: "Electronics", total: "$2,458.00" },
     { date: "02/09/25", route: "VN → SG", product: "Textiles", total: "$1,245.00" },
