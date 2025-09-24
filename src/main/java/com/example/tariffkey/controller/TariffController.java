@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.tariffkey.model.TariffRequest;
 import com.example.tariffkey.model.TariffResponse;
-import com.example.tariffkey.service.TariffService;
+// import com.example.tariffkey.service.TariffService;
+import com.example.tariffkey.service.TariffService2;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
@@ -15,15 +16,15 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @CrossOrigin(origins = "http://localhost:5173")
 public class TariffController {
 
-    private final TariffService tariffService;
+    private final TariffService2 tariffService2;
 
-    public TariffController(TariffService tariffService) {
-        this.tariffService = tariffService;
+    public TariffController(TariffService2 tariffService2) {
+        this.tariffService2 = tariffService2;
     }
 
     @PostMapping("/calculate")
     public TariffResponse calculate(@RequestBody TariffRequest request) {
         System.out.println("Received response");
-        return tariffService.calculate(request);
+        return tariffService2.calculate(request);
     }
 }

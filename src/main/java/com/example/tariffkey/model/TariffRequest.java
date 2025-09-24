@@ -9,6 +9,11 @@ public class TariffRequest {
     private boolean inspection;
     private boolean processing;
     private boolean others;
+    
+    // added datetime field
+    private String calculationFrom;
+    private String calculationTo;
+
     public String getFromCountry() {
         return fromCountry;
     }
@@ -56,6 +61,18 @@ public class TariffRequest {
     }
     public void setOthers(boolean others) {
         this.others = others;
+    }
+    public String getCalculationFrom() {
+        return calculationFrom;
+    }
+    public void setCalculationFrom(String calculationFrom) {
+        this.calculationFrom = calculationFrom;
+    }
+    public String getCalculationTo() {
+        return calculationTo;
+    }
+    public void setCalculationTo(String calculationTo) {
+        this.calculationTo = calculationTo;
     }
 
     

@@ -1,4 +1,5 @@
 package com.example.tariffkey.model;
+import java.util.List;
 
 public class TariffResponse {
     private double itemPrice;
@@ -8,8 +9,31 @@ public class TariffResponse {
     private double inspectionFee;
     private double processingFee;
     private double otherFees;
-    private double totalPrice;
+    private Double totalPrice;
+    private List<Segment> segments;
 
+    // this class is to include timeperiods where one tariff ends, and a new tariff starts
+    public static class Segment {
+        private String from;            // date time
+        private String to;              // date time
+        private double ratePercent;     // tariff in this segment
+        private double quantityPortion; // quantity allocated to this segment
+        private double itemPrice;       // portion * basePrice
+        private double tariffAmount;    // itemPrice * rate
+
+        public String getFrom() { return from; }
+        public void setFrom(String from) { this.from = from; }
+        public String getTo() { return to; }
+        public void setTo(String to) { this.to = to; }
+        public double getRatePercent() { return ratePercent; }
+        public void setRatePercent(double ratePercent) { this.ratePercent = ratePercent; }
+        public double getQuantityPortion() { return quantityPortion; }
+        public void setQuantityPortion(double quantityPortion) { this.quantityPortion = quantityPortion; }
+        public double getItemPrice() { return itemPrice; }
+        public void setItemPrice(double itemPrice) { this.itemPrice = itemPrice; }
+        public double getTariffAmount() { return tariffAmount; }
+        public void setTariffAmount(double tariffAmount) { this.tariffAmount = tariffAmount; }
+    }
     public double getItemPrice() {
         return itemPrice;
     }
@@ -22,10 +46,10 @@ public class TariffResponse {
     public void setTariffRate(double tariffRate) {
         this.tariffRate = tariffRate;
     }
-    public double getTotalPrice() {
+    public Double getTotalPrice() {
         return totalPrice;
     }
-    public void setTotalPrice(double totalPrice) {
+    public void setTotalPrice(Double totalPrice) {
         this.totalPrice = totalPrice;
     }
     public double getTariffAmount() {
@@ -57,6 +81,12 @@ public class TariffResponse {
     }
     public void setOtherFees(double otherFees) {
         this.otherFees = otherFees;
+    }
+    public List<Segment> getSegments() {
+        return segments;
+    }
+    public void setSegments(List<Segment> segments) {
+        this.segments = segments;
     }
 
 }
