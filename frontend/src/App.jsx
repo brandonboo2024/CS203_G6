@@ -9,11 +9,13 @@ export default function App() {
       flexDirection: "column"
     }}>
       {/* Navigation */}
-      <nav style={{ padding: "1rem", borderBottom: "1px solid #ddd" }}>
-        <Link to="/" style={{ marginRight: "1rem" }}>Dashboard</Link>
-        <Link to="/tariffs" style={{ marginRight: "1rem" }}>Tariff Calc</Link>
-        <Link to="/profile" style={{ marginRight: "1rem" }}>Profile</Link>
-        <Link to="/login" style={{ float: "right" }}>Login</Link>
+      <nav className="nav">
+        <Link to="/">Dashboard</Link>
+        <Link to="/tariffs">Tariff Calc</Link>
+        <Link to="/history">History</Link>
+        <Link to="/simulation">Simulation</Link>
+        <Link to="/profile">Profile</Link>
+        <Link to="/login" className="nav-right">Login</Link>
       </nav>
 
       {/* Main content */}
