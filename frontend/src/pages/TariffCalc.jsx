@@ -18,11 +18,6 @@ export default function TariffCalc() {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   setResult({ total: Math.floor(Math.random() * 500) + 100 }); // fake result for demo
-  // };
-
   const handleSubmit = async(e) => {
     e.preventDefault();
       const request = {
@@ -66,65 +61,6 @@ export default function TariffCalc() {
       }
 
   };
-  // const handleSubmit = (e) => {
-  // e.preventDefault();
-  //
-  // // Base prices per unit by product type (more realistic pricing)
-  // const basePrices = {
-  //   'electronics': 100,
-  //   'clothing': 25,
-  //   'furniture': 200,
-  //   'food': 5,
-  //   'books': 15,
-  //   'toys': 30,
-  //   'tools': 75,
-  //   'beauty': 40,
-  //   'sports': 60,
-  //   'automotive': 150
-  // };
-  //
-  // const basePrice = basePrices[product] || 50;
-  // const itemPrice = parseFloat(quantity) * basePrice;
-  //
-  // // Tariff rates by product type
-  // const tariffRates = {
-  //   'electronics': 15,
-  //   'clothing': 12,
-  //   'furniture': 8,
-  //   'food': 5,
-  //   'books': 0,
-  //   'toys': 10,
-  //   'tools': 7,
-  //   'beauty': 8,
-  //   'sports': 6,
-  //   'automotive': 20
-  // };
-  
-//   const tariffRate = tariffRates[product] || 10;
-//   const tariffAmount = itemPrice * (tariffRate / 100);
-//
-//   // Fee calculations
-//   const handlingFee = fees.handling ? 25.00 : 0;
-//   const processingFee = fees.processing ? 8.00 : 0;
-//   const inspectionFee = fees.inspection ? 15.00 : 0;
-//   const othersFee = fees.others ? 10.50 : 0;
-//
-//   const totalPrice = itemPrice + tariffAmount + handlingFee + processingFee + inspectionFee + othersFee;
-//
-//   setResult({
-//     breakdown: {
-//       itemPrice,
-//       tariffRate,
-//       tariffAmount,
-//       handlingFee,
-//       processingFee,
-//       inspectionFee,
-//       othersFee,
-//       totalPrice
-//     }
-//   });
-// };
-//
   // helper function to get country names
   const getCountryName = (code) => {
   const countries = {
