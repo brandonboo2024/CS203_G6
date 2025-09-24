@@ -51,7 +51,7 @@ export default function TariffCalc() {
             handlingFee:    data.handlingFee    ?? data.handling_fee    ?? 0,
             processingFee:  data.processingFee  ?? data.processing_fee  ?? 0,
             inspectionFee:  data.inspectionFee  ?? data.inspection_fee  ?? 0,
-            othersFee:      data.othersFee      ?? data.others_fee      ?? 0,
+            otherFees:      data.otherFees      ?? data.other_fees      ?? 0,
             totalPrice:      data.totalPrice      ?? data.total_price      ?? 0,
           };
 
@@ -245,7 +245,7 @@ export default function TariffCalc() {
                 {fees.others && (
                   <div className="breakdown-row">
                     <span>Miscellaneous Charges</span>
-                    <span>${Number(result.breakdown.othersFee || 0).toFixed(2)}</span>
+                    <span>${Number(result.breakdown.otherFees || 0).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="breakdown-row total-row">
