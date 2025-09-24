@@ -112,6 +112,15 @@
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- Flyway dependency for migration of PostGreSQL-->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
     </dependencies>
    
 
