@@ -1,8 +1,10 @@
-package com.example.tariffkey.auth;
+package com.example.tariffkey.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.example.tariffkey.repository.*;
+import com.example.tariffkey.model.*;
 
 @Service
 @RequiredArgsConstructor

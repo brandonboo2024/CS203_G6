@@ -1,7 +1,6 @@
 package com.example.tariffkey.security;
 
-import com.example.tariffkey.auth.JwtService;
-import com.example.tariffkey.auth.CustomUserDetailsService;
+import com.example.tariffkey.service.*;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
