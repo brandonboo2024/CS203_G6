@@ -6,6 +6,8 @@ export default function TariffCalc() {
   const [toCountry, setToCountry] = useState("");
   const [product, setProduct] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [calculationFrom, setFrom] = useState("");
+  const [calculationTo, setTo] = useState("");
   const [fees, setFees] = useState({
     handling: false,
     inspection: false,
@@ -29,6 +31,8 @@ export default function TariffCalc() {
           inspection: fees.inspection,
           processing: fees.processing,
           others: fees.others,
+          calculationFrom,
+          calculationTo,
       };
 
       try {
@@ -53,6 +57,8 @@ export default function TariffCalc() {
             inspectionFee:  data.inspectionFee  ?? data.inspection_fee  ?? 0,
             otherFees:      data.otherFees      ?? data.other_fees      ?? 0,
             totalPrice:      data.totalPrice      ?? data.total_price      ?? 0,
+            from:  data.from ?? data.from ?? 0,
+            to: data.to ?? data.to ?? 0,
           };
 
           setResult({ breakdown });
