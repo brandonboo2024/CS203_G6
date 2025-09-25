@@ -314,30 +314,22 @@ export default function TariffCalc() {
               </div>
             </div>
             
-            {/* NEW: Segment breakdown */}
             <div className="breakdown-section">
-              <h3>Rate Segments</h3>
+              <h3>Tariff(s) Applied</h3>
               {result.segments?.length ? (
-                <div className="segments-table">
-                  <div className="segments-header">
-                    <span>From</span>
-                    <span>To</span>
-                    <span>Rate %</span>
-                    <span>Qty Portion</span>
-                    <span>Item Price</span>
-                    <span>Tariff Amount</span>
-                  </div>
+                <ul className="segments-list">
                   {result.segments.map((s, idx) => (
-                    <div className="segments-row" key={idx}>
-                      <span>{fmtDate(s.from)}</span>
-                      <span>{fmtDate(s.to)}</span>
-                      <span>{Number(s.ratePercent || 0).toFixed(2)}%</span>
-                      <span>{Number(s.quantityPortion || 0).toFixed(2)}</span>
-                      <span>${fmt(s.itemPrice)}</span>
-                      <span>${fmt(s.tariffAmount)}</span>
-                    </div>
+                    <li key={idx} className="segment-chip">
+                      <strong>{s.label || (s.source === "override" ? "Route Override" : "Default rate")}</strong>
+                      {" — "}
+                      {Number(s.ratePercent || 0).toFixed(2)}%
+                      {" "}
+                      <span className="muted">
+                        ({fmtDate(s.from)} → {fmtDate(s.to)})
+                      </span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               ) : (
                 <p className="muted">No tariff segments overlapped this period.</p>
               )}
