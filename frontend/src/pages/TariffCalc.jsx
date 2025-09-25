@@ -19,9 +19,22 @@ export default function TariffCalc() {
   const toggleFee = (key) => {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+  const toIso = (local) => (local ? new Date(local).toISOString() : null);
 
   const handleSubmit = async(e) => {
     e.preventDefault();
+      if(!calculationFrom || !calculationTo){
+          setError("Please select both start and end date/time.");
+          return;
+      }
+      const fromDate = new Date(calculationFrom);
+      const toDate = new Date(calculationTo);
+      if(fromDate > toDate){
+          setError("End date/time must be after start date/time.");
+          return;
+      }
+      
+
       const request = {
           fromCountry,
           toCountry,
@@ -31,8 +44,8 @@ export default function TariffCalc() {
           inspection: fees.inspection,
           processing: fees.processing,
           others: fees.others,
-          calculationFrom,
-          calculationTo,
+          calculationFrom: toIso(calculationFrom),
+          calculationTo: toIso(calculationTo),
       };
 
       try {
@@ -60,10 +73,19 @@ export default function TariffCalc() {
             from:  data.from ?? data.from ?? 0,
             to: data.to ?? data.to ?? 0,
           };
+          
+          const segments = Array.isArray(data.segments) ? data.segments : [];
 
-          setResult({ breakdown });
+          setResult({
+              breakdown,
+              segments,
+              window : {from: request.calculationFrom, to: calculationTo},
+          });
       } catch (err) {
           console.error(err);
+          SetError(err.message || "Something went wrong idk tho");
+      }finally{
+          setLoading(false);
       }
 
   };
@@ -78,7 +100,16 @@ export default function TariffCalc() {
     'CN': 'China', 'JP': 'Japan'
   };
   return countries[code] || code;
-};
+};  
+  const fmt = (v) => Number(v || 0).toFixed(2);
+  const fmtDate = (iso) => {
+    if (!iso) return "-";
+    try {
+      return new Date(iso).toLocaleString();
+    } catch {
+      return iso;
+    }
+  };
 
   return (
     <div className="calc-wrapper">
@@ -167,6 +198,28 @@ export default function TariffCalc() {
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="Enter quantity"
+            />
+          </div>
+        {/* new time window */}
+          <div className="form-row">
+            <label>From:</label>
+            <input
+              type="datetime-local"
+              value={calculationFrom}
+              onChange={(e) => setFrom(e.target.value)}
+              placeholder="Select Start Date"
+              required
+            />
+          </div>
+
+          <div className="form-row">
+            <label>To:</label>
+            <input
+              type="datetime-local"
+              value={calculationTo}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="Select End Date"
+              required
             />
           </div>
 
@@ -259,6 +312,35 @@ export default function TariffCalc() {
                   <span>${Number(result.breakdown.totalPrice || 0).toFixed(2)}</span>
                 </div>
               </div>
+            </div>
+            
+            {/* NEW: Segment breakdown */}
+            <div className="breakdown-section">
+              <h3>Rate Segments</h3>
+              {result.segments?.length ? (
+                <div className="segments-table">
+                  <div className="segments-header">
+                    <span>From</span>
+                    <span>To</span>
+                    <span>Rate %</span>
+                    <span>Qty Portion</span>
+                    <span>Item Price</span>
+                    <span>Tariff Amount</span>
+                  </div>
+                  {result.segments.map((s, idx) => (
+                    <div className="segments-row" key={idx}>
+                      <span>{fmtDate(s.from)}</span>
+                      <span>{fmtDate(s.to)}</span>
+                      <span>{Number(s.ratePercent || 0).toFixed(2)}%</span>
+                      <span>{Number(s.quantityPortion || 0).toFixed(2)}</span>
+                      <span>${fmt(s.itemPrice)}</span>
+                      <span>${fmt(s.tariffAmount)}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">No tariff segments overlapped this period.</p>
+              )}
             </div>
 
             {/* Action Buttons */}
