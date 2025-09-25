@@ -1,4 +1,4 @@
-package com.example.tariffkey.auth;
+package com.example.tariffkey.model;
 
 import java.time.LocalDateTime;
 

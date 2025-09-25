@@ -1,4 +1,4 @@
-package com.example.tariffkey.auth;
+package com.example.tariffkey.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.function.Function;
+
+import com.example.tariffkey.model.*;
 
 @Service
 public class JwtService {

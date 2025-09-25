@@ -1,10 +1,13 @@
-package com.example.tariffkey.auth;
+package com.example.tariffkey.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
+import com.example.tariffkey.model.*;
+import com.example.tariffkey.service.*;
+import com.example.tariffkey.security.*;
 
 @RestController
 @RequestMapping("/auth")
