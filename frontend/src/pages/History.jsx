@@ -1,13 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+// src/pages/History.jsx
+import React, { useState, useEffect } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function History() {
+  // Summary data
   const summary = {
     route: "CN → SG",
     avgCost: "$2,395.50",
     saved: "$1,245.00",
   };
 
+  // Sample past calculations
   const historyData = [
     { date: "13/09/25", route: "CN → SG", product: "Electronics", total: "$2,458.00" },
     { date: "02/09/25", route: "VN → SG", product: "Textiles", total: "$1,245.00" },
@@ -15,68 +27,83 @@ export default function History() {
     { date: "29/08/25", route: "CN → SG", product: "Electronics", total: "$100.00" },
   ];
 
-  // Graph state
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Default selected product: electronics
   const [graphFilters, setGraphFilters] = useState({
-    productCode: '',
-    startDate: '2020-01-01',
-    endDate: new Date().toISOString().split('T')[0]
+    productCode: "electronics",
+    startDate: "2020-01-01",
+    endDate: new Date().toISOString().split("T")[0],
   });
 
-  // Product list for dropdown
   const productOptions = [
-    'automotive', 'beauty', 'books', 'clothing', 'electronics', 'food',
-    'furniture', 'sports', 'tools', 'toys'
+    "automotive", "beauty", "books", "clothing", "electronics", "food",
+    "furniture", "sports", "tools", "toys",
   ];
 
   // Fetch historical tariff data
   const fetchHistoricalData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/tariff/history', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(graphFilters)
+      const response = await fetch("http://localhost:8080/api/tariff/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(graphFilters),
       });
 
-      if (!response.ok) throw new Error('Failed to fetch data');
+      if (!response.ok) throw new Error("Failed to fetch data");
 
-      const data = await response.json();
-      setHistoricalData(data);
-    } catch (error) {
-      console.error('Error fetching tariff history:', error);
+      const result = await response.json();
+      setHistoricalData(Array.isArray(result) ? result : result.data || []);
+    } catch (err) {
+      console.error(err);
       setHistoricalData([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Auto-fetch whenever filters change
   useEffect(() => {
     fetchHistoricalData();
   }, [graphFilters]);
 
-  // Format data for the chart
+  // Format chart data and clip by start/end filter dates
   const formatChartData = () => {
-    // Group by date
-    const grouped = historicalData.reduce((acc, entry) => {
-      const date = new Date(entry.valid_from).toLocaleDateString('en-GB'); // DD/MM/YY
+    if (!Array.isArray(historicalData) || historicalData.length === 0) return [];
 
-      if (!acc[date]) acc[date] = { date };
+    const formatted = {};
+    const globalStart = new Date(graphFilters.startDate);
+    const globalEnd = new Date(graphFilters.endDate);
 
-      const key = entry.origin_country && entry.dest_country
-        ? `${entry.product_code} (${entry.origin_country}→${entry.dest_country})`
-        : `${entry.product_code} (Default)`;
+    historicalData.forEach((entry) => {
+      const from = new Date(entry.valid_from);
+      const to = entry.valid_to ? new Date(entry.valid_to) : globalEnd;
 
-      acc[date][key] = entry.rate_percent;
-      return acc;
-    }, {});
+      // Skip entries completely outside the filter range
+      if (to < globalStart || from > globalEnd) return;
 
-    // Convert to array and sort by date
-    return Object.values(grouped).sort((a, b) => {
-      const aDate = new Date(a.date.split('/').reverse().join('-'));
-      const bDate = new Date(b.date.split('/').reverse().join('-'));
+      const key =
+        entry.origin_country && entry.dest_country
+          ? `${entry.product_code} (${entry.origin_country}→${entry.dest_country})`
+          : entry.product_code;
+
+      // Clip start and end to filter range
+      const start = from < globalStart ? globalStart : from;
+      const end = to > globalEnd ? globalEnd : to;
+
+      const startLabel = start.toLocaleDateString("en-GB");
+      if (!formatted[startLabel]) formatted[startLabel] = { date: startLabel };
+      formatted[startLabel][key] = entry.rate_percent;
+
+      const endLabel = end.toLocaleDateString("en-GB");
+      if (!formatted[endLabel]) formatted[endLabel] = { date: endLabel };
+      formatted[endLabel][key] = entry.rate_percent;
+    });
+
+    return Object.values(formatted).sort((a, b) => {
+      const aDate = new Date(a.date.split("/").reverse().join("-"));
+      const bDate = new Date(b.date.split("/").reverse().join("-"));
       return aDate - bDate;
     });
   };
@@ -104,26 +131,33 @@ export default function History() {
         <div className="filter-bar">
           <span className="filter-label">Graph Filters:</span>
           <div className="filter-actions">
+            {/* Product Dropdown (no "All Products") */}
             <select
               value={graphFilters.productCode}
-              onChange={(e) => setGraphFilters({ ...graphFilters, productCode: e.target.value })}
+              onChange={(e) =>
+                setGraphFilters({ ...graphFilters, productCode: e.target.value })
+              }
             >
-              <option value="">All Products</option>
               {productOptions.map((product) => (
                 <option key={product} value={product}>
                   {product.charAt(0).toUpperCase() + product.slice(1)}
                 </option>
               ))}
             </select>
+
             <input
               type="date"
               value={graphFilters.startDate}
-              onChange={(e) => setGraphFilters({ ...graphFilters, startDate: e.target.value })}
+              onChange={(e) =>
+                setGraphFilters({ ...graphFilters, startDate: e.target.value })
+              }
             />
             <input
               type="date"
               value={graphFilters.endDate}
-              onChange={(e) => setGraphFilters({ ...graphFilters, endDate: e.target.value })}
+              onChange={(e) =>
+                setGraphFilters({ ...graphFilters, endDate: e.target.value })
+              }
             />
           </div>
         </div>
@@ -133,43 +167,35 @@ export default function History() {
           <div className="loading">Loading tariff history...</div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <LineChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
-              <YAxis label={{ value: 'Rate %', angle: -90, position: 'insideLeft' }} />
-              <Tooltip 
-                formatter={(value) => [`${value}%`, 'Tariff Rate']}
+              <YAxis label={{ value: "Rate %", angle: -90, position: "insideLeft" }} />
+              <Tooltip
+                formatter={(value) => [`${value}%`, "Tariff Rate"]}
                 labelFormatter={(label) => `Date: ${label}`}
               />
               <Legend />
-
-              {chartData.length > 0 && Object.keys(chartData[0])
-                .filter(key => key !== 'date')
-                .map((key, index) => (
-                  <Line
-                    key={key}
-                    type="monotone"
-                    dataKey={key}
-                    stroke={`hsl(${index * 60}, 70%, 50%)`}
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                ))}
+              {chartData.length > 0 &&
+                Object.keys(chartData[0])
+                  .filter((key) => key !== "date")
+                  .map((key, index) => (
+                    <Line
+                      key={key}
+                      type="monotone"
+                      dataKey={key}
+                      stroke={`hsl(${index * 60}, 70%, 50%)`}
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  ))}
             </LineChart>
           </ResponsiveContainer>
         )}
-      </div>
-
-      {/* Filters for History Table */}
-      <div className="card filter-bar">
-        <span className="filter-label">Filter Calculations:</span>
-        <div className="filter-actions">
-          <button type="button">Date</button>
-          <button type="button">Country</button>
-          <button type="button">Product</button>
-        </div>
-        <input type="text" placeholder="Search..." />
       </div>
 
       {/* History Table */}
