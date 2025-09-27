@@ -77,6 +77,8 @@ public class TariffService2 {
             o.setQuantityPortion(qtyPortion);
             o.setItemPrice(itemPrice);
             o.setTariffAmount(tariffAmt);
+            o.setLabel(s.label);
+            o.setSource(s.source);
             out.add(o);
 
             totalItemPrice += itemPrice;
@@ -120,12 +122,16 @@ public class TariffService2 {
         Instant to;          // exclusive end (use a large instant if NULL)
         double ratePercent;
         boolean isOverride;
+        String source;      
+        String label;        
     }
 
     private static class Segment {
         Instant from;
         Instant to;
         double ratePercent;
+        String label;
+        String source;
     }
     private static Timestamp ts(Instant i) {
         return (i == null) ? null : Timestamp.from(i);
@@ -154,6 +160,8 @@ public class TariffService2 {
                 r.to = (vt == null) ? Instant.ofEpochSecond(253402300799L) : vt.toInstant(); // 9999-12-31T23:59:59Z
                 r.ratePercent = rs.getDouble(3);
                 r.isOverride = true;
+                r.source = "override";
+                r.label = "Route override " + origin + "->" + dest + " (" + product + ")"; 
                 return r;
             },
             product, origin, dest, ts(windowFrom), ts(windowTo)
@@ -174,6 +182,8 @@ public class TariffService2 {
                 r.to = (vt == null) ? Instant.ofEpochSecond(253402300799L) : vt.toInstant();
                 r.ratePercent = rs.getDouble(3);
                 r.isOverride = false;
+                r.source = "default";
+                r.label = "Default rate (" + product + ")";
                 return r;
             },
             product, ts(windowFrom), ts(windowTo)
@@ -223,6 +233,8 @@ public class TariffService2 {
             s.from = a;
             s.to = b;
             s.ratePercent = chosen.ratePercent;
+            s.label = chosen.label;
+            s.source = chosen.source;
             segs.add(s);
         }
         return segs;
