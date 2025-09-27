@@ -24,6 +24,12 @@ export default function History() {
     endDate: new Date().toISOString().split('T')[0]
   });
 
+  // Product list for dropdown
+  const productOptions = [
+    'automotive', 'beauty', 'books', 'clothing', 'electronics', 'food',
+    'furniture', 'sports', 'tools', 'toys'
+  ];
+
   // Fetch historical tariff data
   const fetchHistoricalData = async () => {
     try {
@@ -33,49 +39,46 @@ export default function History() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(graphFilters)
       });
-      
+
       if (!response.ok) throw new Error('Failed to fetch data');
-      
+
       const data = await response.json();
       setHistoricalData(data);
     } catch (error) {
       console.error('Error fetching tariff history:', error);
-      // Fallback to mock data for demo
-      setHistoricalData([
-        { product_code: 'electronics', origin_country: 'CN', dest_country: 'SG', rate_percent: 5.0, valid_from: '2024-01-01' },
-        { product_code: 'electronics', origin_country: 'CN', dest_country: 'SG', rate_percent: 5.5, valid_from: '2024-03-01' },
-        { product_code: 'electronics', origin_country: 'CN', dest_country: 'SG', rate_percent: 4.8, valid_from: '2024-06-01' },
-        { product_code: 'textiles', origin_country: 'VN', dest_country: 'SG', rate_percent: 3.2, valid_from: '2024-01-01' },
-        { product_code: 'textiles', origin_country: 'VN', dest_country: 'SG', rate_percent: 3.5, valid_from: '2024-05-01' },
-      ]);
+      setHistoricalData([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Auto-fetch whenever filters change
   useEffect(() => {
     fetchHistoricalData();
-  }, []);
+  }, [graphFilters]);
 
   // Format data for the chart
   const formatChartData = () => {
-    const formattedData = {};
-    
-    historicalData.forEach(entry => {
-      const date = new Date(entry.valid_from).toLocaleDateString('en-GB'); // DD/MM/YY format
-      
-      if (!formattedData[date]) {
-        formattedData[date] = { date };
-      }
-      
-      const key = entry.origin_country && entry.dest_country 
+    // Group by date
+    const grouped = historicalData.reduce((acc, entry) => {
+      const date = new Date(entry.valid_from).toLocaleDateString('en-GB'); // DD/MM/YY
+
+      if (!acc[date]) acc[date] = { date };
+
+      const key = entry.origin_country && entry.dest_country
         ? `${entry.product_code} (${entry.origin_country}→${entry.dest_country})`
         : `${entry.product_code} (Default)`;
-      
-      formattedData[date][key] = entry.rate_percent;
+
+      acc[date][key] = entry.rate_percent;
+      return acc;
+    }, {});
+
+    // Convert to array and sort by date
+    return Object.values(grouped).sort((a, b) => {
+      const aDate = new Date(a.date.split('/').reverse().join('-'));
+      const bDate = new Date(b.date.split('/').reverse().join('-'));
+      return aDate - bDate;
     });
-    
-    return Object.values(formattedData);
   };
 
   const chartData = formatChartData();
@@ -96,28 +99,32 @@ export default function History() {
       <div className="card">
         <h2>Tariff Rate History</h2>
         <p>Visualize how tariff rates have changed over time</p>
-        
+
         {/* Graph Filters */}
         <div className="filter-bar">
           <span className="filter-label">Graph Filters:</span>
           <div className="filter-actions">
-            <input
-              type="text"
-              placeholder="Product (electronics, textiles...)"
+            <select
               value={graphFilters.productCode}
-              onChange={(e) => setGraphFilters({...graphFilters, productCode: e.target.value})}
-            />
+              onChange={(e) => setGraphFilters({ ...graphFilters, productCode: e.target.value })}
+            >
+              <option value="">All Products</option>
+              {productOptions.map((product) => (
+                <option key={product} value={product}>
+                  {product.charAt(0).toUpperCase() + product.slice(1)}
+                </option>
+              ))}
+            </select>
             <input
               type="date"
               value={graphFilters.startDate}
-              onChange={(e) => setGraphFilters({...graphFilters, startDate: e.target.value})}
+              onChange={(e) => setGraphFilters({ ...graphFilters, startDate: e.target.value })}
             />
             <input
               type="date"
               value={graphFilters.endDate}
-              onChange={(e) => setGraphFilters({...graphFilters, endDate: e.target.value})}
+              onChange={(e) => setGraphFilters({ ...graphFilters, endDate: e.target.value })}
             />
-            <button type="button" onClick={fetchHistoricalData}>Apply</button>
           </div>
         </div>
 
@@ -135,7 +142,7 @@ export default function History() {
                 labelFormatter={(label) => `Date: ${label}`}
               />
               <Legend />
-              
+
               {chartData.length > 0 && Object.keys(chartData[0])
                 .filter(key => key !== 'date')
                 .map((key, index) => (
