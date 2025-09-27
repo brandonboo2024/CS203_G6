@@ -61,3 +61,36 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Past Calculations Tables
+CREATE TABLE IF NOT EXISTS past_calculations (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    item_price NUMERIC(10,2) NOT NULL,
+    tariff_rate NUMERIC(6,3) NOT NULL,
+    tariff_amount NUMERIC(10,2) NOT NULL,
+    handling_fee NUMERIC(10,2) NOT NULL,
+    inspection_fee NUMERIC(10,2) NOT NULL,
+    processing_fee NUMERIC(10,2) NOT NULL,
+    other_fees NUMERIC(10,2) NOT NULL,
+    total_price NUMERIC(10,2) NOT NULL,
+    calculation_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Table for segments (one calculation can have many segments)
+CREATE TABLE IF NOT EXISTS past_calculation_segments (
+    id BIGSERIAL PRIMARY KEY,
+    past_calculation_id BIGINT NOT NULL REFERENCES past_calculations(id) ON DELETE CASCADE,
+    time_from VARCHAR(30) NOT NULL,
+    time_to VARCHAR(30) NOT NULL,
+    rate_percent NUMERIC(6,3) NOT NULL,
+    quantity_portion NUMERIC(10,3) NOT NULL,
+    item_price NUMERIC(10,2) NOT NULL,
+    tariff_amount NUMERIC(10,2) NOT NULL,
+    label VARCHAR(100),
+    source VARCHAR(50),
+    
+    CONSTRAINT fk_past_calculation FOREIGN KEY (past_calculation_id) REFERENCES past_calculations(id)
+);
+
