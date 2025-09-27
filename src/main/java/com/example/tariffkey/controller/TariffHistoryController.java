@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/tariff")
@@ -14,6 +16,8 @@ public class TariffHistoryController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @PostMapping("/history")
     public List<Map<String, Object>> getTariffHistory(@RequestBody TariffHistoryRequest request) {
@@ -34,14 +38,18 @@ public class TariffHistoryController {
             ) AS combined
             WHERE (? = '' OR product_code ILIKE ?)
             ORDER BY valid_from
-            """;
-        
+        """;
+
+        // Convert string dates to LocalDate
+        LocalDate startDate = LocalDate.parse(request.getStartDate(), formatter);
+        LocalDate endDate = LocalDate.parse(request.getEndDate(), formatter);
+
         String productCodeFilter = request.getProductCode() != null ? request.getProductCode() : "";
         String productCodeLike = "%" + productCodeFilter + "%";
-        
+
         return jdbcTemplate.queryForList(sql, 
-            request.getEndDate(), request.getStartDate(),
-            request.getEndDate(), request.getStartDate(),
+            endDate, startDate,
+            endDate, startDate,
             productCodeFilter, productCodeLike);
     }
 
@@ -49,14 +57,14 @@ public class TariffHistoryController {
         private String productCode;
         private String startDate;
         private String endDate;
-        
+
         // Getters and setters
         public String getProductCode() { return productCode; }
         public void setProductCode(String productCode) { this.productCode = productCode; }
-        
+
         public String getStartDate() { return startDate; }
         public void setStartDate(String startDate) { this.startDate = startDate; }
-        
+
         public String getEndDate() { return endDate; }
         public void setEndDate(String endDate) { this.endDate = endDate; }
     }
