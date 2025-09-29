@@ -44,7 +44,9 @@ public class PastCalculations {
     @Embeddable
     @Data
     public static class PastCalculationSegment {
+        @Column(name = "time_from")
         private String from;            // date time
+        @Column(name = "time_to")
         private String to;              // date time
         private double ratePercent;     // tariff in this segment
         private double quantityPortion; // quantity allocated to this segment
