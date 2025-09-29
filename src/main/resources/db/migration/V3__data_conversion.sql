@@ -13,5 +13,5 @@ ALTER TABLE past_calculations
   ALTER COLUMN handling_fee     TYPE double precision USING handling_fee::double precision,
   ALTER COLUMN processing_fee   TYPE double precision USING processing_fee::double precision,
   ALTER COLUMN inspection_fee   TYPE double precision USING inspection_fee::double precision,
-  ALTER COLUMN others_fee       TYPE double precision USING others_fee::double precision,
+  ALTER COLUMN other_fees       TYPE double precision USING other_fees::double precision,
   ALTER COLUMN total_price      TYPE double precision USING total_price::double precision;
