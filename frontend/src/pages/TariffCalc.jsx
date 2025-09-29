@@ -15,6 +15,7 @@ export default function TariffCalc() {
     others: false,
   });
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   const toggleFee = (key) => {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -50,7 +51,7 @@ export default function TariffCalc() {
 
       try {
           console.log("Submitting:", request);
-          const response = await fetch("http://localhost:8080/api/tariff/calculate", {
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tariff/calculate`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(request),
