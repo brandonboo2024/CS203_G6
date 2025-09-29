@@ -46,7 +46,7 @@ export default function History() {
   const fetchHistoricalData = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:8080/api/tariff/history", {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tariff/history`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(graphFilters),
