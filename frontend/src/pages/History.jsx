@@ -26,6 +26,28 @@ export default function History() {
   const [calculationsLoading, setCalculationsLoading] = useState(true);
   const [calculationsError, setCalculationsError] = useState(null);
 
+  const [historicalData, setHistoricalData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Default selected product: electronics
+  const [graphFilters, setGraphFilters] = useState({
+    productCode: "electronics",
+    originCountry: "",
+    destCountry: "",
+    startDate: "2020-01-01",
+    endDate: new Date().toISOString().split("T")[0],
+  });
+
+  const productOptions = [
+    "automotive", "beauty", "books", "clothing", "electronics", "food",
+    "furniture", "sports", "tools", "toys",
+  ];
+
+  const countryOptions = [
+    'SG', 'US', 'MY', 'TH', 'VN', 'ID', 'PH', 'KR',
+    'IN', 'AU', 'GB', 'DE', 'FR', 'IT', 'ES', 'CA'
+  ];
+
   // Fetch past calculations
   useEffect(() => {
     const fetchPastCalculations = async () => {
@@ -43,21 +65,6 @@ export default function History() {
 
     fetchPastCalculations();
   }, []);
-
-  const [historicalData, setHistoricalData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Default selected product: electronics
-  const [graphFilters, setGraphFilters] = useState({
-    productCode: "electronics",
-    startDate: "2020-01-01",
-    endDate: new Date().toISOString().split("T")[0],
-  });
-
-  const productOptions = [
-    "automotive", "beauty", "books", "clothing", "electronics", "food",
-    "furniture", "sports", "tools", "toys",
-  ];
 
   // Fetch historical tariff data
   const fetchHistoricalData = async () => {
@@ -127,7 +134,6 @@ export default function History() {
       return aDate - bDate;
     });
   };
-  
 
   const chartData = formatChartData();
 
@@ -268,82 +274,6 @@ export default function History() {
 
         {/* Export CSV */}
         <button onClick={exportToCSV} className="export-btn">Export CSV</button>
-      </div>
-
-      {/* History Table */}
-      <div className="card">
-        <h2>Tariff Rate History</h2>
-        <p>Visualize how tariff rates have changed over time</p>
-
-        {/* Graph Filters */}
-        <div className="filter-bar">
-          <span className="filter-label">Graph Filters:</span>
-          <div className="filter-actions">
-            {/* Product Dropdown (no "All Products") */}
-            <select
-              value={graphFilters.productCode}
-              onChange={(e) =>
-                setGraphFilters({ ...graphFilters, productCode: e.target.value })
-              }
-            >
-              {productOptions.map((product) => (
-                <option key={product} value={product}>
-                  {product.charAt(0).toUpperCase() + product.slice(1)}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="date"
-              value={graphFilters.startDate}
-              onChange={(e) =>
-                setGraphFilters({ ...graphFilters, startDate: e.target.value })
-              }
-            />
-            <input
-              type="date"
-              value={graphFilters.endDate}
-              onChange={(e) =>
-                setGraphFilters({ ...graphFilters, endDate: e.target.value })
-              }
-            />
-          </div>
-        </div>
-
-        {/* Graph */}
-        {loading ? (
-          <div className="loading">Loading tariff history...</div>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis label={{ value: "Rate %", angle: -90, position: "insideLeft" }} />
-              <Tooltip
-                formatter={(value) => [`${value}%`, "Tariff Rate"]}
-                labelFormatter={(label) => `Date: ${label}`}
-              />
-              <Legend />
-              {chartData.length > 0 &&
-                Object.keys(chartData[0])
-                  .filter((key) => key !== "date")
-                  .map((key, index) => (
-                    <Line
-                      key={key}
-                      type="monotone"
-                      dataKey={key}
-                      stroke={`hsl(${index * 60}, 70%, 50%)`}
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  ))}
-            </LineChart>
-          </ResponsiveContainer>
-        )}
       </div>
 
       {/* Past Calculations */}
