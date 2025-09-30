@@ -70,9 +70,12 @@ export default function History() {
   const fetchHistoricalData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tariff/history`, {
+      const response = await fetch(`${API_BASE_URL}/api/tariff/history`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`
+        },
         body: JSON.stringify(graphFilters),
       });
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -240,22 +243,24 @@ export default function History() {
         {/* Graph */}
         {loading ? (
           <div className="loading">Loading tariff history...</div>
+        ) : chartData.length === 0 ? (
+          <div>No tariff history data available</div>
         ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis label={{ value: "Rate %", angle: -90, position: "insideLeft" }} />
-              <Tooltip
-                formatter={(value) => [`${value}%`, "Tariff Rate"]}
-                labelFormatter={(label) => `Date: ${label}`}
-              />
-              <Legend />
-              {chartData.length > 0 &&
-                Object.keys(chartData[0])
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <LineChart
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis label={{ value: "Rate %", angle: -90, position: "insideLeft" }} />
+                <Tooltip
+                  formatter={(value) => [`${value}%`, "Tariff Rate"]}
+                  labelFormatter={(label) => `Date: ${label}`}
+                />
+                <Legend />
+                {Object.keys(chartData[0])
                   .filter((key) => key !== "date")
                   .map((key, index) => (
                     <Line
@@ -268,8 +273,9 @@ export default function History() {
                       activeDot={{ r: 6 }}
                     />
                   ))}
-            </LineChart>
-          </ResponsiveContainer>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         )}
 
         {/* Export CSV */}
