@@ -44,8 +44,12 @@ export default function History() {
     "furniture", "sports", "tools", "toys",
   ];
 
-  const countryOptions = ["CN", "US", "VN", "SG", "JP", "KR", "DE"];
-
+  const countryOptions = [
+    "AU", "BR", "CA", "CN", "DE", "ES", "FR", "GB", "IN",
+    "IT", "JP", "KR", "MX", "MY", "PH", "RU", "SG", "TH",
+    "US", "VN", "ZA",
+  ];
+  
   // Fetch historical tariff data
   const fetchHistoricalData = async () => {
     try {
