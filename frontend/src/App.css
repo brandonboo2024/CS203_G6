@@ -577,6 +577,11 @@ button:hover {
   color: #000;
 }
 
+.filter-actions select {
+  text-align: center;        /* centers selected value */
+  text-align-last: center;   /* centers dropdown options in Firefox */
+}
+
 .filter-actions input {
   background: var(--bg-dark);
   color: var(--text-light);

@@ -110,6 +110,30 @@ export default function History() {
 
   const chartData = formatChartData();
 
+  // ✅ NEW: CSV export function
+  const exportToCSV = () => {
+    if (chartData.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+
+    const headers = ["Date", ...Object.keys(chartData[0]).filter((k) => k !== "date")];
+    const rows = chartData.map((row) =>
+      [row.date, ...headers.slice(1).map((h) => row[h] ?? "")].join(",")
+    );
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "tariff_history.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="history-wrapper">
       {/* Summary */}
@@ -196,6 +220,10 @@ export default function History() {
             </LineChart>
           </ResponsiveContainer>
         )}
+        {/* Export Button */}
+        <button onClick={exportToCSV} className="export-btn">
+          Export CSV
+        </button>
       </div>
 
       {/* History Table */}
