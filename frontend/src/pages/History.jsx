@@ -140,7 +140,7 @@ export default function History() {
 
   return (
     <div className="history-wrapper">
-      {/* Summary */}
+      {/* Summary
       <div className="card summary-card">
         <h2>Summary</h2>
         <ul>
@@ -148,7 +148,7 @@ export default function History() {
           <li><span>Average Cost:</span> {summary.avgCost}</li>
           <li><span>Total Saved:</span> {summary.saved}</li>
         </ul>
-      </div>
+      </div> */}
 
       {/* Tariff History Graph */}
       <div className="card">
