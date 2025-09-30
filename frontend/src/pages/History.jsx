@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getPastCalculations } from '../api/PastCalculationsApi';
-import { API_BASE_URL } from '../api/config';
+import { API_BASE_URL, getHeaders } from '../api/config';
 
 export default function History() {
   // Summary data
@@ -54,10 +54,18 @@ export default function History() {
       try {
         setCalculationsLoading(true);
         const data = await getPastCalculations();
+        console.log('Past calculations data:', data);
+        if (!data) {
+          throw new Error('No data received from API');
+        }
         setPastCalculations(data);
       } catch (err) {
         console.error('Failed to load past calculations:', err);
-        setCalculationsError('Failed to load your calculation history');
+        setCalculationsError(
+          err.message === 'No data received from API' 
+            ? 'No calculation history found' 
+            : 'Failed to load calculation history. Please try again later.'
+        );
       } finally {
         setCalculationsLoading(false);
       }
@@ -70,19 +78,24 @@ export default function History() {
   const fetchHistoricalData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/tariff/history`, {
+      console.log('Fetching with filters:', graphFilters);
+      const response = await fetch(`${API_BASE_URL}/api/calculations/tariff-history`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('token')}`
-        },
+        headers: getHeaders(),
         body: JSON.stringify(graphFilters),
       });
-      if (!response.ok) throw new Error("Failed to fetch data");
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Tariff history error:', errorText);
+        throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+      }
+      
       const result = await response.json();
+      console.log('Received tariff data:', result);
       setHistoricalData(Array.isArray(result) ? result : result.data || []);
     } catch (err) {
-      console.error(err);
+      console.error('Tariff history error:', err);
       setHistoricalData([]);
     } finally {
       setLoading(false);
