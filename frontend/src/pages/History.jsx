@@ -30,9 +30,11 @@ export default function History() {
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Default selected product: electronics
+  // Filters for country
   const [graphFilters, setGraphFilters] = useState({
     productCode: "electronics",
+    originCountry: "",
+    destCountry: "",
     startDate: "2020-01-01",
     endDate: new Date().toISOString().split("T")[0],
   });
@@ -41,6 +43,8 @@ export default function History() {
     "automotive", "beauty", "books", "clothing", "electronics", "food",
     "furniture", "sports", "tools", "toys",
   ];
+
+  const countryOptions = ["CN", "US", "VN", "SG", "JP", "KR", "DE"];
 
   // Fetch historical tariff data
   const fetchHistoricalData = async () => {
@@ -51,9 +55,7 @@ export default function History() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(graphFilters),
       });
-
       if (!response.ok) throw new Error("Failed to fetch data");
-
       const result = await response.json();
       setHistoricalData(Array.isArray(result) ? result : result.data || []);
     } catch (err) {
@@ -68,64 +70,66 @@ export default function History() {
     fetchHistoricalData();
   }, [graphFilters]);
 
-  // Format chart data and clip by start/end filter dates
+  // Format chart data
   const formatChartData = () => {
     if (!Array.isArray(historicalData) || historicalData.length === 0) return [];
-
+  
     const formatted = {};
     const globalStart = new Date(graphFilters.startDate);
     const globalEnd = new Date(graphFilters.endDate);
-
+  
     historicalData.forEach((entry) => {
       const from = new Date(entry.valid_from);
       const to = entry.valid_to ? new Date(entry.valid_to) : globalEnd;
-
+  
       // Skip entries completely outside the filter range
       if (to < globalStart || from > globalEnd) return;
-
+  
+      // Filter by product, origin, and destination
+      if (graphFilters.productCode && entry.product_code !== graphFilters.productCode) return;
+      if (graphFilters.originCountry && entry.origin_country !== graphFilters.originCountry) return;
+      if (graphFilters.destCountry && entry.dest_country !== graphFilters.destCountry) return;
+  
       const key =
         entry.origin_country && entry.dest_country
           ? `${entry.product_code} (${entry.origin_country}→${entry.dest_country})`
           : entry.product_code;
-
-      // Clip start and end to filter range
+  
       const start = from < globalStart ? globalStart : from;
       const end = to > globalEnd ? globalEnd : to;
-
+  
       const startLabel = start.toLocaleDateString("en-GB");
       if (!formatted[startLabel]) formatted[startLabel] = { date: startLabel };
       formatted[startLabel][key] = entry.rate_percent;
-
+  
       const endLabel = end.toLocaleDateString("en-GB");
       if (!formatted[endLabel]) formatted[endLabel] = { date: endLabel };
       formatted[endLabel][key] = entry.rate_percent;
     });
-
+  
     return Object.values(formatted).sort((a, b) => {
       const aDate = new Date(a.date.split("/").reverse().join("-"));
       const bDate = new Date(b.date.split("/").reverse().join("-"));
       return aDate - bDate;
     });
   };
+  
 
   const chartData = formatChartData();
 
-  // ✅ NEW: CSV export function
+  // CSV export
   const exportToCSV = () => {
     if (chartData.length === 0) {
       alert("No data available to export.");
       return;
     }
-
     const headers = ["Date", ...Object.keys(chartData[0]).filter((k) => k !== "date")];
     const rows = chartData.map((row) =>
       [row.date, ...headers.slice(1).map((h) => row[h] ?? "")].join(",")
     );
-
     const csvContent = [headers.join(","), ...rows].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute("download", "tariff_history.csv");
@@ -151,11 +155,11 @@ export default function History() {
         <h2>Tariff Rate History</h2>
         <p>Visualize how tariff rates have changed over time</p>
 
-        {/* Graph Filters */}
+        {/* Filters */}
         <div className="filter-bar">
           <span className="filter-label">Graph Filters:</span>
           <div className="filter-actions">
-            {/* Product Dropdown (no "All Products") */}
+            {/* Product */}
             <select
               value={graphFilters.productCode}
               onChange={(e) =>
@@ -169,6 +173,33 @@ export default function History() {
               ))}
             </select>
 
+            {/* Origin Country */}
+            <select
+              value={graphFilters.originCountry}
+              onChange={(e) =>
+                setGraphFilters({ ...graphFilters, originCountry: e.target.value })
+              }
+            >
+              <option value="">All Origins</option>
+              {countryOptions.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            {/* Destination Country */}
+            <select
+              value={graphFilters.destCountry}
+              onChange={(e) =>
+                setGraphFilters({ ...graphFilters, destCountry: e.target.value })
+              }
+            >
+              <option value="">All Destinations</option>
+              {countryOptions.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            {/* Date filters */}
             <input
               type="date"
               value={graphFilters.startDate}
@@ -220,10 +251,9 @@ export default function History() {
             </LineChart>
           </ResponsiveContainer>
         )}
-        {/* Export Button */}
-        <button onClick={exportToCSV} className="export-btn">
-          Export CSV
-        </button>
+
+        {/* Export CSV */}
+        <button onClick={exportToCSV} className="export-btn">Export CSV</button>
       </div>
 
       {/* History Table */}
