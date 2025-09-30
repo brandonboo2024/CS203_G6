@@ -137,6 +137,7 @@ export default function TariffCalc() {
               <option value="FR">France</option>
               <option value="IT">Italy</option>
               <option value="ES">Spain</option>
+              <option value="CN">China</option>
               <option value="CA">Canada</option>
               <option value="BR">Brazil</option>
               <option value="MX">Mexico</option>
