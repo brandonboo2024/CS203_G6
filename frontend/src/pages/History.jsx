@@ -45,8 +45,11 @@ export default function History() {
 
   const countryOptions = [
     'SG', 'US', 'MY', 'TH', 'VN', 'ID', 'PH', 'KR',
-    'IN', 'AU', 'GB', 'DE', 'FR', 'IT', 'ES', 'CA'
-  ];
+    'IN', 'AU', 'GB', 'DE', 'FR', 'IT', 'ES', 'CA',
+    "AU", "BR", "CA", "CN", "DE", "ES", "FR", "GB", "IN",
+    "IT", "JP", "KR", "MX", "MY", "PH", "RU", "SG", "TH",
+    "US", "VN", "ZA",
+  ]
 
   // Fetch past calculations
   useEffect(() => {
@@ -74,6 +77,11 @@ export default function History() {
     fetchPastCalculations();
   }, []);
 
+    "AU", "BR", "CA", "CN", "DE", "ES", "FR", "GB", "IN",
+    "IT", "JP", "KR", "MX", "MY", "PH", "RU", "SG", "TH",
+    "US", "VN", "ZA",
+  ];
+  
   // Fetch historical tariff data
   const fetchHistoricalData = async () => {
     try {
@@ -176,7 +184,7 @@ export default function History() {
 
   return (
     <div className="history-wrapper">
-      {/* Summary */}
+      {/* Summary
       <div className="card summary-card">
         <h2>Summary</h2>
         <ul>
@@ -184,7 +192,7 @@ export default function History() {
           <li><span>Average Cost:</span> {summary.avgCost}</li>
           <li><span>Total Saved:</span> {summary.saved}</li>
         </ul>
-      </div>
+      </div> */}
 
       {/* Tariff History Graph */}
       <div className="card">
