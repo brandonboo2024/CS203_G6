@@ -6,6 +6,8 @@ export default function TariffCalc() {
   const [toCountry, setToCountry] = useState("");
   const [product, setProduct] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [calculationFrom, setFrom] = useState("");
+  const [calculationTo, setTo] = useState("");
   const [fees, setFees] = useState({
     handling: false,
     inspection: false,
@@ -13,13 +15,27 @@ export default function TariffCalc() {
     others: false,
   });
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   const toggleFee = (key) => {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+  const toIso = (local) => (local ? new Date(local).toISOString() : null);
 
   const handleSubmit = async(e) => {
     e.preventDefault();
+      if(!calculationFrom || !calculationTo){
+          setError("Please select both start and end date/time.");
+          return;
+      }
+      const fromDate = new Date(calculationFrom);
+      const toDate = new Date(calculationTo);
+      if(fromDate > toDate){
+          setError("End date/time must be after start date/time.");
+          return;
+      }
+      
+
       const request = {
           fromCountry,
           toCountry,
@@ -29,11 +45,13 @@ export default function TariffCalc() {
           inspection: fees.inspection,
           processing: fees.processing,
           others: fees.others,
+          calculationFrom: toIso(calculationFrom),
+          calculationTo: toIso(calculationTo),
       };
 
       try {
           console.log("Submitting:", request);
-          const response = await fetch("http://localhost:8080/api/tariff/calculate", {
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tariff/calculate`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(request),
@@ -53,11 +71,31 @@ export default function TariffCalc() {
             inspectionFee:  data.inspectionFee  ?? data.inspection_fee  ?? 0,
             otherFees:      data.otherFees      ?? data.other_fees      ?? 0,
             totalPrice:      data.totalPrice      ?? data.total_price      ?? 0,
+            from:  data.from ?? data.from ?? 0,
+            to: data.to ?? data.to ?? 0,
           };
+          
+          const segments = Array.isArray(data.segments) ? data.segments : [];
 
-          setResult({ breakdown });
+          setResult({
+              breakdown,
+              segments,
+              window : {from: request.calculationFrom, to: calculationTo},
+          });
+
+          // Save the calculation to history
+          try {
+              await savePastCalculation(data);
+              console.log("Calculation saved to history");
+          } catch (saveErr) {
+              console.error("Failed to save calculation to history:", saveErr);
+              // Don't show this error to user since the calculation itself succeeded
+          }
       } catch (err) {
           console.error(err);
+          setError(err.message || "Something went wrong with the calculation");
+      } finally {
+          setLoading(false);
       }
 
   };
@@ -72,7 +110,16 @@ export default function TariffCalc() {
     'CN': 'China', 'JP': 'Japan'
   };
   return countries[code] || code;
-};
+};  
+  const fmt = (v) => Number(v || 0).toFixed(2);
+  const fmtDate = (iso) => {
+    if (!iso) return "-";
+    try {
+      return new Date(iso).toLocaleString();
+    } catch {
+      return iso;
+    }
+  };
 
   return (
     <div className="calc-wrapper">
@@ -161,6 +208,28 @@ export default function TariffCalc() {
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder="Enter quantity"
+            />
+          </div>
+        {/* new time window */}
+          <div className="form-row">
+            <label>From:</label>
+            <input
+              type="datetime-local"
+              value={calculationFrom}
+              onChange={(e) => setFrom(e.target.value)}
+              placeholder="Select Start Date"
+              required
+            />
+          </div>
+
+          <div className="form-row">
+            <label>To:</label>
+            <input
+              type="datetime-local"
+              value={calculationTo}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder="Select End Date"
+              required
             />
           </div>
 
@@ -253,6 +322,27 @@ export default function TariffCalc() {
                   <span>${Number(result.breakdown.totalPrice || 0).toFixed(2)}</span>
                 </div>
               </div>
+            </div>
+            
+            <div className="breakdown-section">
+              <h3>Tariff(s) Applied</h3>
+              {result.segments?.length ? (
+                <ul className="segments-list">
+                  {result.segments.map((s, idx) => (
+                    <li key={idx} className="segment-chip">
+                      <strong>{s.label || (s.source === "override" ? "Route Override" : "Default rate")}</strong>
+                      {" — "}
+                      {Number(s.ratePercent || 0).toFixed(2)}%
+                      {" "}
+                      <span className="muted">
+                        ({fmtDate(s.from)} → {fmtDate(s.to)})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">No tariff segments overlapped this period.</p>
+              )}
             </div>
 
             {/* Action Buttons */}
