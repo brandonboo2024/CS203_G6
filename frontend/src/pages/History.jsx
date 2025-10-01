@@ -20,19 +20,49 @@ export default function History() {
   };
 
   // Sample past calculations
-  const historyData = [
-    { date: "13/09/25", route: "CN → SG", product: "Electronics", total: "$2,458.00" },
-    { date: "02/09/25", route: "VN → SG", product: "Textiles", total: "$1,245.00" },
-    { date: "30/08/25", route: "US → SG", product: "Machinery", total: "$8,567.00" },
-    { date: "29/08/25", route: "CN → SG", product: "Electronics", total: "$100.00" },
-  ];
+  // const historyData = [
+  //   { date: "13/09/25", route: "CN → SG", product: "Electronics", total: "$2,458.00" },
+  //   { date: "02/09/25", route: "VN → SG", product: "Textiles", total: "$1,245.00" },
+  //   { date: "30/08/25", route: "US → SG", product: "Machinery", total: "$8,567.00" },
+  //   { date: "29/08/25", route: "CN → SG", product: "Electronics", total: "$100.00" },
+  // ];
 
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Default selected product: electronics
+  // Local history (from localStorage)
+  const [historyData, setHistoryData] = useState([]);
+
+  const productLabel = (code) => {
+    const map = {
+      electronics: "Electronics",
+      clothing: "Clothing",
+      furniture: "Furniture",
+      food: "Food",
+      books: "Books",
+      toys: "Toys",
+      tools: "Tools",
+      beauty: "Beauty Products",
+      sports: "Sports Equipment",
+      automotive: "Automotive Parts",
+    };
+    return map[code] || code;
+  };
+
+  const fmtShortDate = (iso) => {
+    try {
+      // dd/MM/yy (en-GB) to match your UI
+      return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "2-digit" });
+    } catch {
+      return iso ?? "-";
+    }
+  };
+
+  // Filters for country
   const [graphFilters, setGraphFilters] = useState({
     productCode: "electronics",
+    originCountry: "",
+    destCountry: "",
     startDate: "2020-01-01",
     endDate: new Date().toISOString().split("T")[0],
   });
@@ -42,6 +72,12 @@ export default function History() {
     "furniture", "sports", "tools", "toys",
   ];
 
+  const countryOptions = [
+    "AU", "BR", "CA", "CN", "DE", "ES", "FR", "GB", "IN",
+    "IT", "JP", "KR", "MX", "MY", "PH", "RU", "SG", "TH",
+    "US", "VN", "ZA",
+  ];
+  
   // Fetch historical tariff data
   const fetchHistoricalData = async () => {
     try {
@@ -51,9 +87,7 @@ export default function History() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(graphFilters),
       });
-
       if (!response.ok) throw new Error("Failed to fetch data");
-
       const result = await response.json();
       setHistoricalData(Array.isArray(result) ? result : result.data || []);
     } catch (err) {
@@ -68,51 +102,107 @@ export default function History() {
     fetchHistoricalData();
   }, [graphFilters]);
 
-  // Format chart data and clip by start/end filter dates
+  useEffect(() => {
+    fetchHistoricalData();
+  }, [graphFilters]);
+
+  // add this as a separate effect (anywhere at top level in the component)
+  useEffect(() => {
+    const load = () => {
+      const raw = localStorage.getItem("calcHistory");
+      const rows = JSON.parse(raw || "[]");
+      setHistoryData(rows);
+    };
+    load();
+
+    // updates if another tab writes to localStorage
+    const onStorage = (e) => {
+      if (e.key === "calcHistory") load();
+    };
+    window.addEventListener("storage", onStorage);
+
+    // optional: also refresh when the tab regains focus (same-tab updates)
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []); // <- empty deps
+
+
+  // Format chart data
   const formatChartData = () => {
     if (!Array.isArray(historicalData) || historicalData.length === 0) return [];
-
+  
     const formatted = {};
     const globalStart = new Date(graphFilters.startDate);
     const globalEnd = new Date(graphFilters.endDate);
-
+  
     historicalData.forEach((entry) => {
       const from = new Date(entry.valid_from);
       const to = entry.valid_to ? new Date(entry.valid_to) : globalEnd;
-
+  
       // Skip entries completely outside the filter range
       if (to < globalStart || from > globalEnd) return;
-
+  
+      // Filter by product, origin, and destination
+      if (graphFilters.productCode && entry.product_code !== graphFilters.productCode) return;
+      if (graphFilters.originCountry && entry.origin_country !== graphFilters.originCountry) return;
+      if (graphFilters.destCountry && entry.dest_country !== graphFilters.destCountry) return;
+  
       const key =
         entry.origin_country && entry.dest_country
           ? `${entry.product_code} (${entry.origin_country}→${entry.dest_country})`
           : entry.product_code;
-
-      // Clip start and end to filter range
+  
       const start = from < globalStart ? globalStart : from;
       const end = to > globalEnd ? globalEnd : to;
-
+  
       const startLabel = start.toLocaleDateString("en-GB");
       if (!formatted[startLabel]) formatted[startLabel] = { date: startLabel };
       formatted[startLabel][key] = entry.rate_percent;
-
+  
       const endLabel = end.toLocaleDateString("en-GB");
       if (!formatted[endLabel]) formatted[endLabel] = { date: endLabel };
       formatted[endLabel][key] = entry.rate_percent;
     });
-
+  
     return Object.values(formatted).sort((a, b) => {
       const aDate = new Date(a.date.split("/").reverse().join("-"));
       const bDate = new Date(b.date.split("/").reverse().join("-"));
       return aDate - bDate;
     });
   };
+  
 
   const chartData = formatChartData();
 
+  // CSV export
+  const exportToCSV = () => {
+    if (chartData.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+    const headers = ["Date", ...Object.keys(chartData[0]).filter((k) => k !== "date")];
+    const rows = chartData.map((row) =>
+      [row.date, ...headers.slice(1).map((h) => row[h] ?? "")].join(",")
+    );
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "tariff_history.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="history-wrapper">
-      {/* Summary */}
+      {/* Summary
       <div className="card summary-card">
         <h2>Summary</h2>
         <ul>
@@ -120,18 +210,18 @@ export default function History() {
           <li><span>Average Cost:</span> {summary.avgCost}</li>
           <li><span>Total Saved:</span> {summary.saved}</li>
         </ul>
-      </div>
+      </div> */}
 
       {/* Tariff History Graph */}
       <div className="card">
         <h2>Tariff Rate History</h2>
         <p>Visualize how tariff rates have changed over time</p>
 
-        {/* Graph Filters */}
+        {/* Filters */}
         <div className="filter-bar">
           <span className="filter-label">Graph Filters:</span>
           <div className="filter-actions">
-            {/* Product Dropdown (no "All Products") */}
+            {/* Product */}
             <select
               value={graphFilters.productCode}
               onChange={(e) =>
@@ -145,6 +235,33 @@ export default function History() {
               ))}
             </select>
 
+            {/* Origin Country */}
+            <select
+              value={graphFilters.originCountry}
+              onChange={(e) =>
+                setGraphFilters({ ...graphFilters, originCountry: e.target.value })
+              }
+            >
+              <option value="">All Origins</option>
+              {countryOptions.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            {/* Destination Country */}
+            <select
+              value={graphFilters.destCountry}
+              onChange={(e) =>
+                setGraphFilters({ ...graphFilters, destCountry: e.target.value })
+              }
+            >
+              <option value="">All Destinations</option>
+              {countryOptions.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+
+            {/* Date filters */}
             <input
               type="date"
               value={graphFilters.startDate}
@@ -196,6 +313,9 @@ export default function History() {
             </LineChart>
           </ResponsiveContainer>
         )}
+
+        {/* Export CSV */}
+        <button onClick={exportToCSV} className="export-btn">Export CSV</button>
       </div>
 
       {/* History Table */}
@@ -211,16 +331,31 @@ export default function History() {
             </tr>
           </thead>
           <tbody>
-            {historyData.map((row, idx) => (
-              <tr key={idx}>
-                <td>{row.date}</td>
-                <td>{row.route}</td>
-                <td>{row.product}</td>
-                <td>{row.total}</td>
-              </tr>
-            ))}
+            {historyData.length === 0 ? (
+              <tr><td colSpan="4" style={{ textAlign: "center" }}>No calculations yet.</td></tr>
+            ) : (
+              historyData.map((row, idx) => (
+                <tr key={idx}>
+                  <td>
+                    {fmtShortDate(row.createdAt)}
+                    <div className="muted" style={{ fontSize: "0.8em" }}>
+                      {fmtShortDate(row.tariffFrom)} → {fmtShortDate(row.tariffTo)}
+                    </div>
+                  </td>
+                  <td>{row.route}</td>
+                  <td>{productLabel(row.product)}</td>
+                  <td>${Number(row.total || 0).toFixed(2)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
+        <button
+          className="secondary-btn"
+          onClick={() => { localStorage.removeItem("calcHistory"); setHistoryData([]); }}
+        >
+          Clear History
+        </button>
       </div>
     </div>
   );
