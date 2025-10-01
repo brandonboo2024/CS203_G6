@@ -44,8 +44,6 @@ export default function History() {
   ];
 
   const countryOptions = [
-    'SG', 'US', 'MY', 'TH', 'VN', 'ID', 'PH', 'KR',
-    'IN', 'AU', 'GB', 'DE', 'FR', 'IT', 'ES', 'CA',
     "AU", "BR", "CA", "CN", "DE", "ES", "FR", "GB", "IN",
     "IT", "JP", "KR", "MX", "MY", "PH", "RU", "SG", "TH",
     "US", "VN", "ZA",
@@ -77,17 +75,13 @@ export default function History() {
     fetchPastCalculations();
   }, []);
 
-    "AU", "BR", "CA", "CN", "DE", "ES", "FR", "GB", "IN",
-    "IT", "JP", "KR", "MX", "MY", "PH", "RU", "SG", "TH",
-    "US", "VN", "ZA",
-  ];
   
   // Fetch historical tariff data
   const fetchHistoricalData = async () => {
     try {
       setLoading(true);
       console.log('Fetching with filters:', graphFilters);
-      const response = await fetch(`${API_BASE_URL}/api/calculations/tariff-history`, {
+      const response = await fetch(`${API_BASE_URL}/api/calculations/history`, {
         method: "POST",
         headers: getHeaders(),
         body: JSON.stringify(graphFilters),
