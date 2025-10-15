@@ -82,22 +82,30 @@ export default function TariffCalc() {
               segments,
               window : {from: request.calculationFrom, to: calculationTo},
           });
-
-          // Save the calculation to history
-          try {
-              await savePastCalculation(data);
-              console.log("Calculation saved to history");
-          } catch (saveErr) {
-              console.error("Failed to save calculation to history:", saveErr);
-              // Don't show this error to user since the calculation itself succeeded
-          }
+          // ---- SAVE SIMPLE HISTORY (localStorage) ----
+          // keep newest first, max 50 rows
+          const historyEntry = {
+            // ISO so we can format later
+            createdAt: new Date().toISOString(),
+            // store codes (what you already use in UI)
+            route: `${fromCountry} → ${toCountry}`,
+            product: product, // e.g. "electronics"
+            total: Number((breakdown.totalPrice ?? 0)),
+            // the tariff window used for this calc
+            tariffFrom: request.calculationFrom,
+            tariffTo:   request.calculationTo,
+          };
+          const prev = JSON.parse(localStorage.getItem("calcHistory") || "[]");
+          prev.unshift(historyEntry);
+          const trimmed = prev.slice(0, 50);
+          localStorage.setItem("calcHistory", JSON.stringify(trimmed));
+          // --------------------------------------------
       } catch (err) {
           console.error(err);
-          setError(err.message || "Something went wrong with the calculation");
-      } finally {
+          setError(err.message || "Something went wrong idk tho");
+      }finally{
           setLoading(false);
       }
-
   };
   // helper function to get country names
   const getCountryName = (code) => {

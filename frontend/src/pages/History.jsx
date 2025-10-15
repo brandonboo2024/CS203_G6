@@ -25,11 +25,47 @@ export default function History() {
   const [pastCalculations, setPastCalculations] = useState([]);
   const [calculationsLoading, setCalculationsLoading] = useState(true);
   const [calculationsError, setCalculationsError] = useState(null);
+  // Sample past calculations
+  // const historyData = [
+  //   { date: "13/09/25", route: "CN → SG", product: "Electronics", total: "$2,458.00" },
+  //   { date: "02/09/25", route: "VN → SG", product: "Textiles", total: "$1,245.00" },
+  //   { date: "30/08/25", route: "US → SG", product: "Machinery", total: "$8,567.00" },
+  //   { date: "29/08/25", route: "CN → SG", product: "Electronics", total: "$100.00" },
+  // ];
 
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Default selected product: electronics
+  // Local history (from localStorage)
+  const [historyData, setHistoryData] = useState([]);
+
+  const productLabel = (code) => {
+    const map = {
+      electronics: "Electronics",
+      clothing: "Clothing",
+      furniture: "Furniture",
+      food: "Food",
+      books: "Books",
+      toys: "Toys",
+      tools: "Tools",
+      beauty: "Beauty Products",
+      sports: "Sports Equipment",
+      automotive: "Automotive Parts",
+    };
+    return map[code] || code;
+  };
+
+  const fmtShortDate = (iso) => {
+    try {
+      // dd/MM/yy (en-GB) to match your UI
+      return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "2-digit" });
+    } catch {
+      return iso ?? "-";
+    }
+  };
+
+  // Filters for country
   const [graphFilters, setGraphFilters] = useState({
     productCode: "electronics",
     originCountry: "",
@@ -107,6 +143,36 @@ export default function History() {
   useEffect(() => {
     fetchHistoricalData();
   }, [graphFilters]);
+
+  useEffect(() => {
+    fetchHistoricalData();
+  }, [graphFilters]);
+
+  // add this as a separate effect (anywhere at top level in the component)
+  useEffect(() => {
+    const load = () => {
+      const raw = localStorage.getItem("calcHistory");
+      const rows = JSON.parse(raw || "[]");
+      setHistoryData(rows);
+    };
+    load();
+
+    // updates if another tab writes to localStorage
+    const onStorage = (e) => {
+      if (e.key === "calcHistory") load();
+    };
+    window.addEventListener("storage", onStorage);
+
+    // optional: also refresh when the tab regains focus (same-tab updates)
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []); // <- empty deps
+
 
   // Format chart data
   const formatChartData = () => {
@@ -299,40 +365,42 @@ export default function History() {
 
       {/* Past Calculations */}
       <div className="card">
-        <h2>Your Past Calculations</h2>
-        {calculationsLoading ? (
-          <div className="loading">Loading your calculations...</div>
-        ) : calculationsError ? (
-          <div className="error">{calculationsError}</div>
-        ) : pastCalculations.length === 0 ? (
-          <p>No calculations found. Try making some calculations first!</p>
-        ) : (
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Item Price</th>
-                <th>Tariff Rate</th>
-                <th>Total Fees</th>
-                <th>Total Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pastCalculations.map((calc) => (
-                <tr key={calc.id}>
-                  <td>{new Date(calc.calculationTime).toLocaleDateString()}</td>
-                  <td>${calc.itemPrice.toFixed(2)}</td>
-                  <td>{calc.tariffRate.toFixed(2)}%</td>
+        <h2>Past Calculations</h2>
+        <table className="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Route</th>
+              <th>Product</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {historyData.length === 0 ? (
+              <tr><td colSpan="4" style={{ textAlign: "center" }}>No calculations yet.</td></tr>
+            ) : (
+              historyData.map((row, idx) => (
+                <tr key={idx}>
                   <td>
-                    ${(calc.handlingFee + calc.inspectionFee + 
-                       calc.processingFee + calc.otherFees).toFixed(2)}
+                    {fmtShortDate(row.createdAt)}
+                    <div className="muted" style={{ fontSize: "0.8em" }}>
+                      {fmtShortDate(row.tariffFrom)} → {fmtShortDate(row.tariffTo)}
+                    </div>
                   </td>
-                  <td>${calc.totalPrice.toFixed(2)}</td>
+                  <td>{row.route}</td>
+                  <td>{productLabel(row.product)}</td>
+                  <td>${Number(row.total || 0).toFixed(2)}</td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
+        <button
+          className="secondary-btn"
+          onClick={() => { localStorage.removeItem("calcHistory"); setHistoryData([]); }}
+        >
+          Clear History
+        </button>
       </div>
     </div>
   );
