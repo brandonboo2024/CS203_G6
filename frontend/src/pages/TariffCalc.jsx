@@ -16,6 +16,7 @@ export default function TariffCalc() {
   });
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const toggleFee = (key) => {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
