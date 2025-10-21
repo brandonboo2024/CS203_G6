@@ -1,7 +1,21 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 export default function App() {
   const navigate = useNavigate();
+
+  const token = localStorage.getItem("token");
+  let isAdmin = false;
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      // Assuming your JWT payload looks like { sub: "user", role: "ADMIN" }
+      isAdmin = decoded.role === "ADMIN";
+    } catch (err) {
+      console.error("Invalid token:", err);
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // clear JWT
@@ -24,6 +38,8 @@ export default function App() {
         <Link to="/history">History</Link>
         <Link to="/simulation">Simulation</Link>
         <Link to="/profile">Profile</Link>
+
+        {isAdmin && <Link to="/admin/tariffs">Admin</Link>}
 
         <div style={{ marginLeft: "auto" }}>
           {localStorage.getItem("token") ? (
