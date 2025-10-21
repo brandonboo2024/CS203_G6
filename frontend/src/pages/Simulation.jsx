@@ -9,19 +9,31 @@ import {
   CartesianGrid,
 } from "recharts";
 
-export default function Compare() {
+export default function Simulation() {
+  // --- Simulation state ---
+  const [baseTariff, setBaseTariff] = useState({
+    origin: "US",
+    destination: "SG",
+    product: "Electronics",
+    rate: 10,
+    quantity: 100,
+    unitPrice: 50,
+  });
+  const [newRate, setNewRate] = useState(baseTariff.rate);
+  const [simResult, setSimResult] = useState(null);
+
+  // --- Comparison state ---
   const [filters, setFilters] = useState({
     productCode: "electronics",
     destCountry: "ALL",
     date: new Date().toISOString().split("T")[0],
   });
-
   const [compareData, setCompareData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const productOptions = [
-    "automotive", "beauty", "books", "clothing", "electronics",
-    "food", "furniture", "sports", "tools", "toys",
+    "automotive","beauty","books","clothing","electronics",
+    "food","furniture","sports","tools","toys",
   ];
 
   const countryOptions = [
@@ -30,10 +42,23 @@ export default function Compare() {
     "US","VN","ZA",
   ];
 
+  // --- Handlers ---
+  const handleSimulate = (e) => {
+    e.preventDefault();
+    const originalTotal = baseTariff.quantity * baseTariff.unitPrice * (1 + baseTariff.rate / 100);
+    const simulatedTotal = baseTariff.quantity * baseTariff.unitPrice * (1 + newRate / 100);
+
+    setSimResult({
+      originalTotal,
+      simulatedTotal,
+      difference: simulatedTotal - originalTotal,
+      percentChange: ((simulatedTotal - originalTotal) / originalTotal) * 100,
+    });
+  };
+
   const handleCompare = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tariff/history`, {
         method: "POST",
@@ -68,7 +93,50 @@ export default function Compare() {
 
   return (
     <div className="page">
-      <h2>Compare Tariffs</h2>
+      {/* --- Simulation Form --- */}
+      <h2>Tariff Simulation</h2>
+      <form onSubmit={handleSimulate} className="calc-form">
+        <div className="form-row">
+          <label>Origin:</label>
+          <input type="text" value={baseTariff.origin} disabled />
+        </div>
+        <div className="form-row">
+          <label>Destination:</label>
+          <input type="text" value={baseTariff.destination} disabled />
+        </div>
+        <div className="form-row">
+          <label>Product:</label>
+          <input type="text" value={baseTariff.product} disabled />
+        </div>
+        <div className="form-row">
+          <label>Base Rate %:</label>
+          <input type="number" value={baseTariff.rate} disabled />
+        </div>
+        <div className="form-row">
+          <label>New Rate %:</label>
+          <input
+            type="number"
+            value={newRate}
+            onChange={(e) => setNewRate(Number(e.target.value))}
+          />
+        </div>
+        <button type="submit">Run Simulation</button>
+      </form>
+
+      {simResult && (
+        <div className="result-box">
+          <h2 style={{ color: "#fff" }}>Simulation Result</h2>
+          <p>Original Total: ${simResult.originalTotal.toFixed(2)}</p>
+          <p>Simulated Total: ${simResult.simulatedTotal.toFixed(2)}</p>
+          <p>
+            Change: {simResult.difference.toFixed(2)} (
+            {simResult.percentChange.toFixed(2)}%)
+          </p>
+        </div>
+      )}
+
+      {/* --- Comparison Form --- */}
+      <h2 style={{ marginTop: "3rem" }}>Compare Tariffs</h2>
       <p>
         Find which origin country offers the lowest tariff rate for your selected product and destination.
       </p>
@@ -117,7 +185,7 @@ export default function Compare() {
         <div className="result-box">Loading comparison...</div>
       ) : compareData.length > 0 ? (
         <div className="result-box">
-          <h2>Comparison Results</h2>
+          <h2 style={{ color: "#fff" }}>Comparison Results</h2>
           <div className="chart-wrapper">
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
@@ -170,7 +238,7 @@ export default function Compare() {
           </table>
         </div>
       ) : (
-        <div className="result-box">No data found for the selected filters.</div>
+        compareData.length === 0 && <div className="result-box">No data found for the selected filters.</div>
       )}
     </div>
   );
