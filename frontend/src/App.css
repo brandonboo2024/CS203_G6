@@ -201,9 +201,12 @@ button:hover {
   padding: 1rem;
   border: 2px dashed var(--accent);
   border-radius: 8px;
-  background: #fff7f0;
+  background: var(--bg-card-alt); /* dark background instead of white */
+  color: var(--text-light);
 }
-.result-box h2 { margin: 0; color: #000; }
+.result-box h2 {
+  color: #fff; 
+}
 .result-box p { font-size: 1.2rem; font-weight: bold; color: var(--accent); }
 
 /* =========================
@@ -367,6 +370,13 @@ button:hover {
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
 }
+
+.chart-wrapper {
+  background: var(--bg-card-alt);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
 
 /* Main Total Cost Card */
 .total-cost-card {
