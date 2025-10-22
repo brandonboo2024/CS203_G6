@@ -1,6 +1,7 @@
 package com.example.tariffkey.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import com.example.tariffkey.model.*;
 import com.example.tariffkey.service.*;
 import com.example.tariffkey.security.*;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/auth")
@@ -19,9 +22,15 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody RegisterRequest req) {
-        User newUser = userService.registerUser(req.getUsername(), req.getEmail(), req.getPassword());
-        return ResponseEntity.ok(newUser); // newUser has joinedAt
+    public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+        try {
+            User newUser = userService.registerUser(req.getUsername(), req.getEmail(), req.getPassword());
+            return ResponseEntity.ok(newUser); // newUser has joinedAt
+        } catch (RuntimeException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        }
     }
 
     @PostMapping("/login")

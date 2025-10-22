@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "../App.css";
+import { validateFileUpload } from "../utils/inputValidation";
 
 export default function Profile() {
   const [user, setUser] = useState({
@@ -10,10 +11,20 @@ export default function Profile() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [newAvatar, setNewAvatar] = useState(null);
+  const [fileError, setFileError] = useState(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    setFileError(null);
+    
     if (file) {
+      // Validate file before processing
+      const validation = validateFileUpload(file);
+      if (!validation.isValid) {
+        setFileError(validation.errors.join(', '));
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onloadend = () => {
         setNewAvatar(reader.result); // temp preview before saving
@@ -81,6 +92,19 @@ export default function Profile() {
             {isEditing && (
               <>
                 <input type="file" accept="image/*" onChange={handleFileChange} />
+                {fileError && (
+                  <div style={{ 
+                    color: '#d32f2f', 
+                    fontSize: '0.9rem', 
+                    marginTop: '0.5rem',
+                    padding: '0.5rem',
+                    backgroundColor: '#ffebee',
+                    border: '1px solid #f44336',
+                    borderRadius: '4px'
+                  }}>
+                    {fileError}
+                  </div>
+                )}
                 <button onClick={handleSave} style={{ marginTop: "1rem" }}>Save</button>
               </>
             )}
