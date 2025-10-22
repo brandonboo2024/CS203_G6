@@ -9,6 +9,7 @@ import Profile from "./pages/Profile.jsx";
 import Register from "./pages/RegisterPage.jsx";
 import History from "./pages/History.jsx";
 import Simulation from "./pages/Simulation.jsx";  
+import AdminTariffPage from "./pages/AdminTariffPage.jsx";
 
 import "./index.css";
 
@@ -69,6 +70,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Simulation />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/tariffs",
+        element: (
+          <ProtectedRoute>
+            <AdminTariffPage />
           </ProtectedRoute>
         ),
       },
