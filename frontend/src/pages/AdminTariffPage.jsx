@@ -10,10 +10,10 @@ export default function AdminTariffPage() {
     destinationCountry: "",
     rate: "",
   });
+  const [popup, setPopup] = useState({ show: false, message: "", type: "" });
 
   const API_BASE = "http://localhost:8080/api/tariff";
 
-  // ✅ Fetch tariffs when component loads
   useEffect(() => {
     fetchTariffs();
   }, []);
@@ -29,6 +29,11 @@ export default function AdminTariffPage() {
     }
   };
 
+  const showPopup = (message, type = "success") => {
+    setPopup({ show: true, message, type });
+    setTimeout(() => setPopup({ show: false, message: "", type: "" }), 2000);
+  };
+
   const handleAdd = async (e) => {
     e.preventDefault();
     if (
@@ -37,7 +42,7 @@ export default function AdminTariffPage() {
       !newTariff.destinationCountry.trim() ||
       !newTariff.rate
     ) {
-      alert("⚠️ Please fill in all fields!");
+      alert("Please fill in all fields!");
       return;
     }
 
@@ -59,10 +64,12 @@ export default function AdminTariffPage() {
         destinationCountry: "",
         rate: "",
       });
-      alert("✅ Tariff added successfully!");
+
+      // show success popup
+      showPopup("Tariff added successfully!", "success");
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to add tariff");
+      showPopup("Failed to add tariff", "error");
     }
   };
 
@@ -73,17 +80,27 @@ export default function AdminTariffPage() {
       const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete tariff");
       await fetchTariffs();
+
+      // show delete popup
+      showPopup("Tariff deleted successfully!", "delete");
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to delete tariff");
+      showPopup("Failed to delete tariff", "error");
     }
   };
 
   return (
     <div className="page">
+      {/* Reusable popup */}
+      {popup.show && (
+        <div className={`popup ${popup.type}`}>
+          {popup.message}
+        </div>
+      )}
+
       <h1 style={{ color: "var(--accent)" }}>Admin Tariff Management</h1>
 
-      {/* ✅ Add Form */}
+      {/* Add Form */}
       <form
         className="card"
         onSubmit={handleAdd}
@@ -91,7 +108,6 @@ export default function AdminTariffPage() {
       >
         <h2>Add New Tariff</h2>
 
-        {/* ✅ Shared dropdown components */}
         <ProductDropdown
           value={newTariff.product}
           onChange={(value) => setNewTariff({ ...newTariff, product: value })}
@@ -113,7 +129,6 @@ export default function AdminTariffPage() {
           }
         />
 
-        {/* Tariff rate input */}
         <div className="form-row">
           <label>Rate (%):</label>
           <input
@@ -130,7 +145,7 @@ export default function AdminTariffPage() {
         <button type="submit">Add Tariff</button>
       </form>
 
-      {/* ✅ Tariff Table */}
+      {/* Tariff Table */}
       <div
         className="card"
         style={{ marginTop: "2rem", width: "100%", maxWidth: "800px" }}
