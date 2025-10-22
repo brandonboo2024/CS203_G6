@@ -1,9 +1,7 @@
 package com.example.tariffkey.model;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,7 +27,7 @@ public class User {
     private String passwordHash;
 
     @Builder.Default
-    private String role = "USER";   // default role
+    private String role = "ROLE_USER";   // default role
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
