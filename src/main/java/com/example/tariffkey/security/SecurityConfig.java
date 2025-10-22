@@ -39,13 +39,11 @@ public class SecurityConfig {
         return source;
     }
 
-    // BCrypt encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Link user service + encoder to Spring Security
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -54,7 +52,6 @@ public class SecurityConfig {
         return provider;
     }
 
-    // Security chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -64,10 +61,12 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                // Temporarily allow tariff routes for testing
-                .requestMatchers("/api/tariff/**").permitAll()
-                // Everything else must be authenticated
-                .anyRequest().authenticated()
+
+                // Only ADMIN can access any other endpoints
+                .requestMatchers("/api/**").hasRole("ADMIN")
+
+                // Any other request is denied by default
+                .anyRequest().denyAll()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
