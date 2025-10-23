@@ -13,6 +13,7 @@ export default function AdminTariffPage() {
   const [popup, setPopup] = useState({ show: false, message: "", type: "" });
 
   const API_BASE = "http://localhost:8080/api/tariff";
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchTariffs();
@@ -20,7 +21,12 @@ export default function AdminTariffPage() {
 
   const fetchTariffs = async () => {
     try {
-      const res = await fetch(`${API_BASE}/all`);
+      const res = await fetch(`${API_BASE}/all`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
       if (!res.ok) throw new Error("Failed to fetch tariffs");
       const data = await res.json();
       setTariffs(data);
@@ -48,13 +54,16 @@ export default function AdminTariffPage() {
 
     try {
       const res = await fetch(`${API_BASE}/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...newTariff,
-          rate: parseFloat(newTariff.rate),
-        }),
-      });
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        ...newTariff,
+        rate: parseFloat(newTariff.rate),
+      }),
+    });
 
       if (!res.ok) throw new Error("Failed to add tariff");
       await fetchTariffs();
@@ -77,7 +86,13 @@ export default function AdminTariffPage() {
     if (!window.confirm("Are you sure you want to delete this tariff?")) return;
 
     try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ ADD THIS
+      },
+    });
+
       if (!res.ok) throw new Error("Failed to delete tariff");
       await fetchTariffs();
 

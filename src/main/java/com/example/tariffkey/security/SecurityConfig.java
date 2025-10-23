@@ -63,7 +63,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
 
                 // Only ADMIN can access any other endpoints
-                .requestMatchers("/api/**").hasRole("ADMIN")
+                .requestMatchers("/api/tariff/**").hasAuthority("ADMIN")
 
                 // Any other request is denied by default
                 .anyRequest().denyAll()

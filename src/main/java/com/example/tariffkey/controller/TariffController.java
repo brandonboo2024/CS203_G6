@@ -51,6 +51,6 @@ public class TariffController {
 
     @GetMapping
     public String testEndpoint() {
-        return "TariffController active ✅";
+        return "TariffController active";
     }
 }
