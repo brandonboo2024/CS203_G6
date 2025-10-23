@@ -61,7 +61,7 @@ class SecurityTests {
 
     // Test 5: Admin user should be allowed
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", authorities = {"ADMIN"})
     void adminCanAccessProtectedApi() throws Exception {
         mockMvc.perform(get("/api/tariff"))
                 .andExpect(status().isOk());
