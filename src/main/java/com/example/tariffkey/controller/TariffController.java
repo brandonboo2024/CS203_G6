@@ -48,4 +48,9 @@ public class TariffController {
     public void deleteTariff(@PathVariable int id) {
         tariffService2.deleteTariff(id);
     }
+
+    @GetMapping
+    public String testEndpoint() {
+        return "TariffController active";
+    }
 }
