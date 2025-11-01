@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "../App.css";
+import { validateForm, sanitizeInput } from "../utils/inputValidation";
 
 // ✅ import your new shared components
 import CountryDropdown from "../components/CountryDropdown.jsx";
@@ -20,6 +21,8 @@ export default function TariffCalc() {
   });
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const toggleFee = (key) => {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -29,6 +32,53 @@ export default function TariffCalc() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setValidationErrors({});
+    
+    // Validate form data
+    const formData = {
+      fromCountry,
+      toCountry,
+      product,
+      quantity,
+      calculationFrom,
+      calculationTo
+    };
+    
+    const validation = validateForm(formData, 'tariff');
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setLoading(false);
+      return;
+    }
+    
+    if(!calculationFrom || !calculationTo){
+        setError("Please select both start and end date/time.");
+        setLoading(false);
+        return;
+    }
+    const fromDate = new Date(calculationFrom);
+    const toDate = new Date(calculationTo);
+    if(fromDate > toDate){
+        setError("End date/time must be after start date/time.");
+        setLoading(false);
+        return;
+    }
+    
+    // Sanitize inputs before sending
+    const request = {
+        fromCountry: sanitizeInput(fromCountry),
+        toCountry: sanitizeInput(toCountry),
+        product: sanitizeInput(product),
+        quantity: parseInt(quantity),
+        handling: fees.handling,
+        inspection: fees.inspection,
+        processing: fees.processing,
+        others: fees.others,
+        calculationFrom: toIso(calculationFrom),
+        calculationTo: toIso(calculationTo),
+    };
 
     if (!calculationFrom || !calculationTo) {
       setError("Please select both start and end date/time.");
@@ -219,8 +269,38 @@ export default function TariffCalc() {
             </div>
           </div>
 
-          <button type="submit">Calculate</button>
+
+          <button type="submit" disabled={loading}>
+            {loading ? 'Calculating...' : 'Calculate'}
+          </button>
         </form>
+
+        {/* Display validation errors */}
+        {Object.keys(validationErrors).length > 0 && (
+          <div className="validation-errors" style={{ 
+            marginTop: '1rem', 
+            padding: '1rem', 
+            backgroundColor: '#ffebee', 
+            border: '1px solid #f44336', 
+            borderRadius: '4px' 
+          }}>
+            <h4 style={{ color: '#d32f2f', margin: '0 0 0.5rem 0' }}>Please fix the following errors:</h4>
+            {Object.entries(validationErrors).map(([field, errors]) => (
+              <div key={field} style={{ marginBottom: '0.5rem' }}>
+                <strong style={{ textTransform: 'capitalize', color: '#d32f2f' }}>
+                  {field.replace(/([A-Z])/g, ' $1').trim()}:
+                </strong>
+                <ul style={{ margin: '0.25rem 0 0 1rem', padding: 0 }}>
+                  {errors.map((error, index) => (
+                    <li key={index} style={{ color: '#d32f2f', fontSize: '0.9rem' }}>
+                      {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
 
         {result && (
           <div className="results-wrapper">
