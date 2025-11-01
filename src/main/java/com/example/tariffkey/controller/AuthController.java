@@ -12,6 +12,7 @@ import com.example.tariffkey.security.*;
 import java.util.Map;
 import java.util.HashMap;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -36,14 +37,22 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
         authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword()));
+                new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
+        );
 
         User user = userService.findByUsername(req.getUsername());
-        String token = jwtService.generateToken(user);
+        var userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPasswordHash())
+                .authorities(user.getRole())
+                .build();
+
+        String token = jwtService.generateToken(userDetails);
 
         return ResponseEntity.ok(new LoginResponse(
                 token,
                 user.getUsername(),
-                user.getEmail()));
+                user.getEmail()
+        ));
     }
 }

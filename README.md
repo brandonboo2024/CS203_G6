@@ -25,3 +25,8 @@ To test remotely:
 5. try npm install in frontend folder if missing dependencies
 6. If failing to build the backend, try ./mvnw clean package first (NOT ./mvnw clean)
 
+Flyway Error:
+- If backend has issue with the database due to Flyway, might need to repair, run:
+**mvn -Dflyway.url=jdbc:postgresql://localhost:5433/tariffs -Dflyway.user=dev -Dflyway.password=devpass flyway:repair**
+
+

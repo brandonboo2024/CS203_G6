@@ -44,12 +44,20 @@ export default function Login() {
       }
 
       const data = await res.json();
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("username", data.username);
-      localStorage.setItem("email", data.email);
 
-      // Redirect to dashboard immediately
-      navigate("/dashboard");
+      // Store all useful fields locally
+      localStorage.setItem("token", data.token);        // <-- the JWT
+      localStorage.setItem("username", data.username);  // optional
+      localStorage.setItem("email", data.email);        // optional
+      if (data.role) localStorage.setItem("role", data.role); // if backend returns it
+
+      // Redirect based on user role (optional)
+      if (data.role === "ADMIN") {
+        navigate("/admin/tariffs");
+      } else {
+        navigate("/dashboard");
+      }
+
     } catch (err) {
       alert("Invalid username or password"); // Show error message
     } finally {
