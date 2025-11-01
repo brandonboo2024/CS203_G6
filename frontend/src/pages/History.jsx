@@ -82,9 +82,11 @@ export default function History() {
   const fetchHistoricalData = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem("token");
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tariff/history`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`},
         body: JSON.stringify(graphFilters),
       });
       if (!response.ok) throw new Error("Failed to fetch data");

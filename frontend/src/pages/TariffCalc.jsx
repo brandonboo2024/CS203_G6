@@ -56,12 +56,16 @@ export default function TariffCalc() {
     };
 
     try {
+      const token = localStorage.getItem("token");
+      localStorage.getItem("token")         // is it non-null?
+      console.log(atob(localStorage.getItem("token").split('.')[1])); // check roles/authorities in payload     
       console.log("Submitting:", request);
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/api/tariff/calculate`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`},
           body: JSON.stringify(request),
         }
       );
