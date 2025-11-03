@@ -158,9 +158,12 @@ export default function TariffCalc() {
       prev.unshift(historyEntry);
       const trimmed = prev.slice(0, 50);
       localStorage.setItem("calcHistory", JSON.stringify(trimmed));
+      
+      setLoading(false);
     } catch (err) {
       console.error(err);
       setError(err.message || "Something went wrong.");
+      setLoading(false);
     }
   };
 
@@ -302,22 +305,226 @@ export default function TariffCalc() {
           </div>
         )}
 
-        {result && (
-          <div className="results-wrapper">
-            <h2>Results</h2>
-            <div className="total-cost-card">
-              <div className="total-label">Total Import Cost</div>
-              <div className="total-amount">
-                ${Number(result.breakdown.totalPrice || 0).toFixed(2)}
+        {result && (() => {
+          // Calculate total based on only selected fees
+          const calculatedTotal = 
+            Number(result.breakdown.itemPrice || 0) +
+            Number(result.breakdown.tariffAmount || 0) +
+            (fees.handling ? Number(result.breakdown.handlingFee || 0) : 0) +
+            (fees.processing ? Number(result.breakdown.processingFee || 0) : 0) +
+            (fees.inspection ? Number(result.breakdown.inspectionFee || 0) : 0) +
+            (fees.others ? Number(result.breakdown.otherFees || 0) : 0);
+
+          return (
+          <div className="results-wrapper" style={{ marginTop: '2rem' }}>
+            <h2 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Results</h2>
+            
+            {/* Total Import Cost Card - Orange Theme */}
+            <div style={{
+              backgroundColor: '#FF8C00',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              textAlign: 'left'
+            }}>
+              <div style={{ color: '#000', fontSize: '1rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Total Import Cost
               </div>
-              <div className="route">
+              <div style={{ color: '#000', fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                ${calculatedTotal.toFixed(2)}
+              </div>
+              <div style={{ color: '#000', fontSize: '0.9rem' }}>
                 {getCountryName(fromCountry)} → {getCountryName(toCountry)}
               </div>
             </div>
 
-            {/* Add your breakdown and segments sections below (unchanged) */}
+            {/* Cost Breakdown Section */}
+            <h3 style={{ color: '#fff', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+              Cost Breakdown
+            </h3>
+            <div style={{
+              backgroundColor: '#000',
+              border: '1px solid #FF8C00',
+              padding: '1.5rem',
+              borderRadius: '8px',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {/* Product Value */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#fff', fontSize: '1rem' }}>Product Value:</span>
+                  <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                    ${Number(result.breakdown.itemPrice || 0).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Tariff */}
+                {result.breakdown.tariffAmount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>
+                      Tariff ({Number(result.breakdown.tariffRate || 0).toFixed(1)}%):
+                    </span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.tariffAmount || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Handling Fee - only show if selected */}
+                {fees.handling && result.breakdown.handlingFee > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>Handling Fee:</span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.handlingFee || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Processing Fee - only show if selected */}
+                {fees.processing && result.breakdown.processingFee > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>Processing Fee:</span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.processingFee || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Inspection Fee - only show if selected */}
+                {fees.inspection && result.breakdown.inspectionFee > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>Inspection Fee:</span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.inspectionFee || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Miscellaneous Charges - only show if selected */}
+                {fees.others && result.breakdown.otherFees > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>Miscellaneous Charges:</span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.otherFees || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Separator Line */}
+                <hr style={{ 
+                  border: 'none', 
+                  borderTop: '1px solid #fff', 
+                  margin: '1rem 0',
+                  width: '100%',
+                  opacity: 0.3
+                }} />
+
+                {/* Total Cost */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>Total Cost:</span>
+                  <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                    ${calculatedTotal.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '1rem', 
+              justifyContent: 'center',
+              marginTop: '1.5rem'
+            }}>
+              <button
+                type="button"
+                onClick={() => {
+                  // Save result functionality
+                  const historyEntry = {
+                    createdAt: new Date().toISOString(),
+                    route: `${fromCountry} → ${toCountry}`,
+                    product,
+                    total: Number(result.breakdown.totalPrice || 0),
+                    tariffFrom: result.window.from,
+                    tariffTo: result.window.to,
+                    breakdown: result.breakdown
+                  };
+                  const prev = JSON.parse(localStorage.getItem("calcHistory") || "[]");
+                  prev.unshift(historyEntry);
+                  const trimmed = prev.slice(0, 50);
+                  localStorage.setItem("calcHistory", JSON.stringify(trimmed));
+                  alert("Result saved successfully!");
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#808080',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Save Result
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  // Export PDF functionality - placeholder
+                  alert("PDF export functionality coming soon!");
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#808080',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Export PDF
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  // Reset form and result
+                  setResult(null);
+                  setFromCountry("");
+                  setToCountry("");
+                  setProduct("");
+                  setQuantity("");
+                  setFrom("");
+                  setTo("");
+                  setFees({
+                    handling: false,
+                    inspection: false,
+                    processing: false,
+                    others: false,
+                  });
+                  setError(null);
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#808080',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                New Calculation
+              </button>
+            </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
