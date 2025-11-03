@@ -3,6 +3,8 @@ package com.example.tariffkey.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.lang.Integer;
+import java.util.stream.*;
 
 /**
  * Minimal request payload for a tariff quote between two countries for one product.
@@ -51,8 +53,8 @@ public record TariffApiRequest(
         return startDate
                 .datesUntil(endDate.plusDays(1))
                 .map(LocalDate::getYear)
+                // .boxed()
                 .distinct()
-                .boxed()
                 .toList();
     }
 
