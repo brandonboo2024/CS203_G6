@@ -6,10 +6,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.tariffkey.model.Tariff;
+import com.example.tariffkey.model.TariffApiRequest;
+import com.example.tariffkey.model.TariffApiResponse;
 import com.example.tariffkey.model.TariffRequest;
 import com.example.tariffkey.model.TariffResponse;
 // import com.example.tariffkey.service.TariffService;
 import com.example.tariffkey.service.TariffService2;
+import com.example.tariffkey.service.DefaultQuoteService;
 import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,9 +25,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class TariffController {
 
     private final TariffService2 tariffService2;
+    private final DefaultQuoteService tariffQuote;
 
-    public TariffController(TariffService2 tariffService2) {
+    public TariffController(TariffService2 tariffService2, DefaultQuoteService tariffQuote) {
         this.tariffService2 = tariffService2;
+        this.tariffQuote = tariffQuote;
     }
 
     @PostMapping("/calculate")
@@ -32,6 +37,13 @@ public class TariffController {
         System.out.println("Received response");
         return tariffService2.calculate(request);
     }
+    
+    @PostMapping("/quote")
+    public TariffApiResponse quote(@RequestBody TariffApiRequest quote){
+      System.out.println("Sending request to API...\n");
+      return tariffQuote.fetchFromApi(quote);
+    }
+    
 
     // ====== Admin Tariff Management ======
     @GetMapping("/all")
