@@ -1,6 +1,7 @@
 // TariffService.java
 package com.example.tariffkey.service;
 
+import com.example.tariffkey.model.Tariff;
 import com.example.tariffkey.model.TariffRequest;
 import com.example.tariffkey.model.TariffResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,7 +12,6 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
-import java.time.Instant;
 
 
 @Service
@@ -256,5 +256,23 @@ public class TariffService2 {
             }
         }
         return best;
+    }
+
+    // ====== In-memory tariff management (for Admin page) ======
+    private final List<Tariff> tariffs = new ArrayList<>();
+    private int nextId = 1;
+
+    public List<Tariff> getAllTariffs() {
+        return tariffs;
+    }
+
+    public Tariff addTariff(Tariff tariff) {
+        tariff.setId(nextId++);
+        tariffs.add(tariff);
+        return tariff;
+    }
+
+    public void deleteTariff(int id) {
+        tariffs.removeIf(t -> t.getId() == id);
     }
 }

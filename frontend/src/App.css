@@ -201,9 +201,12 @@ button:hover {
   padding: 1rem;
   border: 2px dashed var(--accent);
   border-radius: 8px;
-  background: #fff7f0;
+  background: var(--bg-card-alt); /* dark background instead of white */
+  color: var(--text-light);
 }
-.result-box h2 { margin: 0; color: #000; }
+.result-box h2 {
+  color: #fff; 
+}
 .result-box p { font-size: 1.2rem; font-weight: bold; color: var(--accent); }
 
 /* =========================
@@ -367,6 +370,13 @@ button:hover {
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
 }
+
+.chart-wrapper {
+  background: var(--bg-card-alt);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
 
 /* Main Total Cost Card */
 .total-cost-card {
@@ -633,4 +643,42 @@ button:hover {
   .filter-actions {
     justify-content: center;
   }
+}
+
+/* =========================
+   Popup Notifications
+========================= */
+.popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  color: white;
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  animation: fadein 0.3s, fadeout 0.3s 1.7s;
+  z-index: 9999;
+  font-weight: 500;
+}
+
+.popup.success {
+  background: #4caf50;
+}
+
+.popup.delete {
+  background: #f44336;
+}
+
+.popup.error {
+  background: #e53935;
+}
+
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeout {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-5px); }
 }

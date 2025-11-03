@@ -1,5 +1,10 @@
 import { useState } from "react";
 import "../App.css";
+import { validateForm, sanitizeInput } from "../utils/inputValidation";
+
+// ✅ import your new shared components
+import CountryDropdown from "../components/CountryDropdown.jsx";
+import ProductDropdown from "../components/ProductDropdown.jsx";
 
 export default function TariffCalc() {
   const [fromCountry, setFromCountry] = useState("");
@@ -16,110 +21,180 @@ export default function TariffCalc() {
   });
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const toggleFee = (key) => {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
   };
+
   const toIso = (local) => (local ? new Date(local).toISOString() : null);
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-      if(!calculationFrom || !calculationTo){
-          setError("Please select both start and end date/time.");
-          return;
-      }
-      const fromDate = new Date(calculationFrom);
-      const toDate = new Date(calculationTo);
-      if(fromDate > toDate){
-          setError("End date/time must be after start date/time.");
-          return;
-      }
-      
+    setLoading(true);
+    setError(null);
+    setValidationErrors({});
+    
+    // Validate form data
+    const formData = {
+      fromCountry,
+      toCountry,
+      product,
+      quantity,
+      calculationFrom,
+      calculationTo
+    };
+    
+    const validation = validateForm(formData, 'tariff');
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setLoading(false);
+      return;
+    }
+    
+    if(!calculationFrom || !calculationTo){
+        setError("Please select both start and end date/time.");
+        setLoading(false);
+        return;
+    }
+    const fromDate = new Date(calculationFrom);
+    const toDate = new Date(calculationTo);
+    if(fromDate > toDate){
+        setError("End date/time must be after start date/time.");
+        setLoading(false);
+        return;
+    }
+    
+    // Sanitize inputs before sending
+    // const request = {
+    //     fromCountry: sanitizeInput(fromCountry),
+    //     toCountry: sanitizeInput(toCountry),
+    //     product: sanitizeInput(product),
+    //     quantity: parseInt(quantity),
+    //     handling: fees.handling,
+    //     inspection: fees.inspection,
+    //     processing: fees.processing,
+    //     others: fees.others,
+    //     calculationFrom: toIso(calculationFrom),
+    //     calculationTo: toIso(calculationTo),
+    // };
+    //
+    // if (!calculationFrom || !calculationTo) {
+    //   setError("Please select both start and end date/time.");
+    //   return;
+    // }
+    //
+    // const fromDate = new Date(calculationFrom);
+    // const toDate = new Date(calculationTo);
+    // if (fromDate > toDate) {
+    //   setError("End date/time must be after start date/time.");
+    //   return;
+    // }
 
-      const request = {
-          fromCountry,
-          toCountry,
-          product,
-          quantity: parseInt(quantity),
-          handling: fees.handling,
-          inspection: fees.inspection,
-          processing: fees.processing,
-          others: fees.others,
-          calculationFrom: toIso(calculationFrom),
-          calculationTo: toIso(calculationTo),
+    const request = {
+      fromCountry,
+      toCountry,
+      product,
+      quantity: parseInt(quantity),
+      handling: fees.handling,
+      inspection: fees.inspection,
+      processing: fees.processing,
+      others: fees.others,
+      calculationFrom: toIso(calculationFrom),
+      calculationTo: toIso(calculationTo),
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+      localStorage.getItem("token")         // is it non-null?
+      console.log(atob(localStorage.getItem("token").split('.')[1])); // check roles/authorities in payload     
+      console.log("Submitting:", request);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/tariff/calculate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`},
+          body: JSON.stringify(request),
+        }
+      );
+
+      if (!response.ok) throw new Error("Request failed");
+      const data = await response.json();
+
+      // normalize snake_case to camelCase
+      const breakdown = {
+        itemPrice: data.itemPrice ?? data.item_price ?? 0,
+        tariffRate: data.tariffRate ?? data.tariff_rate ?? 0,
+        tariffAmount: data.tariffAmount ?? data.tariff_amount ?? 0,
+        handlingFee: data.handlingFee ?? data.handling_fee ?? 0,
+        processingFee: data.processingFee ?? data.processing_fee ?? 0,
+        inspectionFee: data.inspectionFee ?? data.inspection_fee ?? 0,
+        otherFees: data.otherFees ?? data.other_fees ?? 0,
+        totalPrice: data.totalPrice ?? data.total_price ?? 0,
+        from: data.from ?? 0,
+        to: data.to ?? 0,
       };
 
-      try {
-          console.log("Submitting:", request);
-          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tariff/calculate`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(request),
-          });
+      const segments = Array.isArray(data.segments) ? data.segments : [];
 
-          if (!response.ok) throw new Error("Request failed");
+      setResult({
+        breakdown,
+        segments,
+        window: { from: request.calculationFrom, to: calculationTo },
+      });
 
-          const data = await response.json();
-
-          // normalize snake_case to camelCase
-          const breakdown = {
-            itemPrice:   data.itemPrice   ?? data.item_price   ?? 0,
-            tariffRate:     data.tariffRate     ?? data.tariff_rate     ?? 0,
-            tariffAmount:   data.tariffAmount   ?? data.tariff_amount   ?? 0,
-            handlingFee:    data.handlingFee    ?? data.handling_fee    ?? 0,
-            processingFee:  data.processingFee  ?? data.processing_fee  ?? 0,
-            inspectionFee:  data.inspectionFee  ?? data.inspection_fee  ?? 0,
-            otherFees:      data.otherFees      ?? data.other_fees      ?? 0,
-            totalPrice:      data.totalPrice      ?? data.total_price      ?? 0,
-            from:  data.from ?? data.from ?? 0,
-            to: data.to ?? data.to ?? 0,
-          };
-          
-          const segments = Array.isArray(data.segments) ? data.segments : [];
-
-          setResult({
-              breakdown,
-              segments,
-              window : {from: request.calculationFrom, to: calculationTo},
-          });
-          // ---- SAVE SIMPLE HISTORY (localStorage) ----
-          // keep newest first, max 50 rows
-          const historyEntry = {
-            // ISO so we can format later
-            createdAt: new Date().toISOString(),
-            // store codes (what you already use in UI)
-            route: `${fromCountry} → ${toCountry}`,
-            product: product, // e.g. "electronics"
-            total: Number((breakdown.totalPrice ?? 0)),
-            // the tariff window used for this calc
-            tariffFrom: request.calculationFrom,
-            tariffTo:   request.calculationTo,
-          };
-          const prev = JSON.parse(localStorage.getItem("calcHistory") || "[]");
-          prev.unshift(historyEntry);
-          const trimmed = prev.slice(0, 50);
-          localStorage.setItem("calcHistory", JSON.stringify(trimmed));
-          // --------------------------------------------
-      } catch (err) {
-          console.error(err);
-          setError(err.message || "Something went wrong idk tho");
-      }finally{
-          setLoading(false);
-      }
+      // ---- Save local history ----
+      const historyEntry = {
+        createdAt: new Date().toISOString(),
+        route: `${fromCountry} → ${toCountry}`,
+        product,
+        total: Number(breakdown.totalPrice ?? 0),
+        tariffFrom: request.calculationFrom,
+        tariffTo: request.calculationTo,
+      };
+      const prev = JSON.parse(localStorage.getItem("calcHistory") || "[]");
+      prev.unshift(historyEntry);
+      const trimmed = prev.slice(0, 50);
+      localStorage.setItem("calcHistory", JSON.stringify(trimmed));
+      
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Something went wrong.");
+      setLoading(false);
+    }
   };
-  // helper function to get country names
+
   const getCountryName = (code) => {
-  const countries = {
-    'SG': 'Singapore', 'US': 'United States', 'MY': 'Malaysia', 'TH': 'Thailand',
-    'VN': 'Vietnam', 'ID': 'Indonesia', 'PH': 'Philippines', 'KR': 'South Korea',
-    'IN': 'India', 'AU': 'Australia', 'GB': 'United Kingdom', 'DE': 'Germany',
-    'FR': 'France', 'IT': 'Italy', 'ES': 'Spain', 'CA': 'Canada',
-    'BR': 'Brazil', 'MX': 'Mexico', 'RU': 'Russia', 'ZA': 'South Africa',
-    'CN': 'China', 'JP': 'Japan'
+    const countries = {
+      SG: "Singapore",
+      US: "United States",
+      MY: "Malaysia",
+      TH: "Thailand",
+      VN: "Vietnam",
+      ID: "Indonesia",
+      PH: "Philippines",
+      KR: "South Korea",
+      IN: "India",
+      AU: "Australia",
+      GB: "United Kingdom",
+      DE: "Germany",
+      FR: "France",
+      IT: "Italy",
+      ES: "Spain",
+      CA: "Canada",
+      BR: "Brazil",
+      MX: "Mexico",
+      RU: "Russia",
+      ZA: "South Africa",
+      CN: "China",
+      JP: "Japan",
+    };
+    return countries[code] || code;
   };
-  return countries[code] || code;
-};  
-  const fmt = (v) => Number(v || 0).toFixed(2);
+
   const fmtDate = (iso) => {
     if (!iso) return "-";
     try {
@@ -135,80 +210,20 @@ export default function TariffCalc() {
         <h1>Tariff Calculator</h1>
 
         <form onSubmit={handleSubmit} className="calc-form">
-          <div className="form-row">
-            <label>Origin:</label>
-            <select value={fromCountry} onChange={(e) => setFromCountry(e.target.value)}>
-              <option value="" disabled>Select Origin Country</option>
-              <option value="SG">Singapore</option>
-              <option value="US">United States</option>
-              <option value="MY">Malaysia</option>
-              <option value="TH">Thailand</option>
-              <option value="VN">Vietnam</option>
-              <option value="ID">Indonesia</option>
-              <option value="PH">Philippines</option>
-              <option value="KR">South Korea</option>
-              <option value="IN">India</option>
-              <option value="AU">Australia</option>
-              <option value="GB">United Kingdom</option>
-              <option value="DE">Germany</option>
-              <option value="FR">France</option>
-              <option value="IT">Italy</option>
-              <option value="ES">Spain</option>
-              <option value="CN">China</option>
-              <option value="CA">Canada</option>
-              <option value="BR">Brazil</option>
-              <option value="MX">Mexico</option>
-              <option value="RU">Russia</option>
-              <option value="ZA">South Africa</option>
-            </select>
-          </div>
+          {/* ✅ Replaced long dropdowns with shared components */}
+          <CountryDropdown
+            label="Origin"
+            value={fromCountry}
+            onChange={setFromCountry}
+          />
+          <CountryDropdown
+            label="Destination"
+            value={toCountry}
+            onChange={setToCountry}
+          />
+          <ProductDropdown value={product} onChange={setProduct} />
 
-          <div className="form-row">
-            <label>Destination:</label>
-            <select value={toCountry} onChange={(e) => setToCountry(e.target.value)}>
-              <option value="" disabled>Select Destination Country</option>
-              <option value="CN">China</option>
-              <option value="JP">Japan</option>
-              <option value="SG">Singapore</option>
-              <option value="US">United States</option>
-              <option value="MY">Malaysia</option>
-              <option value="TH">Thailand</option>
-              <option value="VN">Vietnam</option>
-              <option value="ID">Indonesia</option>
-              <option value="PH">Philippines</option>
-              <option value="KR">South Korea</option>
-              <option value="IN">India</option>
-              <option value="AU">Australia</option>
-              <option value="GB">United Kingdom</option>
-              <option value="DE">Germany</option>
-              <option value="FR">France</option>
-              <option value="IT">Italy</option>
-              <option value="ES">Spain</option>
-              <option value="CA">Canada</option>
-              <option value="BR">Brazil</option>
-              <option value="MX">Mexico</option>
-              <option value="RU">Russia</option>
-              <option value="ZA">South Africa</option>
-            </select>
-          </div>
-
-          <div className="form-row">
-            <label>Product:</label>
-            <select value={product} onChange={(e) => setProduct(e.target.value)} >
-              <option value="" disabled>Select Product</option>
-              <option value="electronics">Electronics</option>
-              <option value="clothing">Clothing</option>
-              <option value="furniture">Furniture</option>
-              <option value="food">Food</option>
-              <option value="books">Books</option>
-              <option value="toys">Toys</option>
-              <option value="tools">Tools</option>
-              <option value="beauty">Beauty Products</option>
-              <option value="sports">Sports Equipment</option>
-              <option value="automotive">Automotive Parts</option>
-            </select>
-          </div>
-
+          {/* Quantity */}
           <div className="form-row">
             <label>Quantity:</label>
             <input
@@ -219,149 +234,297 @@ export default function TariffCalc() {
               placeholder="Enter quantity"
             />
           </div>
-        {/* new time window */}
+
+          {/* Time window */}
           <div className="form-row">
             <label>From:</label>
             <input
               type="datetime-local"
               value={calculationFrom}
               onChange={(e) => setFrom(e.target.value)}
-              placeholder="Select Start Date"
               required
             />
           </div>
-
           <div className="form-row">
             <label>To:</label>
             <input
               type="datetime-local"
               value={calculationTo}
               onChange={(e) => setTo(e.target.value)}
-              placeholder="Select End Date"
               required
             />
           </div>
 
+          {/* Fees */}
           <div className="form-row">
             <label>Fees:</label>
             <div className="fees">
-              <label><input 
-                type="checkbox"
-                checked={fees.handling}
-                onChange={() => toggleFee("handling")}
-                /> Handling Fee
-              </label>
-              <label>
+              {Object.keys(fees).map((key) => (
+                <label key={key}>
                   <input
                     type="checkbox"
-                    checked={fees.inspection}
-                    onChange={() => toggleFee("inspection")}
-                  /> Inspection Fee
-            </label>
-            <label>
-                  <input
-                    type="checkbox"
-                    checked={fees.processing}
-                    onChange={() => toggleFee("processing")}
-                  /> Processing Fee
-           </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={fees.others}
-                onChange={() => toggleFee("others")}
-              /> Others
-            </label>
+                    checked={fees[key]}
+                    onChange={() => toggleFee(key)}
+                  />{" "}
+                  {key.charAt(0).toUpperCase() + key.slice(1)} Fee
+                </label>
+              ))}
             </div>
           </div>
 
 
-          <button type="submit">Calculate</button>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Calculating...' : 'Calculate'}
+          </button>
         </form>
 
-        {result && (
-          <div className="results-wrapper">
-            <h2>Results</h2>
-            
-            {/* Main Result Card */}
-            <div className="total-cost-card">
-              <div className="total-label">Total Import Cost</div>
-              <div className="total-amount">${Number(result.breakdown.totalPrice|| 0).toFixed(2)}</div>
-              <div className="route">{getCountryName(fromCountry)} → {getCountryName(toCountry)}</div>
-            </div>
-
-            {/* Cost Breakdown */}
-            <div className="breakdown-section">
-              <h3>Cost Breakdown</h3>
-              <div className="breakdown-table">
-                <div className="breakdown-row">
-                  <span>Product Value ({quantity} x {product})</span>
-                  <span>${Number(result.breakdown.itemPrice || 0).toFixed(2)}</span>
-                </div>
-                <div className="breakdown-row">
-                  <span>Tariff ({result.breakdown.tariffRate}%)</span>
-                  <span>${Number(result.breakdown.tariffAmount || 0).toFixed(2)}</span>
-                </div>
-                {fees.handling && (
-                  <div className="breakdown-row">
-                    <span>Handling Fee</span>
-                    <span>${Number(result.breakdown.handlingFee || 0).toFixed(2)}</span>
-                  </div>
-                )}
-                {fees.processing && (
-                  <div className="breakdown-row">
-                    <span>Processing Fee</span>
-                    <span>${Number(result.breakdown.processingFee || 0).toFixed(2)}</span>
-                  </div>
-                )}
-                {fees.inspection && (
-                  <div className="breakdown-row">
-                    <span>Inspection Fee</span>
-                    <span>${Number(result.breakdown.inspectionFee || 0).toFixed(2)}</span>
-                  </div>
-                )}
-                {fees.others && (
-                  <div className="breakdown-row">
-                    <span>Miscellaneous Charges</span>
-                    <span>${Number(result.breakdown.otherFees || 0).toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="breakdown-row total-row">
-                  <span>Total Cost</span>
-                  <span>${Number(result.breakdown.totalPrice || 0).toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="breakdown-section">
-              <h3>Tariff(s) Applied</h3>
-              {result.segments?.length ? (
-                <ul className="segments-list">
-                  {result.segments.map((s, idx) => (
-                    <li key={idx} className="segment-chip">
-                      <strong>{s.label || (s.source === "override" ? "Route Override" : "Default rate")}</strong>
-                      {" — "}
-                      {Number(s.ratePercent || 0).toFixed(2)}%
-                      {" "}
-                      <span className="muted">
-                        ({fmtDate(s.from)} → {fmtDate(s.to)})
-                      </span>
+        {/* Display validation errors */}
+        {Object.keys(validationErrors).length > 0 && (
+          <div className="validation-errors" style={{ 
+            marginTop: '1rem', 
+            padding: '1rem', 
+            backgroundColor: '#ffebee', 
+            border: '1px solid #f44336', 
+            borderRadius: '4px' 
+          }}>
+            <h4 style={{ color: '#d32f2f', margin: '0 0 0.5rem 0' }}>Please fix the following errors:</h4>
+            {Object.entries(validationErrors).map(([field, errors]) => (
+              <div key={field} style={{ marginBottom: '0.5rem' }}>
+                <strong style={{ textTransform: 'capitalize', color: '#d32f2f' }}>
+                  {field.replace(/([A-Z])/g, ' $1').trim()}:
+                </strong>
+                <ul style={{ margin: '0.25rem 0 0 1rem', padding: 0 }}>
+                  {errors.map((error, index) => (
+                    <li key={index} style={{ color: '#d32f2f', fontSize: '0.9rem' }}>
+                      {error}
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="muted">No tariff segments overlapped this period.</p>
-              )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {result && (() => {
+          // Calculate total based on only selected fees
+          const calculatedTotal = 
+            Number(result.breakdown.itemPrice || 0) +
+            Number(result.breakdown.tariffAmount || 0) +
+            (fees.handling ? Number(result.breakdown.handlingFee || 0) : 0) +
+            (fees.processing ? Number(result.breakdown.processingFee || 0) : 0) +
+            (fees.inspection ? Number(result.breakdown.inspectionFee || 0) : 0) +
+            (fees.others ? Number(result.breakdown.otherFees || 0) : 0);
+
+          return (
+          <div className="results-wrapper" style={{ marginTop: '2rem' }}>
+            <h2 style={{ color: '#fff', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Results</h2>
+            
+            {/* Total Import Cost Card - Orange Theme */}
+            <div style={{
+              backgroundColor: '#FF8C00',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              textAlign: 'left'
+            }}>
+              <div style={{ color: '#000', fontSize: '1rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Total Import Cost
+              </div>
+              <div style={{ color: '#000', fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                ${calculatedTotal.toFixed(2)}
+              </div>
+              <div style={{ color: '#000', fontSize: '0.9rem' }}>
+                {getCountryName(fromCountry)} → {getCountryName(toCountry)}
+              </div>
+            </div>
+
+            {/* Cost Breakdown Section */}
+            <h3 style={{ color: '#fff', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+              Cost Breakdown
+            </h3>
+            <div style={{
+              backgroundColor: '#000',
+              border: '1px solid #FF8C00',
+              padding: '1.5rem',
+              borderRadius: '8px',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {/* Product Value */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#fff', fontSize: '1rem' }}>Product Value:</span>
+                  <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                    ${Number(result.breakdown.itemPrice || 0).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Tariff */}
+                {result.breakdown.tariffAmount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>
+                      Tariff ({Number(result.breakdown.tariffRate || 0).toFixed(1)}%):
+                    </span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.tariffAmount || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Handling Fee - only show if selected */}
+                {fees.handling && result.breakdown.handlingFee > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>Handling Fee:</span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.handlingFee || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Processing Fee - only show if selected */}
+                {fees.processing && result.breakdown.processingFee > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>Processing Fee:</span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.processingFee || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Inspection Fee - only show if selected */}
+                {fees.inspection && result.breakdown.inspectionFee > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>Inspection Fee:</span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.inspectionFee || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Miscellaneous Charges - only show if selected */}
+                {fees.others && result.breakdown.otherFees > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#fff', fontSize: '1rem' }}>Miscellaneous Charges:</span>
+                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                      ${Number(result.breakdown.otherFees || 0).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Separator Line */}
+                <hr style={{ 
+                  border: 'none', 
+                  borderTop: '1px solid #fff', 
+                  margin: '1rem 0',
+                  width: '100%',
+                  opacity: 0.3
+                }} />
+
+                {/* Total Cost */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>Total Cost:</span>
+                  <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                    ${calculatedTotal.toFixed(2)}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="result-actions">
-              <button className="secondary-btn">Save Result</button>
-              <button className="secondary-btn">Export PDF</button>
-              <button className="secondary-btn" onClick={() => {setResult(null); setFromCountry(''); setToCountry(''); setProduct(''); setQuantity(''); setFees({handling: false, inspection: false, processing: false, others: false});}}>New Calculation</button>
+            <div style={{ 
+              display: 'flex', 
+              gap: '1rem', 
+              justifyContent: 'center',
+              marginTop: '1.5rem'
+            }}>
+              <button
+                type="button"
+                onClick={() => {
+                  // Save result functionality
+                  const historyEntry = {
+                    createdAt: new Date().toISOString(),
+                    route: `${fromCountry} → ${toCountry}`,
+                    product,
+                    total: Number(result.breakdown.totalPrice || 0),
+                    tariffFrom: result.window.from,
+                    tariffTo: result.window.to,
+                    breakdown: result.breakdown
+                  };
+                  const prev = JSON.parse(localStorage.getItem("calcHistory") || "[]");
+                  prev.unshift(historyEntry);
+                  const trimmed = prev.slice(0, 50);
+                  localStorage.setItem("calcHistory", JSON.stringify(trimmed));
+                  alert("Result saved successfully!");
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#808080',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Save Result
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  // Export PDF functionality - placeholder
+                  alert("PDF export functionality coming soon!");
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#808080',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Export PDF
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  // Reset form and result
+                  setResult(null);
+                  setFromCountry("");
+                  setToCountry("");
+                  setProduct("");
+                  setQuantity("");
+                  setFrom("");
+                  setTo("");
+                  setFees({
+                    handling: false,
+                    inspection: false,
+                    processing: false,
+                    others: false,
+                  });
+                  setError(null);
+                }}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#808080',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                New Calculation
+              </button>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
