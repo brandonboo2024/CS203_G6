@@ -39,13 +39,11 @@ public class SecurityConfig {
         return source;
     }
 
-    // BCrypt encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Link user service + encoder to Spring Security
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -54,20 +52,29 @@ public class SecurityConfig {
         return provider;
     }
 
-    // Security chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.POST, "/**").permitAll()
                 // Public endpoints
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                // Temporarily allow tariff routes for testing
-                .requestMatchers("/api/tariff/**").permitAll()
-                // Everything else must be authenticated
-                .anyRequest().authenticated()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                // Only ADMIN can access any other endpoints
+              // If your authorities are stored with the ROLE_ prefix, prefer hasRole/AnyhasAnyRole
+                // .requestMatchers(HttpMethod.POST, "/api/tariff/calculate").hasAnyRole("ADMIN","USER")
+                .requestMatchers(HttpMethod.POST, "/api/tariff/history").hasAnyAuthority("ADMIN", "USER")
+                .requestMatchers(HttpMethod.POST, "/api/tariff/calculate").hasAnyAuthority("ADMIN","USER")
+
+                // equivalent with hasAuthority if your authorities are literally "ROLE_ADMIN","ROLE_USER":
+                // .hasAnyAuthority("ROLE_ADMIN","ROLE_USER")
+                .requestMatchers("/api/tariff/**").hasAuthority("ADMIN")
+
+                // Any other request is denied by default
+                .anyRequest().denyAll()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())

@@ -1,0 +1,18 @@
+GET https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN/reporter/840/partner/000/product/020110/year/2000/datatype/reported?format=JSON
+
+
+###
+
+GET https://wits.worldbank.org/API/V1/wits/datasource/tradestats-tariff/product/all?format=JSON
+
+###
+
+POST http://localhost:8080/api/tariff/quote
+Content-Type: application/json
+
+{
+  "originCountry": "840",   
+  "destCountry":   "000",   
+  "hs6":           "020110",
+  "year":          "2000"
+}
