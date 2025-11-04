@@ -13,9 +13,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class DefaultQuoteService {
@@ -158,4 +156,109 @@ public class DefaultQuoteService {
   private record Parsed(double rateDecimal, String[] tariffTypes, Integer year, String nomenCode) {
     static Parsed empty() { return new Parsed(0.0, new String[0], null, null); }
   }
+
+  Map<String, String> memberCode = new HashMap<>();
+
+{
+    memberCode.put("SG", "702");
+    memberCode.put("Singapore" , "702");
+
+    memberCode.put("US" , "840");
+    memberCode.put("United States" , "840");
+
+    memberCode.put("MY" , "458");
+    memberCode.put("Malaysia" , "458");
+
+    memberCode.put("TH" , "764");
+    memberCode.put("Thailand" , "764");
+
+    memberCode.put("VN" , "704");
+    memberCode.put("Vietnam" , "704");
+
+    memberCode.put("ID" , "360");
+    memberCode.put("Indonesia" , "360");
+
+    memberCode.put("PH" , "608");
+    memberCode.put("Philippines" , "608");
+
+    memberCode.put("KR" , "410");
+    memberCode.put("South Korea" , "410");
+
+    memberCode.put("IN" , "356");
+    memberCode.put("India" , "356");
+
+    memberCode.put("AU" , "036");
+    memberCode.put("Australia" , "036");
+
+    memberCode.put("GB" , "826");
+    memberCode.put("United Kingdom" , "826");
+
+    memberCode.put("DE" , "276"); //European Union
+    memberCode.put("Germany" , "276"); //European Union -> ECS
+    memberCode.put("FR" , "250");//European Union , can't find the "german" and "france" Econnomies in website, doesnt exist
+    memberCode.put("France" , "250");// EU
+    memberCode.put("IT" , "380"); //EU
+    memberCode.put("Italy" , "380"); //EU
+    memberCode.put("ES" , "724"); //EU
+    memberCode.put("Spain" , "724"); //EU
+
+    memberCode.put("CA" , "124");
+    memberCode.put("Canada" , "124");
+
+    memberCode.put("BR" , "076");
+    memberCode.put("Brazil" , "076");
+
+    memberCode.put("MX" , "484");
+    memberCode.put("Mexico" , "484");
+
+    memberCode.put("RU" , "643");
+    memberCode.put("Russia" , "643");
+
+    memberCode.put("ZA" , "710");
+    memberCode.put("South Africa" , "710");
+
+    memberCode.put("CN" , "156");
+    memberCode.put("China" , "156");
+
+    memberCode.put("JP" , "392");
+    memberCode.put("Japan" , "392");
+
+}
+
+Map<String,String> productCode = new HashMap<>();
+    {
+        productCode.put("electronics" , "84-85_MachElec");//Machine and Electronic
+        productCode.put("Electronics" , "84-85_MachElec");//
+
+        productCode.put("clothing" , "50-63_TextCloth");
+        productCode.put("Clothing" , "50-63_TextCloth");//Textiles and Clothing
+
+        productCode.put("furniture" , "UNCTAD-SoP3"); //Consumer goods
+        productCode.put("Furniture" , "UNCTAD-SoP3");//
+
+
+        productCode.put("food" , "16-24_FoodProd");//Food Products
+        productCode.put("Food" , "16-24_FoodProd");//
+
+
+        productCode.put("books" , "Textiles");//no books so put textiles
+        productCode.put("Books" , "Textiles");
+
+        productCode.put("toys" , "Total");//no toys so assume is under "Total , all products category"
+        productCode.put("Toys" , "Total");
+
+        productCode.put("tools" , "manuf");//assuming the tools are used for manufacturing , it should fall under here
+        productCode.put("Tools" , "manuf");
+
+        productCode.put("beauty" , "UNCTAD-SoP3");// beauty products should fall under consumer goods category
+        productCode.put("Beauty Products" , "UNCTAD-SoP3");
+
+        productCode.put("sports" , "64-67_Footwear");//i think the closest is footwear caetgory, unless we want consumer goods, but that 
+        productCode.put("Sports Equipment" , "64-67_Footwear");//shouldnt be used too much
+
+        productCode.put("automotive" , "Transp");//machinery and transport
+        productCode.put("Automotive Parts" , "Transp");//
+
+    }
+
 }
