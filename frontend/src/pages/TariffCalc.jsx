@@ -460,7 +460,7 @@ export default function TariffCalc() {
                   borderRadius: '6px',
                   border: 'none',
                   backgroundColor: '#808080',
-                  color: '#fff',
+                  color: '#000000ff',
                   fontSize: '1rem',
                   cursor: 'pointer',
                   fontWeight: '500'
@@ -480,7 +480,7 @@ export default function TariffCalc() {
                   borderRadius: '6px',
                   border: 'none',
                   backgroundColor: '#808080',
-                  color: '#fff',
+                  color: '#000000ff',
                   fontSize: '1rem',
                   cursor: 'pointer',
                   fontWeight: '500'
@@ -513,7 +513,7 @@ export default function TariffCalc() {
                   borderRadius: '6px',
                   border: 'none',
                   backgroundColor: '#808080',
-                  color: '#fff',
+                  color: '#000000ff',
                   fontSize: '1rem',
                   cursor: 'pointer',
                   fontWeight: '500'
