@@ -101,8 +101,9 @@ public class DefaultQuoteService {
     static Parsed empty() { return new Parsed(0.0, new String[0], null, null); }
   }
 
-  Map<String, String> memberCode = new HashMap<>();
 
+  private String resolveCountryToCountryCode(String Country){
+      Map<String, String> memberCode = new HashMap<>();
 {
     memberCode.put("SG", "702");
     memberCode.put("Singapore" , "702");
@@ -169,6 +170,13 @@ public class DefaultQuoteService {
 
 }
 
+    String countryCode = memberCode.get(Country);
+
+    return countryCode;
+  }
+
+  private String resolveProductToProductCode(String product){
+
 Map<String,String> productCode = new HashMap<>();
     {
         productCode.put("electronics" , "84-85_MachElec");//Machine and Electronic
@@ -205,6 +213,13 @@ Map<String,String> productCode = new HashMap<>();
 
     }
 
+    String codeForProduct = productCode.get(product);
+
+    return codeForProduct;
+  }
+
+
+
     public TariffResponse calculateQuote(TariffRequest request) {
         if (request.getQuantity() <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than zero");
@@ -214,9 +229,9 @@ Map<String,String> productCode = new HashMap<>();
                 .orElseThrow(() -> new IllegalArgumentException("Unknown product: " + request.getProduct()));
 
         TariffApiRequest apiRequest = TariffApiRequest.builder()
-                .originCountry(request.getFromCountry())
-                .destCountry(request.getToCountry())
-                .hs6(product.getHsCode())
+                .originCountry(resolveCountryToCountryCode(request.getFromCountry()))
+                .destCountry(resolveCountryToCountryCode(request.getToCountry()))
+                .hs6(resolveProductToProductCode(product.getHsCode()))
                 .year(resolveYear(request))
                 .build();
 
