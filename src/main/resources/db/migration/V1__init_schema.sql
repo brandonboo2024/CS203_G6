@@ -1,0 +1,27 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS products (
+    id BIGSERIAL PRIMARY KEY,
+    code VARCHAR(100) NOT NULL UNIQUE,
+    hs_code VARCHAR(10) NOT NULL,
+    base_price NUMERIC(12,2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS fee_schedule (
+    code VARCHAR(40) PRIMARY KEY,
+    amount NUMERIC(10,2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS tariffs (
+    id BIGSERIAL PRIMARY KEY,
+    product VARCHAR(100) NOT NULL,
+    origin_country VARCHAR(10) NOT NULL,
+    destination_country VARCHAR(10) NOT NULL,
+    rate NUMERIC(7,3) NOT NULL
+);
