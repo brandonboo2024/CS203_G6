@@ -1,34 +1,32 @@
 package com.example.tariffkey.model;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Entity
+@Table(name = "tariffs")
 public class Tariff {
-    private int id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
     private String product;
+
+    @Column(name = "origin_country", nullable = false)
     private String originCountry;
+
+    @Column(name = "destination_country", nullable = false)
     private String destinationCountry;
+
+    @Column(nullable = false)
     private double rate;
-
-    public Tariff() {}
-
-    public Tariff(int id, String product, String originCountry, String destinationCountry, double rate) {
-        this.id = id;
-        this.product = product;
-        this.originCountry = originCountry;
-        this.destinationCountry = destinationCountry;
-        this.rate = rate;
-    }
-
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-
-    public String getProduct() { return product; }
-    public void setProduct(String product) { this.product = product; }
-
-    public String getOriginCountry() { return originCountry; }
-    public void setOriginCountry(String originCountry) { this.originCountry = originCountry; }
-
-    public String getDestinationCountry() { return destinationCountry; }
-    public void setDestinationCountry(String destinationCountry) { this.destinationCountry = destinationCountry; }
-
-    public double getRate() { return rate; }
-    public void setRate(double rate) { this.rate = rate; }
 }
