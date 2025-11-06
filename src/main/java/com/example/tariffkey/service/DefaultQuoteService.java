@@ -18,9 +18,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 @Service
 public class DefaultQuoteService {
@@ -210,6 +207,15 @@ Map<String,String> productCode = new HashMap<>();
 
         productCode.put("automotive" , "Transp");//machinery and transport
         productCode.put("Automotive Parts" , "Transp");//
+
+        productCode.put("chem" , "28-38_Chemicals");//Chemicals
+        productCode.put("Chemicals" , "28-38_Chemicals");//
+
+        productCode.put("plastic or rubber" , "39-40_PlastiRub");//For materials of Plastic and Rubber
+        productCode.put("Plastic , Rubber" , "39-40_PlastiRub");//
+
+        productCode.put("misc" , "90-99_Miscellan");//For materials of Plastic and Rubber
+        productCode.put("Miscallaneous" , "90-99_Miscellan");//
 
     }
 
