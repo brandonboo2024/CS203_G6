@@ -317,7 +317,9 @@ export default function History() {
         )}
 
         {/* Export CSV */}
-        <button onClick={exportToCSV} className="export-btn">Export CSV</button>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+          <button onClick={exportToCSV} className="export-btn">Export CSV</button>
+        </div>
       </div>
 
       {/* History Table */}
@@ -352,12 +354,14 @@ export default function History() {
             )}
           </tbody>
         </table>
-        <button
-          className="secondary-btn"
-          onClick={() => { localStorage.removeItem("calcHistory"); setHistoryData([]); }}
-        >
-          Clear History
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => { localStorage.removeItem("calcHistory"); setHistoryData([]); }}
+            className="export-btn"
+          >
+            Clear History
+          </button>
+        </div>
       </div>
     </div>
   );
