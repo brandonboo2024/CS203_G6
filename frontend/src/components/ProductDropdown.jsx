@@ -1,16 +1,33 @@
-export default function ProductDropdown({ value, onChange }) {
-  const products = [
-    "electronics", "clothing", "furniture", "food", 
-    "tools", "beauty", "sports", "automotive","misc","plastic or rubber", "chem"
-  ];
+export default function ProductDropdown({
+  value,
+  onChange,
+  options = [],
+  disabled = false,
+  loading = false,
+  placeholder = "Select Product",
+}) {
+  const normalized = options.map((option) =>
+    typeof option === "string"
+      ? { code: option, label: option }
+      : option
+  );
+  const isDisabled = disabled || normalized.length === 0;
 
   return (
     <div className="form-row">
       <label>Product:</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="" disabled>Select Product</option>
-        {products.map((p) => (
-          <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={isDisabled}
+      >
+        <option value="" disabled>
+          {loading ? "Loading..." : placeholder}
+        </option>
+        {normalized.map(({ code, label }) => (
+          <option key={code} value={code}>
+            {label || code}
+          </option>
         ))}
       </select>
     </div>

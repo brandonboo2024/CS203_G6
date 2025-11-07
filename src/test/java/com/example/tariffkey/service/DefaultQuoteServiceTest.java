@@ -2,27 +2,22 @@ package com.example.tariffkey.service;
 
 import com.example.tariffkey.model.FeeSchedule;
 import com.example.tariffkey.model.Product;
+import com.example.tariffkey.model.Tariff;
 import com.example.tariffkey.model.TariffApiRequest;
 import com.example.tariffkey.model.TariffApiResponse;
 import com.example.tariffkey.model.TariffRequest;
 import com.example.tariffkey.model.TariffResponse;
+import com.example.tariffkey.model.WitsTariff;
 import com.example.tariffkey.repository.FeeScheduleRepository;
 import com.example.tariffkey.repository.ProductRepository;
 import com.example.tariffkey.repository.TariffRepository;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import com.example.tariffkey.repository.WitsTariffRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -30,52 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultQuoteServiceTest {
-
-    private static final String SAMPLE_RESPONSE = """
-        {
-          \"dataSets\": [
-            {
-              \"series\": {
-                \"0:0:0:0\": {
-                  \"observations\": {
-                    \"0\": [5.0],
-                    \"1\": [7.5]
-                  }
-                }
-              }
-            }
-          ],
-          \"structure\": {
-            \"dimensions\": {
-              \"observation\": [
-                {
-                  \"values\": [
-                    { \"id\": \"2020\" },
-                    { \"id\": \"2021\" }
-                  ]
-                }
-              ]
-            },
-            \"attributes\": {
-              \"observation\": [
-                {
-                  \"id\": \"NOMENCODE\",
-                  \"values\": [ { \"id\": \"H5\" } ]
-                },
-                {
-                  \"id\": \"TARIFFTYPE\",
-                  \"values\": [ { \"id\": \"MFN\" } ]
-                }
-              ]
-            }
-          }
-        }
-        """;
-
-    private static final MockWebServer mockWebServer = new MockWebServer();
-    private static final java.util.concurrent.atomic.AtomicBoolean mockWebServerStarted = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     @Autowired
     private DefaultQuoteService defaultQuoteService;
@@ -89,43 +39,16 @@ class DefaultQuoteServiceTest {
     @Autowired
     private TariffRepository tariffRepository;
 
-    @AfterAll
-    void tearDownServer() throws IOException {
-        if (mockWebServerStarted.get()) {
-            mockWebServer.shutdown();
-            mockWebServerStarted.set(false);
-        }
-    }
-
-    @DynamicPropertySource
-    static void overrideBaseUrl(DynamicPropertyRegistry registry) {
-        registry.add("wits.api.base-url", () -> {
-            if (mockWebServerStarted.compareAndSet(false, true)) {
-                try {
-                    mockWebServer.start();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            return mockWebServer.url("/API/V1/SDMX/V21/datasource/TRN").toString();
-        });
-    }
+    @Autowired
+    private WitsTariffRepository witsTariffRepository;
 
     @BeforeEach
     void seedData() {
         productRepository.deleteAll();
         feeScheduleRepository.deleteAll();
         tariffRepository.deleteAll();
+        witsTariffRepository.deleteAll();
 
-        // // Clear any remaining mock responses from previous tests
-        // while (mockWebServer.getRequestCount() > 0) {
-        //     try {
-        //         mockWebServer.takeRequest();
-        //     } catch (InterruptedException e) {
-        //         Thread.currentThread().interrupt();
-        //         break;
-        //     }
-        // }
         productRepository.save(Product.builder()
                 .code("electronics")
                 .hsCode("847130")
@@ -141,33 +64,8 @@ class DefaultQuoteServiceTest {
     }
 
     @Test
-    void fetchQuoteParsesLatestObservation() {
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
-                .setBody(SAMPLE_RESPONSE));
-
-        TariffApiRequest request = TariffApiRequest.builder()
-                .originCountry("840")
-                .destCountry("702")
-                .hs6("847130")
-                .year("2021")
-                .build();
-
-        TariffApiResponse response = defaultQuoteService.fetchQuote(request);
-
-        assertThat(response.getHttpStatus()).isEqualTo(200);
-        assertThat(response.getTariffRate()).isEqualTo(0.075);
-        assertThat(response.getTariffTypes()).containsExactly("MFN");
-        assertThat(response.getYear()).isEqualTo(2021);
-        assertThat(response.getNomenclature()).isEqualTo("H5");
-    }
-
-    @Test
-    void fetchQuoteUsesCache() {
-        // No mock response needed, should hit cache
-
-        tariffRepository.save(com.example.tariffkey.model.Tariff.builder()
+    void fetchQuoteReturnsCachedTariff() {
+        tariffRepository.save(Tariff.builder()
                 .originCountry("840")
                 .destinationCountry("702")
                 .product("847130")
@@ -185,19 +83,47 @@ class DefaultQuoteServiceTest {
 
         assertThat(response.isFromCache()).isTrue();
         assertThat(response.getTariffRate()).isEqualTo(0.123);
+        assertThat(response.getHttpStatus()).isEqualTo(200);
     }
 
     @Test
-    void calculateQuoteCombinesProductPricingAndFees() {
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(200)
-                .setHeader("Content-Type", "application/json")
-                .setBody(SAMPLE_RESPONSE));
+    void fetchQuoteFallsBackToWitsDatasetWhenNoManualTariff() {
+        witsTariffRepository.save(WitsTariff.builder()
+                .nomenCode("H0")
+                .reporterIso("840")
+                .partnerCode("702")
+                .productCode("847130")
+                .year(2021)
+                .simpleAverage(BigDecimal.valueOf(7.5))
+                .sourceFile("test.csv")
+                .build());
 
-        mockWebServer.enqueue(new MockResponse()   // second call needs a response too
-          .setResponseCode(200)
-          .setHeader("Content-Type", "application/json")
-          .setBody(SAMPLE_RESPONSE));
+        TariffApiRequest request = TariffApiRequest.builder()
+                .originCountry("840")
+                .destCountry("702")
+                .hs6("847130")
+                .year("2021")
+                .build();
+
+        TariffApiResponse response = defaultQuoteService.fetchQuote(request);
+
+        assertThat(response.getTariffRate()).isEqualTo(0.075);
+        assertThat(response.getYear()).isEqualTo(2021);
+        assertThat(response.getNomenclature()).isEqualTo("H0");
+    }
+
+    @Test
+    void calculateQuoteUsesDatasetTariffWhenManualCacheMissing() {
+        witsTariffRepository.save(WitsTariff.builder()
+                .nomenCode("H0")
+                .reporterIso("840")
+                .partnerCode("702")
+                .productCode("847130")
+                .year(2021)
+                .simpleAverage(BigDecimal.valueOf(7.5))
+                .sourceFile("test.csv")
+                .build());
+
         TariffRequest request = new TariffRequest();
         request.setFromCountry("840");
         request.setToCountry("702");
@@ -220,7 +146,6 @@ class DefaultQuoteServiceTest {
         assertThat(response.getProcessingFee()).isEqualTo(5.0);
         assertThat(response.getOtherFees()).isEqualTo(0.0);
         assertThat(response.getTotalPrice()).isEqualTo(465.0);
-        assertThat(response.getSegments()).isEmpty();
-        assertThat(response.getSource()).isEqualTo("H5");
+        assertThat(response.getLabel()).isEqualTo("Dataset tariff rate");
     }
 }

@@ -58,8 +58,8 @@ const COMMAND_INJECTION_PATTERNS = [
 
 // Whitelist patterns for specific input types
 const WHITELIST_PATTERNS = {
-  // Country codes - only 2-letter ISO codes
-  countryCode: /^[A-Z]{2}$/,
+  // Country/partner codes - allow alphanumeric codes like 702, SG, EU
+  countryCode: /^[A-Z0-9_-]{2,6}$/,
   
   // Username - alphanumeric, underscore, hyphen, and common special chars, 3-20 chars
   username: /^[a-zA-Z0-9_\-.;&|`$(){}[\]@#!%^*+=~]{3,20}$/,
@@ -67,8 +67,8 @@ const WHITELIST_PATTERNS = {
   // Email - standard email format
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   
-  // Product names - letters, numbers, spaces, hyphens, 1-50 chars
-  product: /^[a-zA-Z0-9\s-]{1,50}$/,
+  // Product codes (HS codes, aggregate labels)
+  product: /^[A-Za-z0-9_\-]{1,20}$/,
   
   // Quantity - positive integers only
   quantity: /^[1-9]\d*$/,
@@ -79,19 +79,6 @@ const WHITELIST_PATTERNS = {
   // File extensions for images
   imageFile: /\.(jpg|jpeg|png|gif|bmp|webp)$/i,
 };
-
-// Allowed country codes whitelist
-const ALLOWED_COUNTRIES = [
-  'SG', 'US', 'MY', 'TH', 'VN', 'ID', 'PH', 'KR', 'IN', 'AU', 
-  'GB', 'DE', 'FR', 'IT', 'ES', 'CA', 'BR', 'MX', 'RU', 'ZA', 
-  'CN', 'JP'
-];
-
-// Allowed product categories whitelist
-const ALLOWED_PRODUCTS = [
-  'electronics', 'clothing', 'furniture', 'food', 'books', 
-  'toys', 'tools', 'beauty', 'sports', 'automotive'
-];
 
 /**
  * Check if input contains dangerous patterns
@@ -146,12 +133,9 @@ export const validateCountryCode = (countryCode) => {
   
   const errors = [...baseValidation.errors];
   
-  if (!WHITELIST_PATTERNS.countryCode.test(countryCode)) {
-    errors.push('Country code must be exactly 2 uppercase letters');
-  }
-  
-  if (!ALLOWED_COUNTRIES.includes(countryCode)) {
-    errors.push(`Country code '${countryCode}' is not supported`);
+  const normalized = countryCode.toUpperCase();
+  if (!WHITELIST_PATTERNS.countryCode.test(normalized)) {
+    errors.push('Country code must be 2-6 characters using letters, numbers, underscores, or hyphens');
   }
   
   return {
@@ -221,11 +205,7 @@ export const validateProduct = (product) => {
   const errors = [...baseValidation.errors];
   
   if (!WHITELIST_PATTERNS.product.test(product)) {
-    errors.push('Product name must be 1-50 characters, letters, numbers, spaces, or hyphens only');
-  }
-  
-  if (!ALLOWED_PRODUCTS.includes(product)) {
-    errors.push(`Product '${product}' is not supported`);
+    errors.push('Product code can only contain letters, numbers, underscores, or hyphens (max 20 chars)');
   }
   
   return {

@@ -62,6 +62,7 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/lookups/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Only ADMIN can access any other endpoints
               // If your authorities are stored with the ROLE_ prefix, prefer hasRole/AnyhasAnyRole

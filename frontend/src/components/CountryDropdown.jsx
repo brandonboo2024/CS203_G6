@@ -1,21 +1,34 @@
-export default function CountryDropdown({ label, value, onChange }) {
-  const countries = [
-    ["SG", "Singapore"], ["US", "United States"], ["MY", "Malaysia"],
-    ["TH", "Thailand"], ["VN", "Vietnam"], ["ID", "Indonesia"],
-    ["PH", "Philippines"], ["KR", "South Korea"], ["IN", "India"],
-    ["AU", "Australia"], ["GB", "United Kingdom"], ["DE", "Germany"],
-    ["FR", "France"], ["IT", "Italy"], ["ES", "Spain"], ["CA", "Canada"],
-    ["BR", "Brazil"], ["MX", "Mexico"], ["RU", "Russia"], ["ZA", "South Africa"],
-    ["CN", "China"], ["JP", "Japan"]
-  ];
+export default function CountryDropdown({
+  label,
+  value,
+  onChange,
+  options = [],
+  disabled = false,
+  loading = false,
+  placeholder = "Select Country",
+}) {
+  const normalized = options.map((option) =>
+    typeof option === "string"
+      ? { code: option, label: option }
+      : option
+  );
+  const isDisabled = disabled || normalized.length === 0;
 
   return (
     <div className="form-row">
       <label>{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="" disabled>Select Country</option>
-        {countries.map(([code, name]) => (
-          <option key={code} value={code}>{name}</option>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={isDisabled}
+      >
+        <option value="" disabled>
+          {loading ? "Loading..." : placeholder}
+        </option>
+        {normalized.map(({ code, label }) => (
+          <option key={code} value={code}>
+            {label || code}
+          </option>
         ))}
       </select>
     </div>
