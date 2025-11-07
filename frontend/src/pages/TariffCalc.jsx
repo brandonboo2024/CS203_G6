@@ -177,37 +177,12 @@ export default function TariffCalc() {
         setLoading(false);
         return;
     }
-    
-    // Sanitize inputs before sending
-    // const request = {
-    //     fromCountry: sanitizeInput(fromCountry),
-    //     toCountry: sanitizeInput(toCountry),
-    //     product: sanitizeInput(product),
-    //     quantity: parseInt(quantity),
-    //     handling: fees.handling,
-    //     inspection: fees.inspection,
-    //     processing: fees.processing,
-    //     others: fees.others,
-    //     calculationFrom: toIso(calculationFrom),
-    //     calculationTo: toIso(calculationTo),
-    // };
-    //
-    // if (!calculationFrom || !calculationTo) {
-    //   setError("Please select both start and end date/time.");
-    //   return;
-    // }
-    //
-    // const fromDate = new Date(calculationFrom);
-    // const toDate = new Date(calculationTo);
-    // if (fromDate > toDate) {
-    //   setError("End date/time must be after start date/time.");
-    //   return;
-    // }
 
+    // Sanitize inputs before sending
     const request = {
-      fromCountry,
-      toCountry,
-      product,
+      fromCountry: sanitizeInput(fromCountry),
+      toCountry: sanitizeInput(toCountry),
+      product: sanitizeInput(product),
       quantity: parseInt(quantity),
       handling: fees.handling,
       inspection: fees.inspection,
@@ -597,7 +572,7 @@ export default function TariffCalc() {
                   borderRadius: '6px',
                   border: 'none',
                   backgroundColor: '#808080',
-                  color: '#fff',
+                  color: '#000000ff',
                   fontSize: '1rem',
                   cursor: 'pointer',
                   fontWeight: '500'
@@ -617,7 +592,7 @@ export default function TariffCalc() {
                   borderRadius: '6px',
                   border: 'none',
                   backgroundColor: '#808080',
-                  color: '#fff',
+                  color: '#000000ff',
                   fontSize: '1rem',
                   cursor: 'pointer',
                   fontWeight: '500'
@@ -650,7 +625,7 @@ export default function TariffCalc() {
                   borderRadius: '6px',
                   border: 'none',
                   backgroundColor: '#808080',
-                  color: '#fff',
+                  color: '#000000ff',
                   fontSize: '1rem',
                   cursor: 'pointer',
                   fontWeight: '500'

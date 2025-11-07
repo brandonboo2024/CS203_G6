@@ -23,10 +23,16 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+    public ResponseEntity<?> register(@jakarta.validation.Valid @RequestBody RegisterRequest req) {
         try {
             User newUser = userService.registerUser(req.getUsername(), req.getEmail(), req.getPassword());
-            return ResponseEntity.ok(newUser); // newUser has joinedAt
+            // avoid returning passwordHash or sensitive fields
+            Map<String, Object> out = new HashMap<>();
+            out.put("id", newUser.getId());
+            out.put("username", newUser.getUsername());
+            out.put("email", newUser.getEmail());
+            out.put("role", newUser.getRole());
+            return ResponseEntity.ok(out);
         } catch (RuntimeException e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", e.getMessage());
@@ -35,7 +41,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<LoginResponse> login(@jakarta.validation.Valid @RequestBody LoginRequest req) {
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
         );
