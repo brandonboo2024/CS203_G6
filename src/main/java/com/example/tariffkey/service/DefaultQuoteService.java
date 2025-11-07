@@ -19,18 +19,17 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.time.OffsetDateTime;
-<<<<<<< HEAD
-=======
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
->>>>>>> brandon
 
 @Service
 public class DefaultQuoteService {
 
     private static final ObjectMapper OM = new ObjectMapper();
+    private static final Map<String, String> COUNTRY_CODE_MAP = buildCountryCodeMap();
+    private static final Map<String, String> PRODUCT_CODE_MAP = buildProductCodeMap();
 
     private final ProductRepository productRepository;
     private final FeeScheduleRepository feeScheduleRepository;
@@ -63,33 +62,28 @@ public class DefaultQuoteService {
     }
 
     public TariffApiResponse fetchQuote(TariffApiRequest request) {
-        // Check local database first
+        String originCountry = requireCountryCode(request.getOriginCountry(), "origin country");
+        String destinationCountry = requireCountryCode(request.getDestCountry(), "destination country");
+        String productCode = requireProductCode(request.getHs6());
+        String year = normalizeYear(request.getYear());
+
         Optional<Tariff> cachedTariff = tariffRepository.findByOriginCountryAndDestinationCountryAndProduct(
-                request.getOriginCountry(), request.getDestCountry(), request.getHs6());
+                originCountry, destinationCountry, productCode);
 
         if (cachedTariff.isPresent()) {
             Tariff tariff = cachedTariff.get();
             return TariffApiResponse.builder()
                     .tariffRate(tariff.getRate())
+                    .httpStatus(200)
                     .fromCache(true)
                     .build();
         }
 
-        // If not in DB, fetch from API
-        // String reporter = enc(request.getOriginCountry());
-        String reporter = "840";
-        String partner = "000";
-        String product = "020110";
-        String year = "2020";
-        // String partner = enc(request.getDestCountry());
-        // String product = enc(request.getHs6());
-        // String year = enc(request.getYear());
-
         String url = apiBaseUrl
-                + "/reporter/" + reporter
-                + "/partner/" + partner
-                + "/product/" + product
-                + "/year/" + year
+                + "/reporter/" + enc(originCountry)
+                + "/partner/" + enc(destinationCountry)
+                + "/product/" + enc(productCode)
+                + "/year/" + enc(year)
                 + "/datatype/reported"
                 + "?format=JSON";
 
@@ -108,9 +102,9 @@ public class DefaultQuoteService {
 
             // Save to database
             Tariff newTariff = Tariff.builder()
-                    .originCountry(request.getOriginCountry())
-                    .destinationCountry(request.getDestCountry())
-                    .product(request.getHs6())
+                    .originCountry(originCountry)
+                    .destinationCountry(destinationCountry)
+                    .product(productCode)
                     .rate(parsed.rateDecimal())
                     .build();
             tariffRepository.save(newTariff);
@@ -140,129 +134,127 @@ public class DefaultQuoteService {
   }
 
 
-  private String resolveCountryToCountryCode(String Country){
-      Map<String, String> memberCode = new HashMap<>();
-{
-    memberCode.put("SG", "702");
-    memberCode.put("Singapore" , "702");
-
-    memberCode.put("US" , "840");
-    memberCode.put("United States" , "840");
-
-    memberCode.put("MY" , "458");
-    memberCode.put("Malaysia" , "458");
-
-    memberCode.put("TH" , "764");
-    memberCode.put("Thailand" , "764");
-
-    memberCode.put("VN" , "704");
-    memberCode.put("Vietnam" , "704");
-
-    memberCode.put("ID" , "360");
-    memberCode.put("Indonesia" , "360");
-
-    memberCode.put("PH" , "608");
-    memberCode.put("Philippines" , "608");
-
-    memberCode.put("KR" , "410");
-    memberCode.put("South Korea" , "410");
-
-    memberCode.put("IN" , "356");
-    memberCode.put("India" , "356");
-
-    memberCode.put("AU" , "036");
-    memberCode.put("Australia" , "036");
-
-    memberCode.put("GB" , "826");
-    memberCode.put("United Kingdom" , "826");
-
-    memberCode.put("DE" , "276"); //European Union
-    memberCode.put("Germany" , "276"); //European Union -> ECS
-    memberCode.put("FR" , "250");//European Union , can't find the "german" and "france" Econnomies in website, doesnt exist
-    memberCode.put("France" , "250");// EU
-    memberCode.put("IT" , "380"); //EU
-    memberCode.put("Italy" , "380"); //EU
-    memberCode.put("ES" , "724"); //EU
-    memberCode.put("Spain" , "724"); //EU
-
-    memberCode.put("CA" , "124");
-    memberCode.put("Canada" , "124");
-
-    memberCode.put("BR" , "076");
-    memberCode.put("Brazil" , "076");
-
-    memberCode.put("MX" , "484");
-    memberCode.put("Mexico" , "484");
-
-    memberCode.put("RU" , "643");
-    memberCode.put("Russia" , "643");
-
-    memberCode.put("ZA" , "710");
-    memberCode.put("South Africa" , "710");
-
-    memberCode.put("CN" , "156");
-    memberCode.put("China" , "156");
-
-    memberCode.put("JP" , "392");
-    memberCode.put("Japan" , "392");
-
-}
-
-    String countryCode = memberCode.get(Country);
-
-    return countryCode;
+  private String resolveCountryToCountryCode(String country) {
+      String normalized = trimToNull(country);
+      if (normalized == null) {
+          return null;
+      }
+      if (isDigits(normalized, 3, 3)) {
+          return normalized;
+      }
+      return COUNTRY_CODE_MAP.get(normalized.toUpperCase(Locale.ROOT));
   }
 
   private String resolveProductToProductCode(String product){
+      String normalized = trimToNull(product);
+      if (normalized == null) {
+          return null;
+      }
+      if (isDigits(normalized, 4, 10) || normalized.contains("-") || normalized.contains("_")) {
+          return normalized;
+      }
+      return PRODUCT_CODE_MAP.get(normalized.toLowerCase(Locale.ROOT));
+  }
 
-Map<String,String> productCode = new HashMap<>();
-    {
-        productCode.put("electronics" , "84-85_MachElec");//Machine and Electronic
-        productCode.put("Electronics" , "84-85_MachElec");//
+  private String requireCountryCode(String value, String fieldName) {
+      String resolved = resolveCountryToCountryCode(value);
+      if (resolved == null) {
+          throw new IllegalArgumentException("Unknown " + fieldName + ": " + value);
+      }
+      return resolved;
+  }
 
-        productCode.put("clothing" , "50-63_TextCloth");
-        productCode.put("Clothing" , "50-63_TextCloth");//Textiles and Clothing
+  private String requireProductCode(String value) {
+      String resolved = resolveProductToProductCode(value);
+      if (resolved == null) {
+          throw new IllegalArgumentException("Unknown product code: " + value);
+      }
+      return resolved;
+  }
 
-        productCode.put("furniture" , "UNCTAD-SoP3"); //Consumer goods
-        productCode.put("Furniture" , "UNCTAD-SoP3");//
+  private String normalizeYear(String year) {
+      String normalized = trimToNull(year);
+      return normalized == null ? "ALL" : normalized;
+  }
 
+  private static String trimToNull(String value) {
+      if (value == null) {
+          return null;
+      }
+      String trimmed = value.trim();
+      return trimmed.isEmpty() ? null : trimmed;
+  }
 
-        productCode.put("food" , "16-24_FoodProd");//Food Products
-        productCode.put("Food" , "16-24_FoodProd");//
+  private static boolean isDigits(String value, int minLen, int maxLen) {
+      int len = value.length();
+      if (len < minLen || len > maxLen) {
+          return false;
+      }
+      for (int i = 0; i < len; i++) {
+          if (!Character.isDigit(value.charAt(i))) {
+              return false;
+          }
+      }
+      return true;
+  }
 
+  private static Map<String, String> buildCountryCodeMap() {
+      Map<String, String> codes = new HashMap<>();
+      addCountryCodes(codes, "702", "SG", "SINGAPORE");
+      addCountryCodes(codes, "840", "US", "UNITED STATES");
+      addCountryCodes(codes, "458", "MY", "MALAYSIA");
+      addCountryCodes(codes, "764", "TH", "THAILAND");
+      addCountryCodes(codes, "704", "VN", "VIETNAM");
+      addCountryCodes(codes, "360", "ID", "INDONESIA");
+      addCountryCodes(codes, "608", "PH", "PHILIPPINES");
+      addCountryCodes(codes, "410", "KR", "SOUTH KOREA");
+      addCountryCodes(codes, "356", "IN", "INDIA");
+      addCountryCodes(codes, "036", "AU", "AUSTRALIA");
+      addCountryCodes(codes, "826", "GB", "UNITED KINGDOM");
+      addCountryCodes(codes, "276", "DE", "GERMANY");
+      addCountryCodes(codes, "250", "FR", "FRANCE");
+      addCountryCodes(codes, "380", "IT", "ITALY");
+      addCountryCodes(codes, "724", "ES", "SPAIN");
+      addCountryCodes(codes, "124", "CA", "CANADA");
+      addCountryCodes(codes, "076", "BR", "BRAZIL");
+      addCountryCodes(codes, "484", "MX", "MEXICO");
+      addCountryCodes(codes, "643", "RU", "RUSSIA");
+      addCountryCodes(codes, "710", "ZA", "SOUTH AFRICA");
+      addCountryCodes(codes, "156", "CN", "CHINA");
+      addCountryCodes(codes, "392", "JP", "JAPAN");
+      return Collections.unmodifiableMap(codes);
+  }
 
-        // productCode.put("books" , "Textiles");//no books so put textiles
-        // productCode.put("Books" , "Textiles");
+  private static void addCountryCodes(Map<String, String> target, String code, String... aliases) {
+      for (String alias : aliases) {
+          target.put(alias.toUpperCase(Locale.ROOT), code);
+      }
+  }
 
-        // productCode.put("toys" , "Total");//no toys so assume is under "Total , all products category"
-        // productCode.put("Toys" , "Total");
+  private static Map<String, String> buildProductCodeMap() {
+      Map<String, String> codes = new HashMap<>();
+      addProductCode(codes, "electronics", "84-85_MachElec");
+      addProductCode(codes, "clothing", "50-63_TextCloth");
+      addProductCode(codes, "furniture", "UNCTAD-SoP3");
+      addProductCode(codes, "food", "16-24_FoodProd");
+      addProductCode(codes, "tools", "manuf");
+      addProductCode(codes, "beauty", "UNCTAD-SoP3");
+      addProductCode(codes, "beauty products", "UNCTAD-SoP3");
+      addProductCode(codes, "sports", "64-67_Footwear");
+      addProductCode(codes, "sports equipment", "64-67_Footwear");
+      addProductCode(codes, "automotive", "Transp");
+      addProductCode(codes, "automotive parts", "Transp");
+      addProductCode(codes, "chem", "28-38_Chemicals");
+      addProductCode(codes, "chemicals", "28-38_Chemicals");
+      addProductCode(codes, "plastic or rubber", "39-40_PlastiRub");
+      addProductCode(codes, "plastic , rubber", "39-40_PlastiRub");
+      addProductCode(codes, "misc", "90-99_Miscellan");
+      addProductCode(codes, "miscallaneous", "90-99_Miscellan");
+      return Collections.unmodifiableMap(codes);
+  }
 
-        productCode.put("tools" , "manuf");//assuming the tools are used for manufacturing , it should fall under here
-        productCode.put("Tools" , "manuf");
-
-        productCode.put("beauty" , "UNCTAD-SoP3");// beauty products should fall under consumer goods category
-        productCode.put("Beauty Products" , "UNCTAD-SoP3");
-
-        productCode.put("sports" , "64-67_Footwear");//i think the closest is footwear caetgory, unless we want consumer goods, but that 
-        productCode.put("Sports Equipment" , "64-67_Footwear");//shouldnt be used too much
-
-        productCode.put("automotive" , "Transp");//machinery and transport
-        productCode.put("Automotive Parts" , "Transp");//
-
-        productCode.put("chem" , "28-38_Chemicals");//Chemicals
-        productCode.put("Chemicals" , "28-38_Chemicals");//
-
-        productCode.put("plastic or rubber" , "39-40_PlastiRub");//For materials of Plastic and Rubber
-        productCode.put("Plastic , Rubber" , "39-40_PlastiRub");//
-
-        productCode.put("misc" , "90-99_Miscellan");//For materials of Plastic and Rubber
-        productCode.put("Miscallaneous" , "90-99_Miscellan");//
-
-    }
-
-    String codeForProduct = productCode.get(product);
-
-    return codeForProduct;
+  private static void addProductCode(Map<String, String> target, String alias, String code) {
+      target.put(alias.toLowerCase(Locale.ROOT), code);
   }
 
 
@@ -276,9 +268,9 @@ Map<String,String> productCode = new HashMap<>();
                 .orElseThrow(() -> new IllegalArgumentException("Unknown product: " + request.getProduct()));
 
         TariffApiRequest apiRequest = TariffApiRequest.builder()
-                .originCountry(resolveCountryToCountryCode(request.getFromCountry()))
-                .destCountry(resolveCountryToCountryCode(request.getToCountry()))
-                .hs6(resolveProductToProductCode(product.getHsCode()))
+                .originCountry(requireCountryCode(request.getFromCountry(), "origin country"))
+                .destCountry(requireCountryCode(request.getToCountry(), "destination country"))
+                .hs6(requireProductCode(product.getHsCode()))
                 .year(resolveYear(request))
                 .build();
 

@@ -117,6 +117,15 @@ class DefaultQuoteServiceTest {
         feeScheduleRepository.deleteAll();
         tariffRepository.deleteAll();
 
+        // // Clear any remaining mock responses from previous tests
+        // while (mockWebServer.getRequestCount() > 0) {
+        //     try {
+        //         mockWebServer.takeRequest();
+        //     } catch (InterruptedException e) {
+        //         Thread.currentThread().interrupt();
+        //         break;
+        //     }
+        // }
         productRepository.save(Product.builder()
                 .code("electronics")
                 .hsCode("847130")
@@ -185,6 +194,10 @@ class DefaultQuoteServiceTest {
                 .setHeader("Content-Type", "application/json")
                 .setBody(SAMPLE_RESPONSE));
 
+        mockWebServer.enqueue(new MockResponse()   // second call needs a response too
+          .setResponseCode(200)
+          .setHeader("Content-Type", "application/json")
+          .setBody(SAMPLE_RESPONSE));
         TariffRequest request = new TariffRequest();
         request.setFromCountry("840");
         request.setToCountry("702");
