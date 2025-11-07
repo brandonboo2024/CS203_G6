@@ -360,9 +360,9 @@ Map<String,String> productCode = new HashMap<>();
         return null;
     }
 
-    private record Parsed(double rateDecimal, String[] tariffTypes, Integer year, String nomenCode) {
-        static Parsed empty() {
-            return new Parsed(0.0, new String[0], null, null);
-        }
-    }
+    // private record Parsed(double rateDecimal, String[] tariffTypes, Integer year, String nomenCode) {
+    //     static Parsed empty() {
+    //         return new Parsed(0.0, new String[0], null, null);
+    //     }
+    // }
 }
