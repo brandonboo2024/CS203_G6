@@ -33,7 +33,7 @@ public class TariffController {
     }
 
     @PostMapping("/calculate")
-    public TariffResponse calculate(@RequestBody TariffRequest request) {
+    public TariffResponse calculate(@jakarta.validation.Valid @RequestBody TariffRequest request) {
         System.out.println("Received response");
         return tariffService2.calculate(request);
     }

@@ -1,16 +1,29 @@
 package com.example.tariffkey.model;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class TariffRequest {
+    @NotBlank
     private String fromCountry;
+
+    @NotBlank
     private String toCountry;
+
+    @NotBlank
     private String product;
-    private int quantity;
+
+    @NotNull
+    @Min(1)
+    private Integer quantity;
+
     private boolean handling;
     private boolean inspection;
     private boolean processing;
     private boolean others;
     
-    // added datetime field
+    // added datetime field (optional)
     private String calculationFrom;
     private String calculationTo;
 
@@ -32,10 +45,10 @@ public class TariffRequest {
     public void setProduct(String product) {
         this.product = product;
     }
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
     public boolean isHandling() {
