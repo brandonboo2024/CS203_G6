@@ -16,22 +16,20 @@ export default function Login() {
 
     // Validate form data
     const formData = { username, password };
-    // const validation = validateForm(formData, 'login');
-    // if (!validation.isValid) {
-    //   setValidationErrors(validation.errors);
-    //   setLoading(false);
-    //   return;
-    // }
+    const validation = validateForm(formData, 'login');
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          username: username,
-          password : password,
-          // username: sanitizeInput(username), 
-          // password: sanitizeInput(password) 
+        body: JSON.stringify({
+          username: sanitizeInput(username),
+          password: sanitizeInput(password)
         }),
       });
 

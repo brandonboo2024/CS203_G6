@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.constraints.Positive;
 
 import com.example.tariffkey.model.Tariff;
 import com.example.tariffkey.model.TariffApiRequest;
@@ -18,7 +19,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @RestController
 @RequestMapping("/api/tariff")
 @CrossOrigin(origins = "http://localhost:5173")
@@ -39,7 +42,7 @@ public class TariffController {
     }
     
     @PostMapping("/quote")
-    public TariffApiResponse quote(@RequestBody TariffApiRequest quote){
+    public TariffApiResponse quote(@jakarta.validation.Valid @RequestBody TariffApiRequest quote){
       System.out.println("Sending request to API...\n");
       return tariffQuote.fetchFromApi(quote);
     }
@@ -52,12 +55,12 @@ public class TariffController {
     }
 
     @PostMapping("/add")
-    public Tariff addTariff(@RequestBody Tariff tariff) {
+    public Tariff addTariff(@jakarta.validation.Valid @RequestBody Tariff tariff) {
         return tariffService2.addTariff(tariff);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteTariff(@PathVariable int id) {
+    public void deleteTariff(@PathVariable @Positive int id) {
         tariffService2.deleteTariff(id);
     }
 
