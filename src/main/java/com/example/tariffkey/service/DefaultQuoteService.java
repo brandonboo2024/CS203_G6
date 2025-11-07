@@ -1,161 +1,180 @@
 package com.example.tariffkey.service;
 
-import com.example.tariffkey.model.TariffApiRequest;
-import com.example.tariffkey.model.TariffApiResponse;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.example.tariffkey.exception.TariffNotFoundException;
+import com.example.tariffkey.model.*;
+import com.example.tariffkey.repository.FeeScheduleRepository;
+import com.example.tariffkey.repository.ProductRepository;
+import com.example.tariffkey.repository.TariffRepository;
+import com.example.tariffkey.repository.WitsTariffRepository;
 import org.springframework.stereotype.Service;
-import java.net.URI;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DefaultQuoteService {
 
-  private static final ObjectMapper OM = new ObjectMapper();
+    private final ProductRepository productRepository;
+    private final FeeScheduleRepository feeScheduleRepository;
+    private final TariffRepository tariffRepository;
+    private final WitsTariffRepository witsTariffRepository;
 
-  private static String enc(String s) {
-    return s == null ? "" : URLEncoder.encode(s.trim(), StandardCharsets.UTF_8);
-  }
-
-  private static String safe(String s) {
-    return s == null ? "" : s.replace("\"", "'");
-  }
-
-  public TariffApiResponse fetchFromApi(TariffApiRequest request) {
-    // NOTE: In WITS TRN, reporter = IMPORTER (destination), partner = ORIGIN.
-    // Your code currently sets reporter=origin & partner=dest; flip if needed.
-    String reporter = enc(request.getOriginCountry());   // e.g., "840"  (importer)
-    String partner  = enc(request.getDestCountry()); // e.g., "702"  (exporter) or "000" for World
-    String product  = enc(request.getHs6());           // HS-6 e.g., "847130"
-    String year     = enc(request.getYear());          // "2022" or "ALL"
-
-    String url = "https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN/"
-        + "reporter/" + reporter
-        + "/partner/" + partner
-        + "/product/" + product
-        + "/year/" + year
-        + "/datatype/reported"
-        + "?format=JSON";
-
-    System.out.println(url);
-
-    try {
-      HttpClient client = HttpClient.newBuilder()
-          .connectTimeout(Duration.ofSeconds(20))
-          .build();
-
-      HttpRequest req = HttpRequest.newBuilder()
-          .uri(URI.create(url))
-          .timeout(Duration.ofSeconds(60))
-          .header("Accept", "application/json")
-          .GET()
-          .build();
-
-      HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
-
-      // Parse SDMX-JSON into fields
-      Parsed p = parseSdmx(resp.body());
-
-      // Build your response DTO
-      TariffApiResponse out = TariffApiResponse.builder()
-          .url(url)
-          .httpStatus(resp.statusCode())
-          .body(resp.body())                 // keep raw for debugging
-          .tariffRate(p.rateDecimal)         // decimal, e.g., 0.264 for 26.4%
-          .tariffTypes(p.tariffTypes)        // e.g., ["MFN"] or ["PREF"]
-          .year(p.year)                      // e.g., 2000
-          .nomenclature(p.nomenCode)         // e.g., "H1" (HS1996), "H5" (HS2012), etc.
-          .build();
-      System.out.println("Received back call");
-
-      return out;
-
-    } catch (Exception e) {
-      TariffApiResponse out = new TariffApiResponse();
-      out.setUrl(url);
-      out.setHttpStatus(500);
-      out.setBody("{\"error\":\"" + safe(e.getMessage()) + "\"}");
-      return out;
-    }
-  }
-
-  /** ---- Minimal SDMX parser for the fields you care about ---- */
-  private static Parsed parseSdmx(String json) throws Exception {
-    JsonNode root = OM.readTree(json);
-
-    // 1) Grab the first series (you asked for one product/year, so there should be 1)
-    JsonNode seriesNode = root.path("dataSets").path(0).path("series");
-    if (seriesNode.isMissingNode() || !seriesNode.fieldNames().hasNext()) {
-      return Parsed.empty(); // no data
-    }
-    String firstSeriesKey = seriesNode.fieldNames().next();
-    JsonNode observations = seriesNode.path(firstSeriesKey).path("observations");
-    if (observations.isMissingNode() || !observations.fieldNames().hasNext()) {
-      return Parsed.empty();
+    @org.springframework.beans.factory.annotation.Autowired
+    public DefaultQuoteService(ProductRepository productRepository,
+                               FeeScheduleRepository feeScheduleRepository,
+                               TariffRepository tariffRepository,
+                               WitsTariffRepository witsTariffRepository) {
+        this.productRepository = productRepository;
+        this.feeScheduleRepository = feeScheduleRepository;
+        this.tariffRepository = tariffRepository;
+        this.witsTariffRepository = witsTariffRepository;
     }
 
-    // 2) Map observation index -> year (from structure.dimensions.observation[0].values)
-    JsonNode timeVals = root.path("structure").path("dimensions").path("observation").get(0).path("values");
-    // pick the "best" observation (if there are multiple years, choose the latest by year id)
-    String bestObsIdx = null;
-    int bestYear = Integer.MIN_VALUE;
-    Iterator<String> it = observations.fieldNames();
-    while (it.hasNext()) {
-      String idx = it.next();                   // e.g., "0", "1", ...
-      int year = parseIntSafe(timeVals.path(Integer.parseInt(idx)).path("id").asText());
-      if (year > bestYear) {
-        bestYear = year;
-        bestObsIdx = idx;
-      }
-    }
-    if (bestObsIdx == null) return Parsed.empty();
+    public TariffApiResponse fetchQuote(TariffApiRequest request) {
+        String originCountry = requireCode(request.getOriginCountry(), "origin country");
+        String destinationCountry = requireCode(request.getDestCountry(), "destination country");
+        String productCode = requireCode(request.getHs6(), "product");
+        String yearValue = trimToNull(request.getYear());
+        Integer requestedYear = parseYear(yearValue);
 
-    // 3) Pull the SimpleAverage percent from the chosen observation, convert to decimal
-    double simpleAveragePercent = observations.path(bestObsIdx).path(0).asDouble(Double.NaN);
-    double rateDecimal = Double.isNaN(simpleAveragePercent) ? 0.0 : simpleAveragePercent / 100.0;
+        Optional<Tariff> cachedTariff = tariffRepository.findByOriginCountryAndDestinationCountryAndProduct(
+                originCountry, destinationCountry, productCode);
 
-    // 4) Observation attributes: TariffType(s), NomenCode
-    // structure.attributes.observation holds code lists; in your sample, each has a single value.
-    JsonNode obsAttrs = root.path("structure").path("attributes").path("observation");
-    String nomenCode = valueByIdSingle(obsAttrs, "NOMENCODE");  // e.g., "H1"
-    // TARIFFTYPE may be MFN or PREF (sometimes one value). Return as array to match your DTO.
-    String tariffType = valueByIdSingle(obsAttrs, "TARIFFTYPE"); // e.g., "MFN"
-    String[] tariffTypes = (tariffType == null || tariffType.isBlank())
-        ? new String[0]
-        : new String[]{tariffType};
-
-    return new Parsed(rateDecimal, tariffTypes, bestYear, nomenCode);
-  }
-
-  private static int parseIntSafe(String s) {
-    try { return Integer.parseInt(s); } catch (Exception e) { return Integer.MIN_VALUE; }
-  }
-
-  // returns the first value.id for the attribute with matching id, or null
-  private static String valueByIdSingle(JsonNode attrs, String id) {
-    if (attrs == null || !attrs.isArray()) return null;
-    for (JsonNode a : attrs) {
-      if (id.equals(a.path("id").asText())) {
-        JsonNode vals = a.path("values");
-        if (vals.isArray() && vals.size() > 0) {
-          return vals.get(0).path("id").asText(null);
+        if (cachedTariff.isPresent()) {
+            Tariff tariff = cachedTariff.get();
+            return TariffApiResponse.builder()
+                    .tariffRate(tariff.getRate())
+                    .httpStatus(200)
+                    .fromCache(true)
+                    .build();
         }
-      }
+
+        Optional<WitsTariff> fromDataset = requestedYear == null
+                ? Optional.empty()
+                : witsTariffRepository.findFirstByReporterIsoAndPartnerCodeAndProductCodeAndYearOrderByIdAsc(
+                        originCountry, destinationCountry, productCode, requestedYear);
+
+        if (fromDataset.isEmpty()) {
+            fromDataset = witsTariffRepository.findFirstByReporterIsoAndPartnerCodeAndProductCodeOrderByYearDesc(
+                    originCountry, destinationCountry, productCode);
+        }
+
+        WitsTariff match = fromDataset.orElseThrow(() ->
+                new TariffNotFoundException("No tariff data found for the selected combination"));
+
+        double rateDecimal = percentageToRate(match.getSimpleAverage());
+
+        return TariffApiResponse.builder()
+                .httpStatus(200)
+                .tariffRate(rateDecimal)
+                .tariffTypes(match.getEstCode() == null ? new String[0] : new String[]{match.getEstCode()})
+                .year(match.getYear())
+                .nomenclature(match.getNomenCode())
+                .fromCache(true)
+                .url("wits_tariffs:" + match.getSourceFile())
+                .body("Lookup from imported dataset")
+                .build();
     }
-    return null;
+
+  private String requireCode(String value, String fieldName) {
+      String normalized = trimToNull(value);
+      if (normalized == null) {
+          throw new IllegalArgumentException("Missing " + fieldName + " code");
+      }
+      return normalized;
   }
 
-  /** tiny holder for parsed pieces */
-  private record Parsed(double rateDecimal, String[] tariffTypes, Integer year, String nomenCode) {
-    static Parsed empty() { return new Parsed(0.0, new String[0], null, null); }
+  private Integer parseYear(String value) {
+      if (value == null || value.equalsIgnoreCase("ALL")) {
+          return null;
+      }
+      try {
+          return Integer.parseInt(value);
+      } catch (NumberFormatException ex) {
+          return null;
+      }
   }
+
+  private static String trimToNull(String value) {
+      if (value == null) {
+          return null;
+      }
+      String trimmed = value.trim();
+      return trimmed.isEmpty() ? null : trimmed;
+  }
+
+    public TariffResponse calculateQuote(TariffRequest request) {
+        if (request.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
+
+        Product product = productRepository.findByCode(request.getProduct())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown product: " + request.getProduct()));
+
+        TariffApiRequest apiRequest = TariffApiRequest.builder()
+                .originCountry(requireCode(request.getFromCountry(), "origin country"))
+                .destCountry(requireCode(request.getToCountry(), "destination country"))
+                .hs6(requireCode(product.getHsCode(), "product code"))
+                .year(resolveYear(request))
+                .build();
+
+        TariffApiResponse apiResponse = fetchQuote(apiRequest);
+        if (apiResponse.getHttpStatus() >= 400) {
+            throw new IllegalStateException("Failed to retrieve tariff data from imported dataset");
+        }
+
+        double itemPrice = product.getBasePrice() * request.getQuantity();
+        double rateDecimal = apiResponse.getTariffRate();
+        double tariffAmount = itemPrice * rateDecimal;
+
+        double handlingFee = request.isHandling() ? feeAmount("handling") : 0.0;
+        double inspectionFee = request.isInspection() ? feeAmount("inspection") : 0.0;
+        double processingFee = request.isProcessing() ? feeAmount("processing") : 0.0;
+        double otherFees = request.isOthers() ? feeAmount("others") : 0.0;
+
+        TariffResponse response = new TariffResponse();
+        response.setItemPrice(itemPrice);
+        response.setTariffRate(rateDecimal * 100.0);
+        response.setTariffAmount(tariffAmount);
+        response.setHandlingFee(handlingFee);
+        response.setInspectionFee(inspectionFee);
+        response.setProcessingFee(processingFee);
+        response.setOtherFees(otherFees);
+        response.setTotalPrice(itemPrice + tariffAmount + handlingFee + inspectionFee + processingFee + otherFees);
+        response.setSegments(new ArrayList<>());
+        response.setLabel(apiResponse.isFromCache() ? "Dataset tariff rate" : "Average tariff rate (WITS)");
+        response.setSource(apiResponse.getNomenclature());
+        return response;
+    }
+
+    private String resolveYear(TariffRequest request) {
+        String calcTo = request.getCalculationTo();
+        String calcFrom = request.getCalculationFrom();
+        String reference = calcTo != null && !calcTo.isBlank() ? calcTo : calcFrom;
+        if (reference == null || reference.isBlank()) {
+            return "ALL";
+        }
+        try {
+            return String.valueOf(OffsetDateTime.parse(reference).getYear());
+        } catch (Exception e) {
+            return "ALL";
+        }
+    }
+
+    private double feeAmount(String code) {
+        return feeScheduleRepository.findById(code)
+                .map(FeeSchedule::getAmount)
+                .map(BigDecimal::doubleValue)
+                .orElse(0.0);
+    }
+
+    private double percentageToRate(BigDecimal percentage) {
+        if (percentage == null) {
+            return 0.0;
+        }
+        return percentage.doubleValue() / 100.0;
+    }
 }

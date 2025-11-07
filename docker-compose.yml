@@ -2,7 +2,7 @@
 services:
   db:
     image: postgres:16
-    container_name: mockdb
+    container_name: mockdbv2
     restart: unless-stopped
     environment:
       POSTGRES_USER: dev
@@ -11,11 +11,11 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata2:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dev -d tariffs"]
       interval: 5s
       timeout: 3s
       retries: 10
 volumes:
-  pgdata:
+  pgdata2:

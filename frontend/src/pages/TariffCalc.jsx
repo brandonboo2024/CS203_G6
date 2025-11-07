@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../App.css";
 import { validateForm, sanitizeInput } from "../utils/inputValidation";
 
@@ -23,6 +23,118 @@ export default function TariffCalc() {
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [lookupError, setLookupError] = useState(null);
+  const [lookups, setLookups] = useState({
+    reporters: [],
+    partners: [],
+    products: [],
+  });
+  const [reportersLoading, setReportersLoading] = useState(true);
+  const [partnersLoading, setPartnersLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+  const fetchLookupJson = async (path) => {
+    const response = await fetch(`${apiBaseUrl}${path}`);
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+    if (!response.ok) {
+      throw new Error(
+        (payload && (payload.message || payload.error)) ||
+          "Failed to fetch lookup data"
+      );
+    }
+    return payload;
+  };
+
+  useEffect(() => {
+    const loadReporters = async () => {
+      setReportersLoading(true);
+      try {
+        const data = await fetchLookupJson("/api/lookups");
+        setLookups((prev) => ({
+          ...prev,
+          reporters: data?.reporters ?? [],
+        }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError(
+          err.message ||
+            "Unable to load origin options. Please try again later."
+        );
+        setLookups((prev) => ({ ...prev, reporters: [] }));
+      } finally {
+        setReportersLoading(false);
+      }
+    };
+    loadReporters();
+  }, [apiBaseUrl]);
+
+  useEffect(() => {
+    setToCountry("");
+    setProduct("");
+    if (!fromCountry) {
+      setLookups((prev) => ({ ...prev, partners: [], products: [] }));
+      return;
+    }
+
+    const loadPartners = async () => {
+      setPartnersLoading(true);
+      try {
+        const data = await fetchLookupJson(
+          `/api/lookups/reporters/${fromCountry}/partners`
+        );
+        setLookups((prev) => ({ ...prev, partners: data, products: [] }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError(
+          err.message ||
+            "Unable to load destination options for the selected origin."
+        );
+        setLookups((prev) => ({ ...prev, partners: [], products: [] }));
+      } finally {
+        setPartnersLoading(false);
+      }
+    };
+
+    loadPartners();
+  }, [fromCountry, apiBaseUrl]);
+
+  useEffect(() => {
+    setProduct("");
+    if (!fromCountry || !toCountry) {
+      setLookups((prev) => ({ ...prev, products: [] }));
+      return;
+    }
+
+    const loadProducts = async () => {
+      setProductsLoading(true);
+      try {
+        const data = await fetchLookupJson(
+          `/api/lookups/reporters/${fromCountry}/partners/${toCountry}/products`
+        );
+        setLookups((prev) => ({ ...prev, products: data }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError(
+          err.message ||
+            "No tariff data exists for that country/product combination."
+        );
+        setLookups((prev) => ({ ...prev, products: [] }));
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [fromCountry, toCountry, apiBaseUrl]);
 
   const toggleFee = (key) => {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -123,7 +235,10 @@ export default function TariffCalc() {
       // ---- Save local history ----
       const historyEntry = {
         createdAt: new Date().toISOString(),
-        route: `${fromCountry} → ${toCountry}`,
+        route: `${getLabel(fromCountry, lookups.reporters)} → ${getLabel(
+          toCountry,
+          lookups.partners
+        )}`,
         product,
         total: Number(breakdown.totalPrice ?? 0),
         tariffFrom: request.calculationFrom,
@@ -142,32 +257,10 @@ export default function TariffCalc() {
     }
   };
 
-  const getCountryName = (code) => {
-    const countries = {
-      SG: "Singapore",
-      US: "United States",
-      MY: "Malaysia",
-      TH: "Thailand",
-      VN: "Vietnam",
-      ID: "Indonesia",
-      PH: "Philippines",
-      KR: "South Korea",
-      IN: "India",
-      AU: "Australia",
-      GB: "United Kingdom",
-      DE: "Germany",
-      FR: "France",
-      IT: "Italy",
-      ES: "Spain",
-      CA: "Canada",
-      BR: "Brazil",
-      MX: "Mexico",
-      RU: "Russia",
-      ZA: "South Africa",
-      CN: "China",
-      JP: "Japan",
-    };
-    return countries[code] || code;
+  const getLabel = (code, collection) => {
+    if (!code || !Array.isArray(collection)) return code;
+    const match = collection.find((entry) => entry.code === code);
+    return match?.label || code;
   };
 
   const fmtDate = (iso) => {
@@ -186,17 +279,53 @@ export default function TariffCalc() {
 
         <form onSubmit={handleSubmit} className="calc-form">
           {/* ✅ Replaced long dropdowns with shared components */}
+          {lookupError && (
+            <div className="error-banner">
+              {lookupError}
+            </div>
+          )}
           <CountryDropdown
             label="Origin"
             value={fromCountry}
             onChange={setFromCountry}
+            options={lookups.reporters}
+            disabled={reportersLoading || !!lookupError}
+            loading={reportersLoading}
+            placeholder="Select origin country"
           />
           <CountryDropdown
             label="Destination"
             value={toCountry}
             onChange={setToCountry}
+            options={lookups.partners}
+            disabled={
+              reportersLoading ||
+              partnersLoading ||
+              !!lookupError ||
+              !fromCountry
+            }
+            loading={partnersLoading}
+            placeholder={
+              fromCountry ? "Select destination country" : "Select origin first"
+            }
           />
-          <ProductDropdown value={product} onChange={setProduct} />
+          <ProductDropdown
+            value={product}
+            onChange={setProduct}
+            options={lookups.products}
+            disabled={
+              reportersLoading ||
+              partnersLoading ||
+              productsLoading ||
+              !!lookupError ||
+              !fromCountry ||
+              !toCountry
+            }
+            loading={productsLoading}
+            placeholder={
+              toCountry ? "Select product" : "Choose countries first"
+            }
+          />
 
           {/* Quantity */}
           <div className="form-row">
@@ -248,7 +377,14 @@ export default function TariffCalc() {
           </div>
 
 
-          <button type="submit" disabled={loading}>
+          <button
+            type="submit"
+            disabled={loading ||
+              reportersLoading ||
+              partnersLoading ||
+              productsLoading ||
+              !!lookupError}
+          >
             {loading ? 'Calculating...' : 'Calculate'}
           </button>
         </form>
@@ -309,7 +445,8 @@ export default function TariffCalc() {
                 ${calculatedTotal.toFixed(2)}
               </div>
               <div style={{ color: '#000', fontSize: '0.9rem' }}>
-                {getCountryName(fromCountry)} → {getCountryName(toCountry)}
+                {getLabel(fromCountry, lookups.reporters)} →{" "}
+                {getLabel(toCountry, lookups.partners)}
               </div>
             </div>
 
@@ -334,16 +471,16 @@ export default function TariffCalc() {
                 </div>
 
                 {/* Tariff */}
-                {result.breakdown.tariffAmount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#fff', fontSize: '1rem' }}>
-                      Tariff ({Number(result.breakdown.tariffRate || 0).toFixed(1)}%):
-                    </span>
-                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
-                      ${Number(result.breakdown.tariffAmount || 0).toFixed(2)}
-                    </span>
-                  </div>
-                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#fff', fontSize: '1rem' }}>
+                    Tariff ({Number(result.breakdown.tariffRate || 0).toFixed(1)}%
+                    {Number(result.breakdown.tariffRate || 0) === 0 ? ' - no tariff applies' : ''}
+                    ):
+                  </span>
+                  <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                    ${Number(result.breakdown.tariffAmount || 0).toFixed(2)}
+                  </span>
+                </div>
 
                 {/* Handling Fee - only show if selected */}
                 {fees.handling && result.breakdown.handlingFee > 0 && (
