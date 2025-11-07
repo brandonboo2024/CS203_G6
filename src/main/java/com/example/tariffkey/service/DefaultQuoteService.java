@@ -176,46 +176,44 @@ public class DefaultQuoteService {
 
 Map<String,String> productCode = new HashMap<>();
     {
-        productCode.put("electronics" , "84-85_MachElec");//Machine and Electronic
-        productCode.put("Electronics" , "84-85_MachElec");//
+        productCode.put("electronics" , "854231");//Processors and controllers, whether or not combined with memories, converters,
+        productCode.put("Electronics" , "854231");//logic circuits, amplifiers, clock and timing circuits, or other circuits
 
-        productCode.put("clothing" , "50-63_TextCloth");
-        productCode.put("Clothing" , "50-63_TextCloth");//Textiles and Clothing
+        productCode.put("clothing" , "392620");
+        productCode.put("Clothing" , "392620");//Articles of apparel and clothing accessories (including gloves, mittens and mitts)
 
-        productCode.put("furniture" , "UNCTAD-SoP3"); //Consumer goods
-        productCode.put("Furniture" , "UNCTAD-SoP3");//
-
-
-        productCode.put("food" , "16-24_FoodProd");//Food Products
-        productCode.put("Food" , "16-24_FoodProd");//
+        productCode.put("furniture" , "940310"); //Metal furniture of a kind used in offices
+        productCode.put("Furniture" , "940310");//
 
 
-        // productCode.put("books" , "Textiles");//no books so put textiles
-        // productCode.put("Books" , "Textiles");
+        productCode.put("food" , "160232");//Of fowls of the species Gallus domesticus
+        productCode.put("Food" , "160232");//we assume "BIRD" for food , if not , too many exceptions
 
-        // productCode.put("toys" , "Total");//no toys so assume is under "Total , all products category"
-        // productCode.put("Toys" , "Total");
 
-        productCode.put("tools" , "manuf");//assuming the tools are used for manufacturing , it should fall under here
-        productCode.put("Tools" , "manuf");
+        productCode.put("books" , "482010");//Registers, account books, note books, order books, receipt books, letter pads, memorandum pads, diaries and similar articles
+        productCode.put("Books" , "482010");
 
-        productCode.put("beauty" , "UNCTAD-SoP3");// beauty products should fall under consumer goods category
-        productCode.put("Beauty Products" , "UNCTAD-SoP3");
+        productCode.put("toys" , "950300");// Tricycles, scooters, pedal cars and similar wheeled toys; dolls' carriages;
+        productCode.put("Toys" , "950300");//dolls; other toys; reduced-size ("scale") models and similar recreational models, working or not; puzzles of all kinds.
 
-        productCode.put("sports" , "64-67_Footwear");//i think the closest is footwear caetgory, unless we want consumer goods, but that 
-        productCode.put("Sports Equipment" , "64-67_Footwear");//shouldnt be used too much
+        productCode.put("tools" , "392410");//assuming Tableware and kitchenware
+        productCode.put("Tools" , "392410");
 
-        productCode.put("automotive" , "Transp");//machinery and transport
-        productCode.put("Automotive Parts" , "Transp");//
+        productCode.put("beauty" , "330430");// beauty products which are Manicure or pedicure preparations
+        productCode.put("Beauty Products" , "330430");
 
-        productCode.put("chem" , "28-38_Chemicals");//Chemicals
-        productCode.put("Chemicals" , "28-38_Chemicals");//
+        productCode.put("sports" , "420321");//Specially designed for use in sports
+        productCode.put("Sports Equipment" , "420321");//
 
-        productCode.put("plastic or rubber" , "39-40_PlastiRub");//For materials of Plastic and Rubber
-        productCode.put("Plastic , Rubber" , "39-40_PlastiRub");//
+        productCode.put("automotive" , "401110");//assuming Of a kind used on motor cars (including station wagons and racing cars)
+        productCode.put("Automotive Parts" , "401110");//
 
-        productCode.put("misc" , "90-99_Miscellan");//For materials of Plastic and Rubber
-        productCode.put("Miscallaneous" , "90-99_Miscellan");//
+        productCode.put("chem" , "382200");//Diagnostic or laboratory reagents on a backing, prepared diagnostic 
+        productCode.put("Chemicals" , "382200");//laboratory reagents whether or not on a backing, other than those of heading 30.02 or 30.06; certified reference materials.
+
+        productCode.put("plastic or rubber" , "650691");// Of rubber or of plastics
+        productCode.put("Plastic , Rubber" , "650691");//
+
 
     }
 

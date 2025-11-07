@@ -1,7 +1,7 @@
 export default function ProductDropdown({ value, onChange }) {
   const products = [
-    "electronics", "clothing", "furniture", "food", 
-    "tools", "beauty", "sports", "automotive","misc","plastic or rubber", "chem"
+    "electronics", "clothing", "furniture", "food",  "books", "toys",
+    "tools", "beauty", "sports", "automotive","plastic or rubber", "chem"
   ];
 
   return (

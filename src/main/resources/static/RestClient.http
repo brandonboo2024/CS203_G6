@@ -1,5 +1,8 @@
 GET https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN/reporter/840/partner/000/product/020110/year/2000/datatype/reported?format=JSON
 
+###
+GET https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN/reporter/702/partner/000/product/manuf/year/2000/datatype/reported?format=JSON
+
 
 ###
 
