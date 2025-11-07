@@ -1,16 +1,42 @@
 package com.example.tariffkey.model;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import com.example.tariffkey.validation.ValidDateRange;
+
+@ValidDateRange(fromField = "calculationFrom", toField = "calculationTo",
+                maxYearsPast = 10, maxYearsFuture = 10,
+                message = "Dates must be within 10 years past/future and start must be before end")
 public class TariffRequest {
+    @NotBlank
+    @Pattern(regexp = "^(SG|US|MY|TH|VN|ID|PH|KR|IN|AU|GB|DE|FR|IT|ES|CA|BR|MX|RU|ZA|CN|JP)$",
+             message = "Country code must be one of the supported countries")
     private String fromCountry;
+
+    @NotBlank
+    @Pattern(regexp = "^(SG|US|MY|TH|VN|ID|PH|KR|IN|AU|GB|DE|FR|IT|ES|CA|BR|MX|RU|ZA|CN|JP)$",
+             message = "Country code must be one of the supported countries")
     private String toCountry;
+
+    @NotBlank
+    @Pattern(regexp = "^(electronics|clothing|furniture|food|books|toys|tools|beauty|sports|automotive)$",
+             message = "Product must be one of the supported categories")
     private String product;
-    private int quantity;
+
+    @NotNull
+    @Min(1)
+    @Max(10000)
+    private Integer quantity;
+
     private boolean handling;
     private boolean inspection;
     private boolean processing;
     private boolean others;
-    
-    // added datetime field
+
+    // datetime fields (optional) - frontend validates within 10 years past/future
     private String calculationFrom;
     private String calculationTo;
 
@@ -32,10 +58,10 @@ public class TariffRequest {
     public void setProduct(String product) {
         this.product = product;
     }
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
     public boolean isHandling() {
