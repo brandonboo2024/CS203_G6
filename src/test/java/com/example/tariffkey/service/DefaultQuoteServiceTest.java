@@ -8,6 +8,7 @@ import com.example.tariffkey.model.TariffRequest;
 import com.example.tariffkey.model.TariffResponse;
 import com.example.tariffkey.repository.FeeScheduleRepository;
 import com.example.tariffkey.repository.ProductRepository;
+import com.example.tariffkey.repository.TariffRepository;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -85,6 +86,9 @@ class DefaultQuoteServiceTest {
     @Autowired
     private FeeScheduleRepository feeScheduleRepository;
 
+    @Autowired
+    private TariffRepository tariffRepository;
+
     @AfterAll
     void tearDownServer() throws IOException {
         if (mockWebServerStarted.get()) {
@@ -111,6 +115,7 @@ class DefaultQuoteServiceTest {
     void seedData() {
         productRepository.deleteAll();
         feeScheduleRepository.deleteAll();
+        tariffRepository.deleteAll();
 
         productRepository.save(Product.builder()
                 .code("electronics")
@@ -147,6 +152,30 @@ class DefaultQuoteServiceTest {
         assertThat(response.getTariffTypes()).containsExactly("MFN");
         assertThat(response.getYear()).isEqualTo(2021);
         assertThat(response.getNomenclature()).isEqualTo("H5");
+    }
+
+    @Test
+    void fetchQuoteUsesCache() {
+        // No mock response needed, should hit cache
+
+        tariffRepository.save(com.example.tariffkey.model.Tariff.builder()
+                .originCountry("840")
+                .destinationCountry("702")
+                .product("847130")
+                .rate(0.123)
+                .build());
+
+        TariffApiRequest request = TariffApiRequest.builder()
+                .originCountry("840")
+                .destCountry("702")
+                .hs6("847130")
+                .year("2021")
+                .build();
+
+        TariffApiResponse response = defaultQuoteService.fetchQuote(request);
+
+        assertThat(response.isFromCache()).isTrue();
+        assertThat(response.getTariffRate()).isEqualTo(0.123);
     }
 
     @Test
