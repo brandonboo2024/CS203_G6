@@ -190,11 +190,11 @@ Map<String,String> productCode = new HashMap<>();
         productCode.put("Food" , "16-24_FoodProd");//
 
 
-        productCode.put("books" , "Textiles");//no books so put textiles
-        productCode.put("Books" , "Textiles");
+        // productCode.put("books" , "Textiles");//no books so put textiles
+        // productCode.put("Books" , "Textiles");
 
-        productCode.put("toys" , "Total");//no toys so assume is under "Total , all products category"
-        productCode.put("Toys" , "Total");
+        // productCode.put("toys" , "Total");//no toys so assume is under "Total , all products category"
+        // productCode.put("Toys" , "Total");
 
         productCode.put("tools" , "manuf");//assuming the tools are used for manufacturing , it should fall under here
         productCode.put("Tools" , "manuf");
