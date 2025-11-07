@@ -26,8 +26,8 @@ class SecurityTests {
     // Test 1: Register endpoint should be public
     @Test
     void registerShouldBePublic() throws Exception {
-        String uniqueUser = "testuser" + System.currentTimeMillis();
-        var request = new RegisterRequest(uniqueUser, uniqueUser + "@example.com", "password");
+        String uniqueUser = "testuser" + "12345678";
+        var request = new RegisterRequest(uniqueUser, uniqueUser + "@example.com", "password1!");
 
         var result = mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
