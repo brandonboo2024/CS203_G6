@@ -3,6 +3,7 @@ package com.example.tariffkey.service;
 import com.example.tariffkey.model.*;
 import com.example.tariffkey.repository.FeeScheduleRepository;
 import com.example.tariffkey.repository.ProductRepository;
+import com.example.tariffkey.repository.TariffRepository; // Added
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.time.OffsetDateTime;
+<<<<<<< HEAD
+=======
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+>>>>>>> brandon
 
 @Service
 public class DefaultQuoteService {
@@ -26,6 +34,7 @@ public class DefaultQuoteService {
 
     private final ProductRepository productRepository;
     private final FeeScheduleRepository feeScheduleRepository;
+    private final TariffRepository tariffRepository; // added repo to check db before making sql call
     private final HttpClient httpClient;
     private final String apiBaseUrl;
 
@@ -33,28 +42,48 @@ public class DefaultQuoteService {
     public DefaultQuoteService(
             ProductRepository productRepository,
             FeeScheduleRepository feeScheduleRepository,
+            TariffRepository tariffRepository, // Added
             @Value("${wits.api.base-url:https://wits.worldbank.org/API/V1/SDMX/V21/datasource/TRN}") String apiBaseUrl
     ) {
-        this(productRepository, feeScheduleRepository,
+        this(productRepository, feeScheduleRepository, tariffRepository, // Added
                 HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).build(),
                 apiBaseUrl);
     }
 
     DefaultQuoteService(ProductRepository productRepository,
                         FeeScheduleRepository feeScheduleRepository,
+                        TariffRepository tariffRepository, // Added
                         HttpClient httpClient,
                         String apiBaseUrl) {
         this.productRepository = productRepository;
         this.feeScheduleRepository = feeScheduleRepository;
+        this.tariffRepository = tariffRepository; // Added
         this.httpClient = httpClient;
         this.apiBaseUrl = apiBaseUrl.endsWith("/") ? apiBaseUrl.substring(0, apiBaseUrl.length() - 1) : apiBaseUrl;
     }
 
     public TariffApiResponse fetchQuote(TariffApiRequest request) {
-        String reporter = enc(request.getOriginCountry());
-        String partner = enc(request.getDestCountry());
-        String product = enc(request.getHs6());
-        String year = enc(request.getYear());
+        // Check local database first
+        Optional<Tariff> cachedTariff = tariffRepository.findByOriginCountryAndDestinationCountryAndProduct(
+                request.getOriginCountry(), request.getDestCountry(), request.getHs6());
+
+        if (cachedTariff.isPresent()) {
+            Tariff tariff = cachedTariff.get();
+            return TariffApiResponse.builder()
+                    .tariffRate(tariff.getRate())
+                    .fromCache(true)
+                    .build();
+        }
+
+        // If not in DB, fetch from API
+        // String reporter = enc(request.getOriginCountry());
+        String reporter = "840";
+        String partner = "000";
+        String product = "020110";
+        String year = "2020";
+        // String partner = enc(request.getDestCountry());
+        // String product = enc(request.getHs6());
+        // String year = enc(request.getYear());
 
         String url = apiBaseUrl
                 + "/reporter/" + reporter
@@ -63,6 +92,8 @@ public class DefaultQuoteService {
                 + "/year/" + year
                 + "/datatype/reported"
                 + "?format=JSON";
+
+        System.out.println("YOU URL IS THIS" + url);
 
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
@@ -75,6 +106,15 @@ public class DefaultQuoteService {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             Parsed parsed = parseSdmx(response.body());
 
+            // Save to database
+            Tariff newTariff = Tariff.builder()
+                    .originCountry(request.getOriginCountry())
+                    .destinationCountry(request.getDestCountry())
+                    .product(request.getHs6())
+                    .rate(parsed.rateDecimal())
+                    .build();
+            tariffRepository.save(newTariff);
+
             return TariffApiResponse.builder()
                     .url(url)
                     .httpStatus(response.statusCode())
@@ -83,6 +123,7 @@ public class DefaultQuoteService {
                     .tariffTypes(parsed.tariffTypes)
                     .year(parsed.year)
                     .nomenclature(parsed.nomenCode)
+                    .fromCache(false) // Added
                     .build();
         } catch (Exception e) {
             TariffApiResponse out = new TariffApiResponse();
@@ -263,7 +304,7 @@ Map<String,String> productCode = new HashMap<>();
         response.setOtherFees(otherFees);
         response.setTotalPrice(itemPrice + tariffAmount + handlingFee + inspectionFee + processingFee + otherFees);
         response.setSegments(new ArrayList<>());
-        response.setLabel("Average tariff rate (WITS)");
+        response.setLabel(apiResponse.isFromCache() ? "Cached tariff rate" : "Average tariff rate (WITS)"); // added for checking
         response.setSource(apiResponse.getNomenclature());
         return response;
     }
@@ -358,9 +399,9 @@ Map<String,String> productCode = new HashMap<>();
         return null;
     }
 
-    private record Parsed(double rateDecimal, String[] tariffTypes, Integer year, String nomenCode) {
-        static Parsed empty() {
-            return new Parsed(0.0, new String[0], null, null);
-        }
-    }
+    // private record Parsed(double rateDecimal, String[] tariffTypes, Integer year, String nomenCode) {
+    //     static Parsed empty() {
+    //         return new Parsed(0.0, new String[0], null, null);
+    //     }
+    // }
 }
