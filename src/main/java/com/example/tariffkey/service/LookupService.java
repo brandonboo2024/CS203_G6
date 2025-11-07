@@ -2,8 +2,12 @@ package com.example.tariffkey.service;
 
 import com.example.tariffkey.model.LookupOption;
 import com.example.tariffkey.model.LookupResponse;
+import com.example.tariffkey.model.Product;
+import com.example.tariffkey.repository.ProductRepository;
 import com.example.tariffkey.repository.WitsTariffRepository;
 import com.example.tariffkey.util.IsoCountryLookup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -17,11 +21,16 @@ import java.util.stream.Collectors;
 @Service
 public class LookupService {
 
+    private static final Logger log = LoggerFactory.getLogger(LookupService.class);
+
     private final WitsTariffRepository witsTariffRepository;
+    private final ProductRepository productRepository;
     private final Map<String, String> reporterLabelCache = new ConcurrentHashMap<>();
 
-    public LookupService(WitsTariffRepository witsTariffRepository) {
+    public LookupService(WitsTariffRepository witsTariffRepository,
+                         ProductRepository productRepository) {
         this.witsTariffRepository = witsTariffRepository;
+        this.productRepository = productRepository;
     }
 
     public LookupResponse getReporters() {
@@ -48,13 +57,30 @@ public class LookupService {
         if (!StringUtils.hasText(partnerCode)) {
             throw new IllegalArgumentException("Partner code is required");
         }
-        List<String> products = witsTariffRepository.findProductsByRoute(reporterCode, partnerCode);
-        if (products.isEmpty()) {
+        List<String> hsCodes = witsTariffRepository.findProductsByRoute(reporterCode, partnerCode);
+        if (hsCodes.isEmpty()) {
             throw new IllegalArgumentException("No products available for the selected countries");
         }
-        return products.stream()
-                .map(code -> new LookupOption(code, formatProductLabel(code)))
+        Map<String, Product> pricedProducts = productRepository.findByHsCodeIn(hsCodes).stream()
+                .collect(Collectors.toMap(Product::getHsCode, product -> product, (left, right) -> left));
+
+        List<LookupOption> options = hsCodes.stream()
+                .map(hs -> {
+                    Product product = pricedProducts.get(hs);
+                    if (product == null) {
+                        log.warn("Missing product mapping for HS {} (reporter {}, partner {})",
+                                hs, reporterCode, partnerCode);
+                        return null;
+                    }
+                    return new LookupOption(product.getCode(), formatProductLabel(product));
+                })
+                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
+
+        if (options.isEmpty()) {
+            throw new IllegalArgumentException("No priced products available for the selected route");
+        }
+        return options;
     }
 
     private LookupOption toReporterOption(String code, String sourceFile) {
@@ -86,7 +112,14 @@ public class LookupService {
         }
     }
 
-    private static String formatProductLabel(String code) {
-        return "HS " + code;
+    private static String formatProductLabel(Product product) {
+        String friendly = product.getCode()
+                .replace('_', ' ')
+                .replace('-', ' ')
+                .trim();
+        if (!friendly.isEmpty()) {
+            friendly = Character.toUpperCase(friendly.charAt(0)) + friendly.substring(1);
+        }
+        return friendly + " (HS " + product.getHsCode() + ")";
     }
 }

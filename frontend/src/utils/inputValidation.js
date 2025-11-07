@@ -68,7 +68,7 @@ const WHITELIST_PATTERNS = {
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   
   // Product codes (HS codes, aggregate labels)
-  product: /^[A-Za-z0-9_\-]{1,20}$/,
+  product: /^[A-Za-z0-9_\-]{1,50}$/,
   
   // Quantity - positive integers only
   quantity: /^[1-9]\d*$/,

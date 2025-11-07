@@ -496,16 +496,16 @@ export default function TariffCalc() {
                 </div>
 
                 {/* Tariff */}
-                {result.breakdown.tariffAmount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#fff', fontSize: '1rem' }}>
-                      Tariff ({Number(result.breakdown.tariffRate || 0).toFixed(1)}%):
-                    </span>
-                    <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
-                      ${Number(result.breakdown.tariffAmount || 0).toFixed(2)}
-                    </span>
-                  </div>
-                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#fff', fontSize: '1rem' }}>
+                    Tariff ({Number(result.breakdown.tariffRate || 0).toFixed(1)}%
+                    {Number(result.breakdown.tariffRate || 0) === 0 ? ' - no tariff applies' : ''}
+                    ):
+                  </span>
+                  <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '500' }}>
+                    ${Number(result.breakdown.tariffAmount || 0).toFixed(2)}
+                  </span>
+                </div>
 
                 {/* Handling Fee - only show if selected */}
                 {fees.handling && result.breakdown.handlingFee > 0 && (
