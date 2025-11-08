@@ -16,22 +16,131 @@ export default function AdminTariffPage() {
     allowOverride: false,
   });
   const [popup, setPopup] = useState({ show: false, message: "", type: "" });
+  const [lookups, setLookups] = useState({
+    reporters: [],
+    partners: [],
+    products: [],
+  });
+  const [lookupError, setLookupError] = useState(null);
+  const [reportersLoading, setReportersLoading] = useState(true);
+  const [partnersLoading, setPartnersLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
 
-  const API_BASE = "http://localhost:8080/api/tariff";
+  const apiBase = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+  const tariffApiBase = `${apiBase}/api/tariff`;
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     fetchTariffs();
   }, []);
 
+  useEffect(() => {
+    const loadReporters = async () => {
+      setReportersLoading(true);
+      try {
+        const data = await fetchLookupJson("/api/lookups");
+        setLookups((prev) => ({ ...prev, reporters: data?.reporters ?? [] }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError(
+          err.message ||
+            "Unable to load origin options. Please try again later."
+        );
+        setLookups((prev) => ({ ...prev, reporters: [] }));
+      } finally {
+        setReportersLoading(false);
+      }
+    };
+    loadReporters();
+  }, [apiBase]);
+
+  useEffect(() => {
+    if (!newTariff.originCountry) {
+      setLookups((prev) => ({ ...prev, partners: [], products: [] }));
+      setPartnersLoading(false);
+      setProductsLoading(false);
+      return;
+    }
+
+    const loadPartners = async () => {
+      setPartnersLoading(true);
+      try {
+        const data = await fetchLookupJson(
+          `/api/lookups/reporters/${newTariff.originCountry}/partners`
+        );
+        setLookups((prev) => ({ ...prev, partners: data, products: [] }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError(
+          err.message ||
+            "Unable to load destination options for the selected origin."
+        );
+        setLookups((prev) => ({ ...prev, partners: [], products: [] }));
+      } finally {
+        setPartnersLoading(false);
+      }
+    };
+
+    loadPartners();
+  }, [newTariff.originCountry, apiBase]);
+
+  useEffect(() => {
+    if (!newTariff.originCountry || !newTariff.destinationCountry) {
+      setLookups((prev) => ({ ...prev, products: [] }));
+      setProductsLoading(false);
+      return;
+    }
+
+    const loadProducts = async () => {
+      setProductsLoading(true);
+      try {
+        const data = await fetchLookupJson(
+          `/api/lookups/reporters/${newTariff.originCountry}/partners/${newTariff.destinationCountry}/products`
+        );
+        setLookups((prev) => ({ ...prev, products: data }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError(
+          err.message ||
+            "No tariff data exists for that country/product combination."
+        );
+        setLookups((prev) => ({ ...prev, products: [] }));
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [newTariff.originCountry, newTariff.destinationCountry, apiBase]);
+
+  const fetchLookupJson = async (path) => {
+    const response = await fetch(`${apiBase}${path}`);
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+    if (!response.ok) {
+      throw new Error(
+        (payload && (payload.message || payload.error)) ||
+          "Failed to fetch lookup data"
+      );
+    }
+    return payload;
+  };
+
   const fetchTariffs = async () => {
     try {
-      const res = await fetch(`${API_BASE}/all`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const res = await fetch(`${tariffApiBase}/all`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (!res.ok) throw new Error("Failed to fetch tariffs");
       const data = await res.json();
       setTariffs(data);
@@ -66,7 +175,7 @@ export default function AdminTariffPage() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/add`, {
+      const res = await fetch(`${tariffApiBase}/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -114,7 +223,7 @@ export default function AdminTariffPage() {
     if (!window.confirm("Are you sure you want to delete this tariff?")) return;
 
     try {
-      const res = await fetch(`${API_BASE}/${id}`, {
+      const res = await fetch(`${tariffApiBase}/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`, // ✅ ADD THIS
@@ -143,6 +252,12 @@ export default function AdminTariffPage() {
 
       <h1 style={{ color: "var(--accent)" }}>Admin Tariff Management</h1>
 
+      {lookupError && (
+        <div className="error-banner" style={{ maxWidth: "600px", marginBottom: "1rem" }}>
+          {lookupError}
+        </div>
+      )}
+
       {/* Add Form */}
       <form
         className="card"
@@ -151,24 +266,57 @@ export default function AdminTariffPage() {
       >
         <h2>Add New Tariff</h2>
 
-        <ProductDropdown
-          value={newTariff.product}
-          onChange={(value) => setNewTariff({ ...newTariff, product: value })}
-        />
-
         <CountryDropdown
           label="Origin Country"
           value={newTariff.originCountry}
-          onChange={(value) =>
-            setNewTariff({ ...newTariff, originCountry: value })
-          }
+          onChange={(value) => {
+            setLookups((prev) => ({ ...prev, partners: [], products: [] }));
+            setNewTariff((prev) => ({
+              ...prev,
+              originCountry: value,
+              destinationCountry: "",
+              product: "",
+            }));
+          }}
+          options={lookups.reporters}
+          loading={reportersLoading}
+          disabled={reportersLoading}
+          placeholder="Select origin country"
         />
 
         <CountryDropdown
           label="Destination Country"
           value={newTariff.destinationCountry}
-          onChange={(value) =>
-            setNewTariff({ ...newTariff, destinationCountry: value })
+          onChange={(value) => {
+            setLookups((prev) => ({ ...prev, products: [] }));
+            setNewTariff((prev) => ({
+              ...prev,
+              destinationCountry: value,
+              product: "",
+            }));
+          }}
+          options={lookups.partners}
+          loading={partnersLoading}
+          disabled={!newTariff.originCountry || partnersLoading}
+          placeholder={
+            newTariff.originCountry ? "Select destination country" : "Select origin first"
+          }
+        />
+
+        <ProductDropdown
+          value={newTariff.product}
+          onChange={(value) => setNewTariff((prev) => ({ ...prev, product: value }))}
+          options={lookups.products}
+          loading={productsLoading}
+          disabled={
+            !newTariff.originCountry ||
+            !newTariff.destinationCountry ||
+            productsLoading
+          }
+          placeholder={
+            newTariff.destinationCountry
+              ? "Select product"
+              : "Select countries first"
           }
         />
 
