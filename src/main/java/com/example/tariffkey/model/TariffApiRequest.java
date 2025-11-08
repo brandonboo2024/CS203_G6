@@ -11,13 +11,13 @@ import jakarta.validation.constraints.Pattern;
 public class TariffApiRequest {
   // API relevant data
     @NotBlank
-    @Pattern(regexp = "^(SG|US|MY|TH|VN|ID|PH|KR|IN|AU|GB|DE|FR|IT|ES|CA|BR|MX|RU|ZA|CN|JP)$",
-             message = "Origin country code must be one of the supported countries")
+    @Pattern(regexp = "^[A-Z0-9]{2,6}$",
+             message = "Origin country code must use 2-6 uppercase letters or digits")
     private String originCountry;
 
     @NotBlank
-    @Pattern(regexp = "^(SG|US|MY|TH|VN|ID|PH|KR|IN|AU|GB|DE|FR|IT|ES|CA|BR|MX|RU|ZA|CN|JP)$",
-             message = "Destination country code must be one of the supported countries")
+    @Pattern(regexp = "^[A-Z0-9]{2,6}$",
+             message = "Destination country code must use 2-6 uppercase letters or digits")
     private String destCountry;
 
     @NotBlank
@@ -25,8 +25,8 @@ public class TariffApiRequest {
     private String hs6; //(PRODUCT CODE)
 
     @NotBlank
-    @Pattern(regexp = "^(19[0-9]{2}|20[0-9]{2}|21[0-9]{2})$",
-             message = "Year must be a valid 4-digit year between 1900-2199")
+    @Pattern(regexp = "^(ALL|19[0-9]{2}|20[0-9]{2}|21[0-9]{2})$",
+             message = "Year must be a valid 4-digit year (1900-2199) or ALL")
     private String year;
 
   //price calculation relevant data

@@ -68,18 +68,12 @@ public class LookupService {
                 .map(hs -> {
                     Product product = pricedProducts.get(hs);
                     if (product == null) {
-                        log.warn("Missing product mapping for HS {} (reporter {}, partner {})",
-                                hs, reporterCode, partnerCode);
-                        return null;
+                        String label = "HS " + hs + " (price required)";
+                        return new LookupOption(hs, label, hs, Boolean.FALSE);
                     }
-                    return new LookupOption(product.getCode(), formatProductLabel(product));
+                    return new LookupOption(product.getCode(), formatProductLabel(product), product.getHsCode(), Boolean.TRUE);
                 })
-                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList());
-
-        if (options.isEmpty()) {
-            throw new IllegalArgumentException("No priced products available for the selected route");
-        }
         return options;
     }
 

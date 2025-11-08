@@ -11,4 +11,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByCode(String code);
 
     List<Product> findByHsCodeIn(Collection<String> hsCodes);
+
+    Optional<Product> findByHsCode(String hsCode);
 }

@@ -107,17 +107,17 @@ public class DefaultQuoteService {
   }
 
     public TariffResponse calculateQuote(TariffRequest request) {
-        if (request.getQuantity() <= 0) {
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than zero");
         }
 
-        Product product = productRepository.findByCode(request.getProduct())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown product: " + request.getProduct()));
+        Product product = resolveProduct(request);
+        String hsCode = resolveHsCode(request, product);
 
         TariffApiRequest apiRequest = TariffApiRequest.builder()
                 .originCountry(requireCode(request.getFromCountry(), "origin country"))
                 .destCountry(requireCode(request.getToCountry(), "destination country"))
-                .hs6(requireCode(product.getHsCode(), "product code"))
+                .hs6(requireCode(hsCode, "product code"))
                 .year(resolveYear(request))
                 .build();
 
@@ -126,7 +126,17 @@ public class DefaultQuoteService {
             throw new IllegalStateException("Failed to retrieve tariff data from imported dataset");
         }
 
-        double itemPrice = product.getBasePrice() * request.getQuantity();
+        Double basePrice = product != null ? product.getBasePrice() : request.getCustomBasePrice();
+        boolean priceProvidedByUser = basePrice != null && product == null;
+        if (basePrice == null) {
+            return buildPriceRequiredResponse(request, hsCode, apiResponse);
+        }
+
+        if (priceProvidedByUser) {
+            product = persistProductIfMissing(request, hsCode, basePrice);
+        }
+
+        double itemPrice = basePrice * request.getQuantity();
         double rateDecimal = apiResponse.getTariffRate();
         double tariffAmount = itemPrice * rateDecimal;
 
@@ -147,6 +157,20 @@ public class DefaultQuoteService {
         response.setSegments(new ArrayList<>());
         response.setLabel(apiResponse.isFromCache() ? "Dataset tariff rate" : "Average tariff rate (WITS)");
         response.setSource(apiResponse.getNomenclature());
+        response.setPricePersisted(priceProvidedByUser && product != null);
+        return response;
+    }
+
+    private TariffResponse buildPriceRequiredResponse(TariffRequest request, String hsCode, TariffApiResponse apiResponse) {
+        TariffResponse response = new TariffResponse();
+        response.setPriceRequired(true);
+        response.setMissingProduct(request.getProduct());
+        response.setMissingHsCode(hsCode);
+        response.setSegments(new ArrayList<>());
+        response.setTariffRate(apiResponse.getTariffRate() * 100.0);
+        response.setLabel("Tariff rate available");
+        response.setSource(apiResponse.getNomenclature());
+        response.setMessage("Base price required for HS " + hsCode + " before totals can be calculated.");
         return response;
     }
 
@@ -164,6 +188,60 @@ public class DefaultQuoteService {
         }
     }
 
+    private Product resolveProduct(TariffRequest request) {
+        String requestedCode = trimToNull(request.getProduct());
+        if (requestedCode != null) {
+            Optional<Product> byCode = productRepository.findByCode(requestedCode);
+            if (byCode.isPresent()) {
+                return byCode.get();
+            }
+        }
+
+        String hsCode = trimToNull(request.getHsCode());
+        if (hsCode != null) {
+            Optional<Product> byHs = productRepository.findByHsCode(hsCode);
+            if (byHs.isPresent()) {
+                return byHs.get();
+            }
+        }
+
+        if (requestedCode != null && looksLikeHsCode(requestedCode)) {
+            return productRepository.findByHsCode(requestedCode).orElse(null);
+        }
+        return null;
+    }
+
+    private String resolveHsCode(TariffRequest request, Product product) {
+        String hsCode = trimToNull(request.getHsCode());
+        if (hsCode != null) {
+            return hsCode;
+        }
+        if (product != null) {
+            return product.getHsCode();
+        }
+        String fallback = trimToNull(request.getProduct());
+        if (looksLikeHsCode(fallback)) {
+            return fallback;
+        }
+        throw new IllegalArgumentException("HS product code is required for tariff lookup");
+    }
+
+    private Product persistProductIfMissing(TariffRequest request, String hsCode, double basePrice) {
+        String code = trimToNull(request.getProduct());
+        if (code == null) {
+            code = hsCode;
+        }
+        if (looksLikeHsCode(code)) {
+            code = "hs_" + hsCode;
+        }
+        Product newProduct = Product.builder()
+                .code(code)
+                .hsCode(hsCode)
+                .basePrice(basePrice)
+                .build();
+        return productRepository.save(newProduct);
+    }
+
     private double feeAmount(String code) {
         return feeScheduleRepository.findById(code)
                 .map(FeeSchedule::getAmount)
@@ -176,5 +254,10 @@ public class DefaultQuoteService {
             return 0.0;
         }
         return percentage.doubleValue() / 100.0;
+    }
+
+    private boolean looksLikeHsCode(String value) {
+        String normalized = trimToNull(value);
+        return normalized != null && normalized.matches("^[0-9]{4,10}$");
     }
 }

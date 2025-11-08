@@ -1,5 +1,6 @@
 package com.example.tariffkey.model;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -12,24 +13,31 @@ import com.example.tariffkey.validation.ValidDateRange;
                 message = "Dates must be within 10 years past/future and start must be before end")
 public class TariffRequest {
     @NotBlank
-    @Pattern(regexp = "^(SG|US|MY|TH|VN|ID|PH|KR|IN|AU|GB|DE|FR|IT|ES|CA|BR|MX|RU|ZA|CN|JP)$",
-             message = "Country code must be one of the supported countries")
+    @Pattern(regexp = "^[A-Z0-9]{2,6}$",
+             message = "Country code must use 2-6 uppercase letters or digits")
     private String fromCountry;
 
     @NotBlank
-    @Pattern(regexp = "^(SG|US|MY|TH|VN|ID|PH|KR|IN|AU|GB|DE|FR|IT|ES|CA|BR|MX|RU|ZA|CN|JP)$",
-             message = "Country code must be one of the supported countries")
+    @Pattern(regexp = "^[A-Z0-9]{2,6}$",
+             message = "Country code must use 2-6 uppercase letters or digits")
     private String toCountry;
 
     @NotBlank
-    @Pattern(regexp = "^(electronics|clothing|furniture|food|books|toys|tools|beauty|sports|automotive)$",
-             message = "Product must be one of the supported categories")
+    @Pattern(regexp = "^[A-Za-z0-9_\\-]{2,64}$",
+             message = "Product code can contain letters, numbers, underscores or hyphens")
     private String product;
 
     @NotNull
     @Min(1)
     @Max(10000)
     private Integer quantity;
+
+    @Pattern(regexp = "^[0-9]{4,10}$",
+             message = "HS code must be numeric (4-10 digits)")
+    private String hsCode;
+
+    @DecimalMin(value = "0.01", message = "Custom base price must be at least 0.01")
+    private Double customBasePrice;
 
     private boolean handling;
     private boolean inspection;
@@ -100,6 +108,16 @@ public class TariffRequest {
     public void setCalculationTo(String calculationTo) {
         this.calculationTo = calculationTo;
     }
-
-    
+    public String getHsCode() {
+        return hsCode;
+    }
+    public void setHsCode(String hsCode) {
+        this.hsCode = hsCode;
+    }
+    public Double getCustomBasePrice() {
+        return customBasePrice;
+    }
+    public void setCustomBasePrice(Double customBasePrice) {
+        this.customBasePrice = customBasePrice;
+    }
 }

@@ -13,6 +13,11 @@ public class TariffResponse {
     private List<Segment> segments;
     private String label;
     private String source;
+    private boolean priceRequired;
+    private boolean pricePersisted;
+    private String missingProduct;
+    private String missingHsCode;
+    private String message;
 
     // this class is to include timeperiods where one tariff ends, and a new tariff starts
     public static class Segment {
@@ -100,5 +105,15 @@ public class TariffResponse {
     public String getLabel() { return label; }
     public void setSource(String source) { this.source = source; }
     public String getSource() { return source;}
+    public boolean isPriceRequired() { return priceRequired; }
+    public void setPriceRequired(boolean priceRequired) { this.priceRequired = priceRequired; }
+    public boolean isPricePersisted() { return pricePersisted; }
+    public void setPricePersisted(boolean pricePersisted) { this.pricePersisted = pricePersisted; }
+    public String getMissingProduct() { return missingProduct; }
+    public void setMissingProduct(String missingProduct) { this.missingProduct = missingProduct; }
+    public String getMissingHsCode() { return missingHsCode; }
+    public void setMissingHsCode(String missingHsCode) { this.missingHsCode = missingHsCode; }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
 
 }

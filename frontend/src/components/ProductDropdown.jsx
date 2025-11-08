@@ -24,9 +24,10 @@ export default function ProductDropdown({
         <option value="" disabled>
           {loading ? "Loading..." : placeholder}
         </option>
-        {normalized.map(({ code, label }) => (
+        {normalized.map(({ code, label, priceAvailable }) => (
           <option key={code} value={code}>
             {label || code}
+            {priceAvailable === false ? " – price required" : ""}
           </option>
         ))}
       </select>
