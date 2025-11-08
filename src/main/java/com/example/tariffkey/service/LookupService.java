@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -83,18 +84,18 @@ public class LookupService {
         Map<String, Product> pricedProducts = productRepository.findByHsCodeIn(hsCodes).stream()
                 .collect(Collectors.toMap(Product::getHsCode, product -> product, (left, right) -> left));
 
-        return samples.stream()
-                .map(sample -> {
-                    String hsCode = sample.getProductCode();
-                    Product product = pricedProducts.get(hsCode);
-                    boolean priceAvailable = product != null;
-                    String baseLabel = productLabel(sample.getNomenCode(), hsCode);
-                    String label = priceAvailable ? baseLabel : baseLabel + " (price required)";
-                    String optionCode = priceAvailable ? product.getCode() : hsCode;
-                    String optionHsCode = priceAvailable ? product.getHsCode() : hsCode;
-                    return new LookupOption(optionCode, label, optionHsCode, priceAvailable);
-                })
-                .collect(Collectors.toList());
+        Map<String, LookupOption> deduped = new LinkedHashMap<>();
+        for (WitsTariffRepository.ProductSample sample : samples) {
+            String hsCode = sample.getProductCode();
+            Product product = pricedProducts.get(hsCode);
+            boolean priceAvailable = product != null;
+            String baseLabel = productLabel(sample.getNomenCode(), hsCode);
+            String label = priceAvailable ? baseLabel : baseLabel + " (price required)";
+            String optionCode = priceAvailable ? product.getCode() : hsCode;
+            String optionHsCode = priceAvailable ? product.getHsCode() : hsCode;
+            deduped.putIfAbsent(optionCode, new LookupOption(optionCode, label, optionHsCode, priceAvailable));
+        }
+        return new ArrayList<>(deduped.values());
     }
 
     private LookupOption toReporterOption(String code, String sourceFile) {

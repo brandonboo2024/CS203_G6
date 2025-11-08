@@ -190,6 +190,17 @@ export default function TariffCalc() {
 
     if (!response.ok) {
       const message = data?.message || data?.error || "Request failed";
+      const messageLower = message.toLowerCase();
+      if (messageLower.includes("price") && messageLower.includes("require")) {
+        const err = new Error(message);
+        err.priceRequired = true;
+        err.priceDetails = {
+          tariffRate: data?.tariffRate ?? data?.tariff_rate ?? null,
+          missingHsCode: payload.hsCode || payload.product,
+          message,
+        };
+        throw err;
+      }
       throw new Error(message);
     }
 
@@ -320,6 +331,19 @@ export default function TariffCalc() {
       applySuccessfulResult(data, request);
       setLoading(false);
     } catch (err) {
+      if (err.priceRequired) {
+        setPendingPrice({
+          request,
+          details: {
+            tariffRate: err.priceDetails?.tariffRate ?? null,
+            missingHsCode: err.priceDetails?.missingHsCode ?? request.hsCode ?? request.product,
+            message: err.message,
+          },
+        });
+        setCustomPriceValue("");
+        setLoading(false);
+        return;
+      }
       console.error(err);
       setError(err.message || "Something went wrong.");
       setLoading(false);
@@ -357,6 +381,18 @@ export default function TariffCalc() {
       setCustomPriceValue("");
       setLoading(false);
     } catch (err) {
+      if (err.priceRequired) {
+        setPendingPrice({
+          request,
+          details: err.priceDetails ?? {
+            missingHsCode: request.hsCode || request.product,
+            message: err.message,
+          },
+        });
+        setCustomPriceValue("");
+        setLoading(false);
+        return;
+      }
       console.error(err);
       setError(err.message || "Unable to apply custom price.");
       setLoading(false);
