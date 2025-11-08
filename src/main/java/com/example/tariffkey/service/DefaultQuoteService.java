@@ -7,8 +7,10 @@ import com.example.tariffkey.repository.ProductRepository;
 import com.example.tariffkey.repository.TariffRepository;
 import com.example.tariffkey.repository.WitsTariffRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,28 +36,43 @@ public class DefaultQuoteService {
     }
 
     public TariffApiResponse fetchQuote(TariffApiRequest request) {
+        return fetchQuote(request, null, null);
+    }
+
+    public TariffApiResponse fetchQuote(TariffApiRequest request, LocalDate windowStart, LocalDate windowEnd) {
         String originCountry = requireCode(request.getOriginCountry(), "origin country");
         String destinationCountry = requireCode(request.getDestCountry(), "destination country");
         String productCode = requireCode(request.getHs6(), "product");
         String yearValue = trimToNull(request.getYear());
         Integer requestedYear = parseYear(yearValue);
 
-        Optional<Tariff> cachedTariff = tariffRepository.findByOriginCountryAndDestinationCountryAndProduct(
-                originCountry, destinationCountry, productCode);
+        LocalDate effectiveStart = windowStart != null ? windowStart : LocalDate.now();
+        LocalDate effectiveEnd = windowEnd != null ? windowEnd : effectiveStart;
+        if (effectiveStart.isAfter(effectiveEnd)) {
+            LocalDate swap = effectiveStart;
+            effectiveStart = effectiveEnd;
+            effectiveEnd = swap;
+        }
 
-        if (cachedTariff.isPresent()) {
-            Tariff tariff = cachedTariff.get();
+        Tariff adminTariff = resolveAdminTariff(originCountry, destinationCountry, productCode, effectiveStart, effectiveEnd);
+        if (adminTariff != null) {
             return TariffApiResponse.builder()
-                    .tariffRate(tariff.getRate())
+                    .tariffRate(adminTariff.getRate())
                     .httpStatus(200)
                     .fromCache(true)
+                    .label(adminTariff.getLabel())
+                    .sourceLabel("admin:" + adminTariff.getId())
+                    .notes(adminTariff.getNotes())
+                    .validFrom(adminTariff.getValidFrom())
+                    .validTo(adminTariff.getValidTo())
+                    .adminTariffId(adminTariff.getId())
                     .build();
         }
 
         Optional<WitsTariff> fromDataset = requestedYear == null
                 ? Optional.empty()
                 : witsTariffRepository.findFirstByReporterIsoAndPartnerCodeAndProductCodeAndYearOrderByIdAsc(
-                        originCountry, destinationCountry, productCode, requestedYear);
+                originCountry, destinationCountry, productCode, requestedYear);
 
         if (fromDataset.isEmpty()) {
             fromDataset = witsTariffRepository.findFirstByReporterIsoAndPartnerCodeAndProductCodeOrderByYearDesc(
@@ -73,6 +90,8 @@ public class DefaultQuoteService {
                 .tariffTypes(match.getEstCode() == null ? new String[0] : new String[]{match.getEstCode()})
                 .year(match.getYear())
                 .nomenclature(match.getNomenCode())
+                .label("Dataset tariff rate")
+                .sourceLabel(match.getNomenCode())
                 .fromCache(true)
                 .url("wits_tariffs:" + match.getSourceFile())
                 .body("Lookup from imported dataset")
@@ -121,7 +140,9 @@ public class DefaultQuoteService {
                 .year(resolveYear(request))
                 .build();
 
-        TariffApiResponse apiResponse = fetchQuote(apiRequest);
+        LocalDate windowStart = toLocalDate(request.getCalculationFrom());
+        LocalDate windowEnd = toLocalDate(request.getCalculationTo());
+        TariffApiResponse apiResponse = fetchQuote(apiRequest, windowStart, windowEnd);
         if (apiResponse.getHttpStatus() >= 400) {
             throw new IllegalStateException("Failed to retrieve tariff data from imported dataset");
         }
@@ -158,8 +179,16 @@ public class DefaultQuoteService {
         response.setOtherFees(otherFees);
         response.setTotalPrice(itemPrice + tariffAmount + handlingFee + inspectionFee + processingFee + otherFees);
         response.setSegments(new ArrayList<>());
-        response.setLabel(apiResponse.isFromCache() ? "Dataset tariff rate" : "Average tariff rate (WITS)");
-        response.setSource(apiResponse.getNomenclature());
+        response.setLabel(StringUtils.hasText(apiResponse.getLabel())
+                ? apiResponse.getLabel()
+                : apiResponse.isFromCache() ? "Dataset tariff rate" : "Average tariff rate (WITS)");
+        response.setSource(StringUtils.hasText(apiResponse.getSourceLabel())
+                ? apiResponse.getSourceLabel()
+                : apiResponse.getNomenclature());
+        response.setAdminTariffId(apiResponse.getAdminTariffId());
+        response.setValidFrom(formatLocalDate(apiResponse.getValidFrom()));
+        response.setValidTo(formatLocalDate(apiResponse.getValidTo()));
+        response.setNotes(apiResponse.getNotes());
         response.setPricePersisted(pricePersisted);
         return response;
     }
@@ -171,8 +200,16 @@ public class DefaultQuoteService {
         response.setMissingHsCode(hsCode);
         response.setSegments(new ArrayList<>());
         response.setTariffRate(apiResponse.getTariffRate() * 100.0);
-        response.setLabel("Tariff rate available");
-        response.setSource(apiResponse.getNomenclature());
+        response.setLabel(StringUtils.hasText(apiResponse.getLabel())
+                ? apiResponse.getLabel()
+                : "Tariff rate available");
+        response.setSource(StringUtils.hasText(apiResponse.getSourceLabel())
+                ? apiResponse.getSourceLabel()
+                : apiResponse.getNomenclature());
+        response.setAdminTariffId(apiResponse.getAdminTariffId());
+        response.setValidFrom(formatLocalDate(apiResponse.getValidFrom()));
+        response.setValidTo(formatLocalDate(apiResponse.getValidTo()));
+        response.setNotes(apiResponse.getNotes());
         response.setMessage("Base price required for HS " + hsCode + " before totals can be calculated.");
         response.setSuggestedBasePrice(suggestedBasePrice);
         return response;
@@ -190,6 +227,34 @@ public class DefaultQuoteService {
         } catch (Exception e) {
             return "ALL";
         }
+    }
+
+    private Tariff resolveAdminTariff(String originCountry, String destinationCountry, String productCode,
+                                      LocalDate windowStart, LocalDate windowEnd) {
+        List<Tariff> overlapping = tariffRepository.findActiveTariffs(
+                originCountry, destinationCountry, productCode, windowStart, windowEnd);
+        if (!overlapping.isEmpty()) {
+            return overlapping.get(0);
+        }
+        return tariffRepository
+                .findTopByOriginCountryAndDestinationCountryAndProductOrderByValidFromDesc(
+                        originCountry, destinationCountry, productCode)
+                .orElse(null);
+    }
+
+    private LocalDate toLocalDate(String iso) {
+        if (!StringUtils.hasText(iso)) {
+            return null;
+        }
+        try {
+            return OffsetDateTime.parse(iso).toLocalDate();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String formatLocalDate(LocalDate date) {
+        return date == null ? null : date.toString();
     }
 
     private Product resolveProduct(TariffRequest request) {

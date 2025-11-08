@@ -19,6 +19,10 @@ public class TariffResponse {
     private String missingHsCode;
     private String message;
     private Double suggestedBasePrice;
+    private Long adminTariffId;
+    private String validFrom;
+    private String validTo;
+    private String notes;
 
     // this class is to include timeperiods where one tariff ends, and a new tariff starts
     public static class Segment {
@@ -118,5 +122,13 @@ public class TariffResponse {
     public void setMessage(String message) { this.message = message; }
     public Double getSuggestedBasePrice() { return suggestedBasePrice; }
     public void setSuggestedBasePrice(Double suggestedBasePrice) { this.suggestedBasePrice = suggestedBasePrice; }
+    public Long getAdminTariffId() { return adminTariffId; }
+    public void setAdminTariffId(Long adminTariffId) { this.adminTariffId = adminTariffId; }
+    public String getValidFrom() { return validFrom; }
+    public void setValidFrom(String validFrom) { this.validFrom = validFrom; }
+    public String getValidTo() { return validTo; }
+    public void setValidTo(String validTo) { this.validTo = validTo; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 
 }

@@ -15,6 +15,12 @@ const normalizePriceDetails = (details, fallbackHsCode, fallbackMessage = null) 
     details?.suggestedBasePrice ??
     details?.suggested_base_price ??
     null,
+  label: details?.label ?? null,
+  source: details?.source ?? details?.source_label ?? null,
+  validFrom: details?.validFrom ?? details?.valid_from ?? null,
+  validTo: details?.validTo ?? details?.valid_to ?? null,
+  notes: details?.notes ?? null,
+  adminTariffId: details?.adminTariffId ?? details?.admin_tariff_id ?? null,
 });
 
 export default function TariffCalc() {
@@ -249,6 +255,14 @@ export default function TariffCalc() {
     };
 
     const segments = Array.isArray(data.segments) ? data.segments : [];
+    const tariffMeta = {
+      label: data.label || null,
+      source: data.source || null,
+      validFrom: data.validFrom || null,
+      validTo: data.validTo || null,
+      notes: data.notes || null,
+      adminTariffId: data.adminTariffId ?? null,
+    };
 
     setResult({
       breakdown,
@@ -258,6 +272,7 @@ export default function TariffCalc() {
         to: requestPayload.calculationTo,
       },
       pricePersisted: Boolean(data.pricePersisted),
+      tariffMeta,
     });
 
     // ---- Save local history ----
@@ -271,6 +286,7 @@ export default function TariffCalc() {
       total: Number(breakdown.totalPrice ?? 0),
       tariffFrom: requestPayload.calculationFrom,
       tariffTo: requestPayload.calculationTo,
+      tariffLabel: tariffMeta.label,
     };
     const prev = JSON.parse(localStorage.getItem("calcHistory") || "[]");
     prev.unshift(historyEntry);
@@ -617,6 +633,16 @@ export default function TariffCalc() {
               {pendingPrice.details?.missingHsCode || selectedProduct?.hsCode || product}
               . We’ll apply your value to the tariff rate to compute the totals.
             </p>
+            {pendingPrice.details?.label && (
+              <p style={{ color: '#ffdd99' }}>
+                Tariff: {pendingPrice.details.label}
+              </p>
+            )}
+            {(pendingPrice.details?.validFrom || pendingPrice.details?.validTo) && (
+              <p style={{ color: '#cfd8dc', fontSize: '0.9rem' }}>
+                Effective {pendingPrice.details?.validFrom || 'now'} → {pendingPrice.details?.validTo || 'open'}
+              </p>
+            )}
             {pendingPrice.details?.message && (
               <p style={{ color: '#ffb74d' }}>{pendingPrice.details.message}</p>
             )}
@@ -630,6 +656,11 @@ export default function TariffCalc() {
             {pendingPrice.details?.tariffRate && (
               <p style={{ fontStyle: 'italic' }}>
                 Tariff rate: {Number(pendingPrice.details.tariffRate).toFixed(2)}%
+              </p>
+            )}
+            {pendingPrice.details?.notes && (
+              <p style={{ color: '#cfd8dc', fontSize: '0.9rem' }}>
+                Notes: {pendingPrice.details.notes}
               </p>
             )}
             <div className="form-row">
@@ -683,6 +714,44 @@ export default function TariffCalc() {
               </div>
             )}
             
+            {result.tariffMeta && (
+              <div
+                style={{
+                  backgroundColor: '#1c2a3a',
+                  border: '1px solid #4caf50',
+                  color: '#e0f7fa',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <strong>{result.tariffMeta.label || 'Tariff details'}</strong>
+                  {result.tariffMeta.source?.startsWith('admin:') && (
+                    <span style={{
+                      backgroundColor: '#ff8c00',
+                      color: '#000',
+                      borderRadius: '12px',
+                      padding: '0.1rem 0.75rem',
+                      fontSize: '0.85rem'
+                    }}>
+                      Admin managed
+                    </span>
+                  )}
+                </div>
+                {(result.tariffMeta.validFrom || result.tariffMeta.validTo) && (
+                  <div style={{ fontSize: '0.9rem', marginTop: '0.3rem' }}>
+                    Effective {result.tariffMeta.validFrom || 'now'} → {result.tariffMeta.validTo || 'open'}
+                  </div>
+                )}
+                {result.tariffMeta.notes && (
+                  <div style={{ fontSize: '0.9rem', marginTop: '0.5rem', color: '#cfd8dc' }}>
+                    {result.tariffMeta.notes}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Total Import Cost Card - Orange Theme */}
             <div style={{
               backgroundColor: '#FF8C00',

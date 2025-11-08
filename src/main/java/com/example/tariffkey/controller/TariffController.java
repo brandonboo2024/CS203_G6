@@ -3,6 +3,8 @@ package com.example.tariffkey.controller;
 import com.example.tariffkey.model.*;
 import com.example.tariffkey.service.DefaultQuoteService;
 import com.example.tariffkey.service.TariffManagementService;
+import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,8 +39,10 @@ public class TariffController {
     }
 
     @PostMapping("/add")
-    public Tariff addTariff(@RequestBody Tariff tariff) {
-        return tariffManagementService.addTariff(tariff);
+    public Tariff addTariff(@Valid @RequestBody AdminTariffRequest tariff,
+                            Authentication authentication) {
+        String createdBy = authentication != null ? authentication.getName() : null;
+        return tariffManagementService.addTariff(tariff, createdBy);
     }
 
     @DeleteMapping("/{id}")

@@ -9,6 +9,11 @@ export default function AdminTariffPage() {
     originCountry: "",
     destinationCountry: "",
     rate: "",
+    label: "",
+    validFrom: "",
+    validTo: "",
+    notes: "",
+    allowOverride: false,
   });
   const [popup, setPopup] = useState({ show: false, message: "", type: "" });
 
@@ -46,9 +51,17 @@ export default function AdminTariffPage() {
       !newTariff.product.trim() ||
       !newTariff.originCountry.trim() ||
       !newTariff.destinationCountry.trim() ||
-      !newTariff.rate
+      !newTariff.rate ||
+      !newTariff.label.trim() ||
+      !newTariff.validFrom ||
+      !newTariff.validTo
     ) {
       alert("Please fill in all fields!");
+      return;
+    }
+
+    if (new Date(newTariff.validFrom) > new Date(newTariff.validTo)) {
+      alert("Valid from date must be before valid to date.");
       return;
     }
 
@@ -60,25 +73,40 @@ export default function AdminTariffPage() {
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({
-        ...newTariff,
+        product: newTariff.product.trim(),
+        originCountry: newTariff.originCountry.trim(),
+        destinationCountry: newTariff.destinationCountry.trim(),
         rate: parseFloat(newTariff.rate),
+        label: newTariff.label.trim(),
+        validFrom: newTariff.validFrom,
+        validTo: newTariff.validTo,
+        notes: newTariff.notes ? newTariff.notes.trim() : "",
+        allowOverride: Boolean(newTariff.allowOverride),
       }),
     });
 
-      if (!res.ok) throw new Error("Failed to add tariff");
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        throw new Error(payload?.message || "Failed to add tariff");
+      }
       await fetchTariffs();
       setNewTariff({
         product: "",
         originCountry: "",
         destinationCountry: "",
         rate: "",
+        label: "",
+        validFrom: "",
+        validTo: "",
+        notes: "",
+        allowOverride: false,
       });
 
       // show success popup
       showPopup("Tariff added successfully!", "success");
     } catch (err) {
       console.error(err);
-      showPopup("Failed to add tariff", "error");
+      showPopup(err.message || "Failed to add tariff", "error");
     }
   };
 
@@ -145,16 +173,88 @@ export default function AdminTariffPage() {
         />
 
         <div className="form-row">
-          <label>Rate (%):</label>
+          <label>Rate (decimal):</label>
           <input
             type="number"
             step="0.01"
             min="0"
+            max="1"
+            placeholder="0.05 for 5%"
             value={newTariff.rate}
             onChange={(e) =>
               setNewTariff({ ...newTariff, rate: e.target.value })
             }
           />
+        </div>
+
+        <div className="form-row">
+          <label>Label:</label>
+          <input
+            type="text"
+            value={newTariff.label}
+            onChange={(e) =>
+              setNewTariff({ ...newTariff, label: e.target.value })
+            }
+            placeholder="e.g. ASEAN FTA Phase 2"
+          />
+        </div>
+
+        <div className="form-row">
+          <label>Valid From:</label>
+          <input
+            type="date"
+            value={newTariff.validFrom}
+            onChange={(e) =>
+              setNewTariff({ ...newTariff, validFrom: e.target.value })
+            }
+          />
+        </div>
+
+        <div className="form-row">
+          <label>Valid To:</label>
+          <input
+            type="date"
+            value={newTariff.validTo}
+            onChange={(e) =>
+              setNewTariff({ ...newTariff, validTo: e.target.value })
+            }
+          />
+        </div>
+
+        <div className="form-row">
+          <label>Notes:</label>
+          <textarea
+            rows="3"
+            value={newTariff.notes}
+            onChange={(e) =>
+              setNewTariff({ ...newTariff, notes: e.target.value })
+            }
+            placeholder="Optional context for this tariff"
+            style={{
+              width: "100%",
+              borderRadius: "var(--radius)",
+              border: "2px solid var(--accent)",
+              background: "var(--bg-dark)",
+              color: "var(--text-light)",
+              padding: "0.5rem 0.75rem",
+            }}
+          />
+        </div>
+
+        <div className="form-row" style={{ alignItems: "center" }}>
+          <label>Override overlaps:</label>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <input
+              type="checkbox"
+              checked={newTariff.allowOverride}
+              onChange={(e) =>
+                setNewTariff({ ...newTariff, allowOverride: e.target.checked })
+              }
+            />
+            <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+              Close existing tariffs automatically
+            </span>
+          </div>
         </div>
 
         <button type="submit">Add Tariff</button>
@@ -177,7 +277,11 @@ export default function AdminTariffPage() {
                 <th>Product</th>
                 <th>Origin</th>
                 <th>Destination</th>
+                <th>Label</th>
+                <th>Valid From</th>
+                <th>Valid To</th>
                 <th>Rate (%)</th>
+                <th>Notes</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -188,7 +292,13 @@ export default function AdminTariffPage() {
                   <td>{t.product.charAt(0).toUpperCase() + t.product.slice(1)}</td>
                   <td>{t.originCountry}</td>
                   <td>{t.destinationCountry}</td>
-                  <td>{t.rate}</td>
+                  <td>{t.label}</td>
+                  <td>{t.validFrom}</td>
+                  <td>{t.validTo}</td>
+                  <td>{Number(t.rate * 100).toFixed(2)}</td>
+                  <td style={{ maxWidth: "200px", whiteSpace: "pre-wrap" }}>
+                    {t.notes || "-"}
+                  </td>
                   <td>
                     <button
                       onClick={() => handleDelete(t.id)}
