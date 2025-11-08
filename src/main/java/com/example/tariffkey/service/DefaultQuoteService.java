@@ -126,14 +126,17 @@ public class DefaultQuoteService {
             throw new IllegalStateException("Failed to retrieve tariff data from imported dataset");
         }
 
-        Double basePrice = product != null ? product.getBasePrice() : request.getCustomBasePrice();
-        boolean priceProvidedByUser = basePrice != null && product == null;
-        if (basePrice == null) {
-            return buildPriceRequiredResponse(request, hsCode, apiResponse);
+        Double storedBasePrice = product != null ? product.getBasePrice() : null;
+        Double confirmedBasePrice = request.getCustomBasePrice();
+        if (confirmedBasePrice == null) {
+            return buildPriceRequiredResponse(request, hsCode, apiResponse, storedBasePrice);
         }
 
-        if (priceProvidedByUser) {
+        double basePrice = confirmedBasePrice;
+        boolean pricePersisted = false;
+        if (product == null) {
             product = persistProductIfMissing(request, hsCode, basePrice);
+            pricePersisted = true;
         }
 
         double itemPrice = basePrice * request.getQuantity();
@@ -157,11 +160,11 @@ public class DefaultQuoteService {
         response.setSegments(new ArrayList<>());
         response.setLabel(apiResponse.isFromCache() ? "Dataset tariff rate" : "Average tariff rate (WITS)");
         response.setSource(apiResponse.getNomenclature());
-        response.setPricePersisted(priceProvidedByUser && product != null);
+        response.setPricePersisted(pricePersisted);
         return response;
     }
 
-    private TariffResponse buildPriceRequiredResponse(TariffRequest request, String hsCode, TariffApiResponse apiResponse) {
+    private TariffResponse buildPriceRequiredResponse(TariffRequest request, String hsCode, TariffApiResponse apiResponse, Double suggestedBasePrice) {
         TariffResponse response = new TariffResponse();
         response.setPriceRequired(true);
         response.setMissingProduct(request.getProduct());
@@ -171,6 +174,7 @@ public class DefaultQuoteService {
         response.setLabel("Tariff rate available");
         response.setSource(apiResponse.getNomenclature());
         response.setMessage("Base price required for HS " + hsCode + " before totals can be calculated.");
+        response.setSuggestedBasePrice(suggestedBasePrice);
         return response;
     }
 

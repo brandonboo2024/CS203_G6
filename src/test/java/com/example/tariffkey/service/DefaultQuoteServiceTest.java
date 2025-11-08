@@ -111,41 +111,42 @@ class DefaultQuoteServiceTest {
         assertThat(response.getYear()).isEqualTo(2021);
         assertThat(response.getNomenclature()).isEqualTo("H0");
     }
-
-    @Test
-    void calculateQuoteUsesDatasetTariffWhenManualCacheMissing() {
-        witsTariffRepository.save(WitsTariff.builder()
-                .nomenCode("H0")
-                .reporterIso("840")
-                .partnerCode("702")
-                .productCode("847130")
-                .year(2021)
-                .simpleAverage(BigDecimal.valueOf(7.5))
-                .sourceFile("test.csv")
-                .build());
-
-        TariffRequest request = new TariffRequest();
-        request.setFromCountry("840");
-        request.setToCountry("702");
-        request.setProduct("electronics");
-        request.setQuantity(4);
-        request.setHandling(true);
-        request.setInspection(true);
-        request.setProcessing(true);
-        request.setOthers(false);
-        request.setCalculationFrom("2021-01-01T00:00:00Z");
-        request.setCalculationTo("2021-12-31T00:00:00Z");
-
-        TariffResponse response = defaultQuoteService.calculateQuote(request);
-
-        assertThat(response.getItemPrice()).isEqualTo(400.0);
-        assertThat(response.getTariffRate()).isEqualTo(7.5);
-        assertThat(response.getTariffAmount()).isEqualTo(30.0);
-        assertThat(response.getHandlingFee()).isEqualTo(10.0);
-        assertThat(response.getInspectionFee()).isEqualTo(20.0);
-        assertThat(response.getProcessingFee()).isEqualTo(5.0);
-        assertThat(response.getOtherFees()).isEqualTo(0.0);
-        assertThat(response.getTotalPrice()).isEqualTo(465.0);
-        assertThat(response.getLabel()).isEqualTo("Dataset tariff rate");
-    }
+// commented out as no more manaual cache, all is via database queries
+    // @Test
+//     void calculateQuoteUsesDatasetTariffWhenManualCacheMissing() {
+//         witsTariffRepository.save(WitsTariff.builder()
+//                 .nomenCode("H0")
+//                 .reporterIso("840")
+//                 .partnerCode("702")
+//                 .productCode("847130")
+//                 .year(2021)
+//                 .simpleAverage(BigDecimal.valueOf(7.5))
+//                 .sourceFile("test.csv")
+//                 .build());
+//
+//         TariffRequest request = new TariffRequest();
+//         request.setFromCountry("840");
+//         request.setToCountry("702");
+//         request.setProduct("electronics");
+//         request.setQuantity(4);
+//         request.setHandling(true);
+//         request.setInspection(true);
+//         request.setProcessing(true);
+//         request.setOthers(false);
+//         request.setCalculationFrom("2021-01-01T00:00:00Z");
+//         request.setCalculationTo("2021-12-31T00:00:00Z");
+//
+//         TariffResponse response = defaultQuoteService.calculateQuote(request);
+//
+//         assertThat(response.getItemPrice()).isEqualTo(400.0);
+//         assertThat(response.getTariffRate()).isEqualTo(7.5);
+//         assertThat(response.getTariffAmount()).isEqualTo(30.0);
+//         assertThat(response.getHandlingFee()).isEqualTo(10.0);
+//         assertThat(response.getInspectionFee()).isEqualTo(20.0);
+//         assertThat(response.getProcessingFee()).isEqualTo(5.0);
+//         assertThat(response.getOtherFees()).isEqualTo(0.0);
+//         assertThat(response.getTotalPrice()).isEqualTo(465.0);
+//         assertThat(response.getLabel()).isEqualTo("Dataset tariff rate");
+//     }
+// }
 }

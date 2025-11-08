@@ -18,6 +18,7 @@ public class TariffResponse {
     private String missingProduct;
     private String missingHsCode;
     private String message;
+    private Double suggestedBasePrice;
 
     // this class is to include timeperiods where one tariff ends, and a new tariff starts
     public static class Segment {
@@ -115,5 +116,7 @@ public class TariffResponse {
     public void setMissingHsCode(String missingHsCode) { this.missingHsCode = missingHsCode; }
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+    public Double getSuggestedBasePrice() { return suggestedBasePrice; }
+    public void setSuggestedBasePrice(Double suggestedBasePrice) { this.suggestedBasePrice = suggestedBasePrice; }
 
 }

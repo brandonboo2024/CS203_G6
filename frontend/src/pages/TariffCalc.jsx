@@ -6,6 +6,17 @@ import { validateForm, sanitizeInput } from "../utils/inputValidation";
 import CountryDropdown from "../components/CountryDropdown.jsx";
 import ProductDropdown from "../components/ProductDropdown.jsx";
 
+const normalizePriceDetails = (details, fallbackHsCode, fallbackMessage = null) => ({
+  tariffRate: details?.tariffRate ?? details?.tariff_rate ?? null,
+  missingHsCode:
+    details?.missingHsCode ?? details?.missing_hs_code ?? fallbackHsCode,
+  message: details?.message ?? fallbackMessage,
+  suggestedBasePrice:
+    details?.suggestedBasePrice ??
+    details?.suggested_base_price ??
+    null,
+});
+
 export default function TariffCalc() {
   const [fromCountry, setFromCountry] = useState("");
   const [toCountry, setToCountry] = useState("");
@@ -35,7 +46,7 @@ export default function TariffCalc() {
   const [reportersLoading, setReportersLoading] = useState(true);
   const [partnersLoading, setPartnersLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(false);
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
   const submitDisabled =
     loading ||
     reportersLoading ||
@@ -157,6 +168,19 @@ export default function TariffCalc() {
     setPriceError(null);
   }, [product]);
 
+  useEffect(() => {
+    if (!pendingPrice) return;
+    const suggested = pendingPrice.details?.suggestedBasePrice;
+    if (suggested === null || suggested === undefined) {
+      return;
+    }
+    const numeric = Number(suggested);
+    if (Number.isNaN(numeric)) {
+      return;
+    }
+    setCustomPriceValue(numeric.toFixed(2));
+  }, [pendingPrice]);
+
   const toggleFee = (key) => {
     setFees((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -173,7 +197,7 @@ export default function TariffCalc() {
     }
 
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/api/tariff/calculate`,
+      `${apiBaseUrl}/api/tariff/calculate`,
       {
         method: "POST",
         headers,
@@ -189,16 +213,20 @@ export default function TariffCalc() {
     }
 
     if (!response.ok) {
-      const message = data?.message || data?.error || "Request failed";
+      const status = response.status;
+      const message =
+        data?.message || data?.error || (status === 401 || status === 403
+          ? "You must be signed in to calculate tariffs."
+          : "Request failed");
       const messageLower = message.toLowerCase();
       if (messageLower.includes("price") && messageLower.includes("require")) {
         const err = new Error(message);
         err.priceRequired = true;
-        err.priceDetails = {
-          tariffRate: data?.tariffRate ?? data?.tariff_rate ?? null,
-          missingHsCode: payload.hsCode || payload.product,
-          message,
-        };
+        err.priceDetails = normalizePriceDetails(
+          data,
+          payload.hsCode || payload.product,
+          message
+        );
         throw err;
       }
       throw new Error(message);
@@ -322,7 +350,14 @@ export default function TariffCalc() {
       const data = await performCalculation(request);
 
       if (data.priceRequired) {
-        setPendingPrice({ request, details: data });
+        setPendingPrice({
+          request,
+          details: normalizePriceDetails(
+            data,
+            request.hsCode ?? request.product,
+            data?.message ?? null
+          ),
+        });
         setCustomPriceValue("");
         setLoading(false);
         return;
@@ -334,11 +369,11 @@ export default function TariffCalc() {
       if (err.priceRequired) {
         setPendingPrice({
           request,
-          details: {
-            tariffRate: err.priceDetails?.tariffRate ?? null,
-            missingHsCode: err.priceDetails?.missingHsCode ?? request.hsCode ?? request.product,
-            message: err.message,
-          },
+          details: normalizePriceDetails(
+            err.priceDetails,
+            request.hsCode ?? request.product,
+            err.message
+          ),
         });
         setCustomPriceValue("");
         setLoading(false);
@@ -371,7 +406,14 @@ export default function TariffCalc() {
 
       if (data.priceRequired) {
         // still missing price for some reason
-        setPendingPrice({ request, details: data });
+        setPendingPrice({
+          request,
+          details: normalizePriceDetails(
+            data,
+            request.hsCode ?? request.product,
+            data?.message ?? null
+          ),
+        });
         setLoading(false);
         return;
       }
@@ -384,10 +426,11 @@ export default function TariffCalc() {
       if (err.priceRequired) {
         setPendingPrice({
           request,
-          details: err.priceDetails ?? {
-            missingHsCode: request.hsCode || request.product,
-            message: err.message,
-          },
+          details: normalizePriceDetails(
+            err.priceDetails,
+            request.hsCode ?? request.product,
+            err.message
+          ),
         });
         setCustomPriceValue("");
         setLoading(false);
@@ -533,6 +576,12 @@ export default function TariffCalc() {
           </button>
         </form>
 
+        {error && (
+          <div className="error-banner" style={{ marginTop: "1rem" }}>
+            {error}
+          </div>
+        )}
+
         {/* Display validation errors */}
         {Object.keys(validationErrors).length > 0 && (
           <div className="validation-errors" style={{ 
@@ -562,13 +611,21 @@ export default function TariffCalc() {
 
         {pendingPrice && (
           <div className="card" style={{ marginTop: '1.5rem', border: '1px solid #ffa000' }}>
-            <h3 style={{ marginTop: 0 }}>Base price required</h3>
+            <h3 style={{ marginTop: 0 }}>Confirm base price</h3>
             <p>
-              We found a tariff rate for HS {pendingPrice.details?.missingHsCode || selectedProduct?.hsCode || product}
-              , but no base price is stored yet. Enter a per-unit price to finish the calculation.
+              Please confirm the per-unit base price for HS{" "}
+              {pendingPrice.details?.missingHsCode || selectedProduct?.hsCode || product}
+              . We’ll apply your value to the tariff rate to compute the totals.
             </p>
             {pendingPrice.details?.message && (
               <p style={{ color: '#ffb74d' }}>{pendingPrice.details.message}</p>
+            )}
+            {pendingPrice.details?.suggestedBasePrice !== undefined &&
+              pendingPrice.details?.suggestedBasePrice !== null && (
+              <p style={{ fontStyle: 'italic', color: '#ffdd99' }}>
+                Suggested price from saved data: $
+                {Number(pendingPrice.details.suggestedBasePrice).toFixed(2)}
+              </p>
             )}
             {pendingPrice.details?.tariffRate && (
               <p style={{ fontStyle: 'italic' }}>
