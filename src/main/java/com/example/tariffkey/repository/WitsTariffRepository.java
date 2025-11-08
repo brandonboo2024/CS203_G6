@@ -41,16 +41,22 @@ public interface WitsTariffRepository extends JpaRepository<WitsTariff, Long> {
     List<String> findPartnersByReporter(@Param("reporter") String reporter);
 
     @Query("""
-            select distinct w.productCode
+            select distinct w.productCode as productCode,
+                            w.nomenCode as nomenCode
             from WitsTariff w
             where w.reporterIso = :reporter and w.partnerCode = :partner
             order by w.productCode asc
             """)
-    List<String> findProductsByRoute(@Param("reporter") String reporter,
-                                     @Param("partner") String partner);
+    List<ProductSample> findProductSamplesByRoute(@Param("reporter") String reporter,
+                                                  @Param("partner") String partner);
 
     interface ReporterSample {
         String getReporterIso();
         String getSourceFile();
+    }
+
+    interface ProductSample {
+        String getProductCode();
+        String getNomenCode();
     }
 }

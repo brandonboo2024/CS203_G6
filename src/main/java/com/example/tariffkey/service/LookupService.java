@@ -2,8 +2,11 @@ package com.example.tariffkey.service;
 
 import com.example.tariffkey.model.LookupOption;
 import com.example.tariffkey.model.LookupResponse;
-import com.example.tariffkey.model.Product;
-import com.example.tariffkey.repository.ProductRepository;
+import com.example.tariffkey.model.WitsCountryMetadata;
+import com.example.tariffkey.model.WitsProductMetadata;
+import com.example.tariffkey.model.WitsProductMetadataId;
+import com.example.tariffkey.repository.WitsCountryMetadataRepository;
+import com.example.tariffkey.repository.WitsProductMetadataRepository;
 import com.example.tariffkey.repository.WitsTariffRepository;
 import com.example.tariffkey.util.IsoCountryLookup;
 import org.slf4j.Logger;
@@ -11,10 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -24,13 +29,17 @@ public class LookupService {
     private static final Logger log = LoggerFactory.getLogger(LookupService.class);
 
     private final WitsTariffRepository witsTariffRepository;
-    private final ProductRepository productRepository;
-    private final Map<String, String> reporterLabelCache = new ConcurrentHashMap<>();
+    private final WitsCountryMetadataRepository countryMetadataRepository;
+    private final WitsProductMetadataRepository productMetadataRepository;
+    private final Map<String, String> countryLabelCache = new ConcurrentHashMap<>();
+    private final Map<String, String> productLabelCache = new ConcurrentHashMap<>();
 
     public LookupService(WitsTariffRepository witsTariffRepository,
-                         ProductRepository productRepository) {
+                         WitsCountryMetadataRepository countryMetadataRepository,
+                         WitsProductMetadataRepository productMetadataRepository) {
         this.witsTariffRepository = witsTariffRepository;
-        this.productRepository = productRepository;
+        this.countryMetadataRepository = countryMetadataRepository;
+        this.productMetadataRepository = productMetadataRepository;
     }
 
     public LookupResponse getReporters() {
@@ -48,7 +57,7 @@ public class LookupService {
             throw new IllegalArgumentException("No partners available for reporter " + reporterCode);
         }
         return partnerCodes.stream()
-                .map(code -> new LookupOption(code, reporterLabelCache.getOrDefault(code, code)))
+                .map(code -> new LookupOption(code, countryLabel(code)))
                 .collect(Collectors.toList());
     }
 
@@ -57,39 +66,74 @@ public class LookupService {
         if (!StringUtils.hasText(partnerCode)) {
             throw new IllegalArgumentException("Partner code is required");
         }
-        List<String> hsCodes = witsTariffRepository.findProductsByRoute(reporterCode, partnerCode);
-        if (hsCodes.isEmpty()) {
+        List<WitsTariffRepository.ProductSample> samples = witsTariffRepository.findProductSamplesByRoute(
+                reporterCode, partnerCode);
+        if (samples.isEmpty()) {
             throw new IllegalArgumentException("No products available for the selected countries");
         }
-        Map<String, Product> pricedProducts = productRepository.findByHsCodeIn(hsCodes).stream()
-                .collect(Collectors.toMap(Product::getHsCode, product -> product, (left, right) -> left));
-
-        List<LookupOption> options = hsCodes.stream()
-                .map(hs -> {
-                    Product product = pricedProducts.get(hs);
-                    if (product == null) {
-                        log.warn("Missing product mapping for HS {} (reporter {}, partner {})",
-                                hs, reporterCode, partnerCode);
-                        return null;
-                    }
-                    return new LookupOption(product.getCode(), formatProductLabel(product));
-                })
-                .filter(java.util.Objects::nonNull)
+        List<LookupOption> options = samples.stream()
+                .map(sample -> new LookupOption(
+                        sample.getProductCode(),
+                        productLabel(sample.getNomenCode(), sample.getProductCode())))
                 .collect(Collectors.toList());
-
         if (options.isEmpty()) {
-            throw new IllegalArgumentException("No priced products available for the selected route");
+            throw new IllegalArgumentException("No product metadata available for the selected route");
         }
         return options;
     }
 
     private LookupOption toReporterOption(String code, String sourceFile) {
-        String iso3 = parseIso3FromSource(sourceFile);
-        String label = IsoCountryLookup.displayNameForIso3(iso3)
-                .map(name -> name + " (" + code + ")")
-                .orElse(code);
-        reporterLabelCache.put(code, label);
+        String label = countryMetadataRepository.findById(code)
+                .map(this::formatCountryLabel)
+                .orElseGet(() -> fallbackReporterLabel(code, sourceFile));
+        countryLabelCache.putIfAbsent(code, label);
         return new LookupOption(code, label);
+    }
+
+    private String countryLabel(String code) {
+        return countryLabelCache.computeIfAbsent(code, key ->
+                countryMetadataRepository.findById(key)
+                        .map(this::formatCountryLabel)
+                        .orElse(key));
+    }
+
+    private String formatCountryLabel(WitsCountryMetadata metadata) {
+        String name = StringUtils.hasText(metadata.getCountryName())
+                ? metadata.getCountryName()
+                : metadata.getCountryCode();
+        if (!StringUtils.hasText(name)) {
+            name = metadata.getIso3();
+        }
+        if (!StringUtils.hasText(name)) {
+            name = metadata.getCountryCode();
+        }
+        List<String> markers = new ArrayList<>();
+        if (StringUtils.hasText(metadata.getIso3())) {
+            markers.add(metadata.getIso3().toUpperCase(Locale.ROOT));
+        }
+        if (StringUtils.hasText(metadata.getCountryCode())
+                && (markers.isEmpty()
+                || !metadata.getCountryCode().equalsIgnoreCase(markers.get(markers.size() - 1)))) {
+            markers.add(metadata.getCountryCode());
+        }
+        return markers.isEmpty() ? name : name + " (" + String.join(" · ", markers) + ")";
+    }
+
+    private String fallbackReporterLabel(String code, String sourceFile) {
+        String iso3 = parseIso3FromSource(sourceFile);
+        return IsoCountryLookup.displayNameForIso3(iso3)
+                .map(name -> {
+                    List<String> markers = new ArrayList<>();
+                    if (StringUtils.hasText(iso3)) {
+                        markers.add(iso3);
+                    }
+                    if (StringUtils.hasText(code)
+                            && (markers.isEmpty() || !code.equalsIgnoreCase(markers.get(markers.size() - 1)))) {
+                        markers.add(code);
+                    }
+                    return markers.isEmpty() ? name : name + " (" + String.join(" · ", markers) + ")";
+                })
+                .orElse(code);
     }
 
     private static String parseIso3FromSource(String sourceFile) {
@@ -112,14 +156,29 @@ public class LookupService {
         }
     }
 
-    private static String formatProductLabel(Product product) {
-        String friendly = product.getCode()
-                .replace('_', ' ')
-                .replace('-', ' ')
-                .trim();
-        if (!friendly.isEmpty()) {
-            friendly = Character.toUpperCase(friendly.charAt(0)) + friendly.substring(1);
+    private String productLabel(String nomenCode, String productCode) {
+        String cacheKey = nomenCode + ":" + productCode;
+        return productLabelCache.computeIfAbsent(cacheKey, key -> resolveProductLabel(nomenCode, productCode));
+    }
+
+    private String resolveProductLabel(String nomenCode, String productCode) {
+        Optional<WitsProductMetadata> precise = productMetadataRepository.findById(
+                new WitsProductMetadataId(nomenCode, productCode));
+        if (precise.isPresent()) {
+            return formatProductDescription(precise.get().getDescription(), productCode);
         }
-        return friendly + " (HS " + product.getHsCode() + ")";
+        Optional<WitsProductMetadata> hsLevel = productMetadataRepository.findById(
+                new WitsProductMetadataId("HS", productCode));
+        if (hsLevel.isPresent()) {
+            return formatProductDescription(hsLevel.get().getDescription(), productCode);
+        }
+        return productMetadataRepository.findFirstByIdProductCode(productCode)
+                .map(meta -> formatProductDescription(meta.getDescription(), productCode))
+                .orElse("HS " + productCode);
+    }
+
+    private String formatProductDescription(String description, String productCode) {
+        String base = StringUtils.hasText(description) ? description : "HS " + productCode;
+        return base + " (HS " + productCode + ")";
     }
 }

@@ -31,9 +31,10 @@ Flyway Error:
 
 -------------------------------------------------------------------------------------------------------------------------
 ### Bulk WITS tariff data
-1. Run the new Flyway migration (e.g. `./mvnw flyway:migrate`) to create the `wits_tariffs` table.
-2. Install the Python dependency once: `pip install psycopg[binary]`.
-3. Execute the importer from the project root, pointing it at the directory that contains all the WITS `.zip` files (the script streams them, no manual unzip needed). The lookup CSVs will be written to `./lookups` by default (override with `--lookup-dir` if desired):
+1. Run the new Flyway migration (e.g. `./mvnw flyway:migrate`) to create/upgrade the WITS tables.
+2. Install the Python dependencies: `pip install psycopg[binary] xlrd`.
+3. Make sure the metadata CSVs exist under `lookups/` (the repo includes `wits_country_metadata.csv` and `wits_hs_product_metadata.csv`, both derived from the official WITS Excel downloads). If you regenerate them elsewhere, point the importer at the new paths via `--country-metadata` / `--hs-metadata`.
+4. Execute the importer from the project root, pointing it at the directory that contains all the WITS `.zip` files (the script streams them, no manual unzip needed). The lookup CSVs will be written to `./lookups` by default (override with `--lookup-dir` if desired):
    ```
    python scripts/import_wits_bulk.py \
      --input-dir "2983760_49725EA1-0/AVEPref" \
@@ -41,7 +42,8 @@ Flyway Error:
      --db-name tariffs --db-user dev --db-password devpass \
      --lookup-dir lookups
    ```
-4. After a successful import you can regenerate just the lookup CSVs (without reprocessing the archives) via:
+   Every successful ZIP import is recorded in the `wits_import_audit` table, so rerunning the command automatically resumes from the first unfinished archive. Pass `--force` if you need to reprocess every file, or tweak `--max-file-retries` (default `3`) to control how many times the script reconnects when the database drops during a batch.
+5. After a successful import you can regenerate just the lookup CSVs (without reprocessing the archives) via:
    ```
    python scripts/import_wits_bulk.py --lookup-only --lookup-dir lookups
    ```
