@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +71,9 @@ class DefaultQuoteServiceTest {
                 .destinationCountry("702")
                 .product("847130")
                 .rate(0.123)
+                .validFrom(LocalDate.of(2023, 1, 1))
+                .validTo(LocalDate.of(2023, 12, 31))
+                .label("Admin tariff 2023")
                 .build());
 
         TariffApiRequest request = TariffApiRequest.builder()
@@ -84,6 +88,45 @@ class DefaultQuoteServiceTest {
         assertThat(response.isFromCache()).isTrue();
         assertThat(response.getTariffRate()).isEqualTo(0.123);
         assertThat(response.getHttpStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void fetchQuotePrefersTariffMatchingCalculationWindow() {
+        tariffRepository.save(Tariff.builder()
+                .originCountry("840")
+                .destinationCountry("702")
+                .product("847130")
+                .rate(0.05)
+                .validFrom(LocalDate.of(2022, 1, 1))
+                .validTo(LocalDate.of(2022, 12, 31))
+                .label("Legacy 2022")
+                .build());
+
+        tariffRepository.save(Tariff.builder()
+                .originCountry("840")
+                .destinationCountry("702")
+                .product("847130")
+                .rate(0.08)
+                .validFrom(LocalDate.of(2024, 1, 1))
+                .validTo(LocalDate.of(2024, 12, 31))
+                .label("Upcoming 2024")
+                .build());
+
+        TariffApiRequest request = TariffApiRequest.builder()
+                .originCountry("840")
+                .destCountry("702")
+                .hs6("847130")
+                .year("2024")
+                .build();
+
+        TariffApiResponse response = defaultQuoteService.fetchQuote(
+                request,
+                LocalDate.of(2024, 3, 1),
+                LocalDate.of(2024, 3, 31));
+
+        assertThat(response.getTariffRate()).isEqualTo(0.08);
+        assertThat(response.getLabel()).isEqualTo("Upcoming 2024");
+        assertThat(response.getValidFrom()).isEqualTo(LocalDate.of(2024, 1, 1));
     }
 
     @Test
