@@ -70,7 +70,7 @@ public class SecurityConfig {
 
                 // equivalent with hasAuthority if your authorities are literally "ROLE_ADMIN","ROLE_USER":
                 // .hasAnyAuthority("ROLE_ADMIN","ROLE_USER")
-                .requestMatchers("/api/tariff/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/tariff/**").hasAnyAuthority("ADMIN", "USER")
 
                 // Any other request is denied by default
                 .anyRequest().denyAll()
