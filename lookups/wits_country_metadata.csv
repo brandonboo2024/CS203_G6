@@ -1,0 +1,266 @@
+country_name,country_iso3,country_code,long_name,income_group,lending_category,region,currency_unit
+Afghanistan,AFG,004,Islamic State of Afghanistan,Low income,IDA,South Asia,Afghan afghani
+Albania,ALB,008,Republic of Albania,Upper middle income,IBRD,Europe & Central Asia,Albanian lek
+Algeria,DZA,012,People's Democratic Republic of Algeria,Upper middle income,IBRD,Middle East & North Africa,Algerian dinar
+American Samoa,ASM,016,American Samoa,Upper middle income,NULL,East Asia & Pacific,U.S. dollar
+Andorra,AND,020,NULL,Others,NULL,NULL,NULL
+Angola,AGO,024,People's Republic of Angola,Lower middle income,IBRD,Sub-Saharan Africa,Angolan kwanza
+Anguila,AIA,660,NULL,Others,NULL,NULL,NULL
+Antarctica,ATA,010,NULL,Others,NULL,NULL,NULL
+Antigua and Barbuda,ATG,028,Antigua and Barbuda,High income,IBRD,Latin America & Caribbean,East Caribbean dollar
+Argentina,ARG,032,Argentine Republic,Upper middle income,IBRD,Latin America & Caribbean,Argentine peso
+Armenia,ARM,051,Republic of Armenia,Upper middle income,IBRD,Europe & Central Asia,Armenian dram
+Aruba,ABW,533,Aruba,High income,NULL,Latin America & Caribbean,Aruban florin
+Australia,AUS,036,Commonwealth of Australia,High income,NULL,East Asia & Pacific,Australian dollar
+Austria,AUT,040,Republic of Austria,High income,NULL,Europe & Central Asia,Euro
+Azerbaijan,AZE,031,Republic of Azerbaijan,Upper middle income,IBRD,Europe & Central Asia,New Azeri manat
+"Bahamas, The",BHS,044,Commonwealth of The Bahamas,High income,NULL,Latin America & Caribbean,Bahamian dollar
+Bahrain,BHR,048,Kingdom of Bahrain,High income,NULL,Middle East & North Africa,Bahraini dinar
+Bangladesh,BGD,050,People's Republic of Bangladesh,Lower middle income,IDA,South Asia,Bangladeshi taka
+Barbados,BRB,052,Barbados,High income,NULL,Latin America & Caribbean,Barbados dollar
+Belarus,BLR,112,Republic of Belarus,Upper middle income,IBRD,Europe & Central Asia,Belarusian rubel
+Belgium,BEL,056,Kingdom of Belgium,High income,NULL,Europe & Central Asia,Euro
+Belgium-Luxembourg,BLX,058,NULL,Others,NULL,NULL,NULL
+Belize,BLZ,084,Belize,Upper middle income,IBRD,Latin America & Caribbean,Belize dollar
+Benin,BEN,204,Republic of Benin,Low income,IDA,Sub-Saharan Africa,West African CFA franc
+Bermuda,BMU,060,The Bermudas,High income,NULL,North America,Bermuda dollar
+Bhutan,BTN,064,Kingdom of Bhutan,Lower middle income,IDA,South Asia,Bhutanese ngultrum
+Bolivia,BOL,068,Plurinational State of Bolivia,Lower middle income,IBRD,Latin America & Caribbean,Bolivian Boliviano
+Bonaire,BES,535,NULL,Others,NULL,NULL,NULL
+Bosnia and Herzegovina,BIH,070,Bosnia and Herzegovina,Upper middle income,IBRD,Europe & Central Asia,Bosnia and Herzegovina convertible mark
+Botswana,BWA,072,Republic of Botswana,Upper middle income,IBRD,Sub-Saharan Africa,Botswana pula
+Bouvet Island,BVT,074,NULL,Others,NULL,NULL,NULL
+Br. Antr. Terr,BAT,080,NULL,Others,NULL,NULL,NULL
+Brazil,BRA,076,Federative Republic of Brazil,Upper middle income,IBRD,Latin America & Caribbean,Brazilian real
+British Indian Ocean Ter.,IOT,086,NULL,Others,NULL,NULL,NULL
+British Virgin Islands,VGB,092,NULL,Others,NULL,NULL,NULL
+Brunei,BRN,096,Brunei Darussalam,High income,NULL,East Asia & Pacific,Brunei dollar
+Bulgaria,BGR,100,Republic of Bulgaria,Upper middle income,IBRD,Europe & Central Asia,Bulgarian lev
+Bunkers,BUN,837,NULL,Others,NULL,NULL,NULL
+Burkina Faso,BFA,854,Burkina Faso,Low income,IDA,Sub-Saharan Africa,West African CFA franc
+Burundi,BDI,108,Republic of Burundi,Low income,IDA,Sub-Saharan Africa,Burundi franc
+Cambodia,KHM,116,Kingdom of Cambodia,Lower middle income,IDA,East Asia & Pacific,Cambodian riel
+Cameroon,CMR,120,Republic of Cameroon,Lower middle income,Blend,Sub-Saharan Africa,Central African CFA franc
+Canada,CAN,124,Canada,High income,NULL,North America,Canadian dollar
+Cape Verde,CPV,132,Republic of Cabo Verde,Lower middle income,Blend,Sub-Saharan Africa,Cabo Verde escudo
+Cayman Islands,CYM,136,Cayman Islands,High income,NULL,Latin America & Caribbean,Cayman Islands dollar
+Central African Republic,CAF,140,Central African Republic,Low income,IDA,Sub-Saharan Africa,Central African CFA franc
+Chad,TCD,148,Republic of Chad,Low income,IDA,Sub-Saharan Africa,Central African CFA franc
+Chile,CHL,152,Republic of Chile,High income,IBRD,Latin America & Caribbean,Chilean peso
+China,CHN,156,People's Republic of China,Upper middle income,IBRD,East Asia & Pacific,Chinese yuan
+Christmas Island,CXR,162,NULL,Others,NULL,NULL,NULL
+Cocos (Keeling) Islands,CCK,166,NULL,Others,NULL,NULL,NULL
+Colombia,COL,170,Republic of Colombia,Upper middle income,IBRD,Latin America & Caribbean,Colombian peso
+Comoros,COM,174,Union of the Comoros,Lower middle income,IDA,Sub-Saharan Africa,Comorian franc
+"Congo, Dem. Rep.",ZAR,180,Democratic Republic of the Congo,Low income,IDA,Sub-Saharan Africa,Congolese franc
+"Congo, Rep.",COG,178,Republic of Congo,Lower middle income,Blend,Sub-Saharan Africa,Central African CFA franc
+Cook Islands,COK,184,NULL,Others,NULL,NULL,NULL
+Costa Rica,CRI,188,Republic of Costa Rica,Upper middle income,IBRD,Latin America & Caribbean,Costa Rican colon
+Cote d'Ivoire,CIV,384,Republic of Côte d'Ivoire,Lower middle income,IDA,Sub-Saharan Africa,West African CFA franc
+Croatia,HRV,191,Republic of Croatia,High income,IBRD,Europe & Central Asia,Croatian kuna
+Cuba,CUB,192,Republic of Cuba,Upper middle income,NULL,Latin America & Caribbean,Cuban peso
+Curaçao,CUW,531,Curaçao,High income,NULL,Latin America & Caribbean,Netherlands Antillean guilder
+Cyprus,CYP,196,Republic of Cyprus,High income,NULL,Europe & Central Asia,Euro
+Czech Republic,CZE,203,Czech Republic,High income,NULL,Europe & Central Asia,Czech koruna
+Czechoslovakia,CSK,200,NULL,Others,NULL,NULL,NULL
+Denmark,DNK,208,Kingdom of Denmark,High income,NULL,Europe & Central Asia,Danish krone
+Djibouti,DJI,262,Republic of Djibouti,Lower middle income,IDA,Middle East & North Africa,Djibouti franc
+Dominica,DMA,212,Commonwealth of Dominica,Upper middle income,Blend,Latin America & Caribbean,East Caribbean dollar
+Dominican Republic,DOM,214,Dominican Republic,Upper middle income,IBRD,Latin America & Caribbean,Dominican peso
+East Asia & Pacific,EAS,EAS,East Asia & Pacific,Others,NULL,NULL,NULL
+East Timor,TMP,626,Democratic Republic of Timor-Leste,Lower middle income,Blend,East Asia & Pacific,U.S. dollar
+Ecuador,ECU,218,Republic of Ecuador,Upper middle income,IBRD,Latin America & Caribbean,U.S. dollar
+"Egypt, Arab Rep.",EGY,818,Arab Republic of Egypt,Lower middle income,IBRD,Middle East & North Africa,Egyptian pound
+El Salvador,SLV,222,Republic of El Salvador,Lower middle income,IBRD,Latin America & Caribbean,U.S. dollar
+Equatorial Guinea,GNQ,226,Republic of Equatorial Guinea,Upper middle income,IBRD,Sub-Saharan Africa,Central African CFA franc
+Eritrea,ERI,232,State of Eritrea,Low income,IDA,Sub-Saharan Africa,Eritrean nakfa
+Estonia,EST,233,Republic of Estonia,High income,NULL,Europe & Central Asia,Euro
+Eswatini,SWZ,748,Kingdom of Eswatini,Lower middle income,IBRD,Sub-Saharan Africa,Swazi lilangeni
+Ethiopia(excludes Eritrea),ETH,231,Federal Democratic Republic of Ethiopia,Low income,IDA,Sub-Saharan Africa,Ethiopian birr
+Ethiopia(includes Eritrea),ETF,230,NULL,Others,NULL,NULL,NULL
+Europe & Central Asia,ECS,ECS,Europe & Central Asia,Others,NULL,NULL,NULL
+Faeroe Islands,FRO,234,Faroe Islands,High income,NULL,Europe & Central Asia,Danish krone
+Falkland Island,FLK,238,NULL,Others,NULL,NULL,NULL
+Fiji,FJI,242,Republic of Fiji,Upper middle income,Blend,East Asia & Pacific,Fijian dollar
+Finland,FIN,246,Republic of Finland,High income,NULL,Europe & Central Asia,Euro
+Fm Sudan,SDN,736,Republic of the Sudan,Lower middle income,IDA,Sub-Saharan Africa,Sudanese pound
+Fr. So. Ant. Tr,ATF,260,NULL,Others,NULL,NULL,NULL
+France,FRA,250,French Republic,High income,NULL,Europe & Central Asia,Euro
+Free Zones,FRE,838,NULL,Others,NULL,NULL,NULL
+French Guiana,GUF,254,NULL,Others,NULL,NULL,NULL
+French Polynesia,PYF,258,French Polynesia,High income,NULL,East Asia & Pacific,CFP franc
+Gabon,GAB,266,Gabonese Republic,Upper middle income,IBRD,Sub-Saharan Africa,Central African CFA franc
+"Gambia, The",GMB,270,Republic of The Gambia,Low income,IDA,Sub-Saharan Africa,Gambian dalasi
+Georgia,GEO,268,Georgia,Upper middle income,IBRD,Europe & Central Asia,Georgian lari
+German Democratic Republic,DDR,278,NULL,Others,NULL,NULL,NULL
+Germany,DEU,276,Federal Republic of Germany,High income,NULL,Europe & Central Asia,Euro
+Ghana,GHA,288,Republic of Ghana,Lower middle income,IDA,Sub-Saharan Africa,New Ghanaian cedi
+Gibraltar,GIB,292,NULL,Others,NULL,NULL,NULL
+Greece,GRC,300,Hellenic Republic,High income,NULL,Europe & Central Asia,Euro
+Greenland,GRL,304,Greenland,High income,NULL,Europe & Central Asia,Danish krone
+Grenada,GRD,308,Grenada,Upper middle income,Blend,Latin America & Caribbean,East Caribbean dollar
+Guadeloupe,GLP,312,NULL,Others,NULL,NULL,NULL
+Guam,GUM,316,Guam,High income,NULL,East Asia & Pacific,U.S. dollar
+Guatemala,GTM,320,Republic of Guatemala,Upper middle income,IBRD,Latin America & Caribbean,Guatemalan quetzal
+Guinea,GIN,324,Republic of Guinea,Low income,IDA,Sub-Saharan Africa,Guinean franc
+Guinea-Bissau,GNB,624,Republic of Guinea-Bissau,Low income,IDA,Sub-Saharan Africa,West African CFA franc
+Guyana,GUY,328,Co-operative Republic of Guyana,Upper middle income,IDA,Latin America & Caribbean,Guyana dollar
+Haiti,HTI,332,Republic of Haiti,Low income,IDA,Latin America & Caribbean,Haitian gourde
+Heard Island and McDonald Isla,HMD,334,NULL,Others,NULL,NULL,NULL
+Holy See,VAT,336,NULL,Others,NULL,NULL,NULL
+Honduras,HND,340,Republic of Honduras,Lower middle income,IDA,Latin America & Caribbean,Honduran lempira
+"Hong Kong, China",HKG,344,Hong Kong Special Administrative Region of the People's Republic of China,High income,NULL,East Asia & Pacific,Hong Kong dollar
+Hungary,HUN,348,Hungary,High income,NULL,Europe & Central Asia,Hungarian forint
+Iceland,ISL,352,Republic of Iceland,High income,NULL,Europe & Central Asia,Iceland krona
+India,IND,356,Republic of India,Lower middle income,IBRD,South Asia,Indian rupee
+Indonesia,IDN,360,Republic of Indonesia,Lower middle income,IBRD,East Asia & Pacific,Indonesian rupiah
+"Iran, Islamic Rep.",IRN,364,Islamic Republic of Iran,Upper middle income,IBRD,Middle East & North Africa,Iranian rial
+Iraq,IRQ,368,Republic of Iraq,Upper middle income,IBRD,Middle East & North Africa,Iraqi dinar
+Ireland,IRL,372,Ireland,High income,NULL,Europe & Central Asia,Euro
+Israel,ISR,376,State of Israel,High income,NULL,Middle East & North Africa,Israeli new shekel
+Italy,ITA,380,Italian Republic,High income,NULL,Europe & Central Asia,Euro
+Jamaica,JAM,388,Jamaica,Upper middle income,IBRD,Latin America & Caribbean,Jamaican dollar
+Japan,JPN,392,Japan,High income,NULL,East Asia & Pacific,Japanese yen
+Jordan,JOR,400,Hashemite Kingdom of Jordan,Upper middle income,IBRD,Middle East & North Africa,Jordanian dinar
+Kazakhstan,KAZ,398,Republic of Kazakhstan,Upper middle income,IBRD,Europe & Central Asia,Kazakh tenge
+Kenya,KEN,404,Republic of Kenya,Lower middle income,Blend,Sub-Saharan Africa,Kenyan shilling
+Kiribati,KIR,296,Republic of Kiribati,Lower middle income,IDA,East Asia & Pacific,Australian dollar
+"Korea, Dem. Rep.",PRK,408,Democratic People's Republic of Korea,Low income,NULL,East Asia & Pacific,Democratic People's Republic of Korean won
+"Korea, Rep.",KOR,410,Republic of Korea,High income,NULL,East Asia & Pacific,Korean won
+Kuwait,KWT,414,State of Kuwait,High income,NULL,Middle East & North Africa,Kuwaiti dinar
+Kyrgyz Republic,KGZ,417,Kyrgyz Republic,Lower middle income,IDA,Europe & Central Asia,Kyrgyz som
+Lao PDR,LAO,418,Lao People's Democratic Republic,Lower middle income,IDA,East Asia & Pacific,Lao kip
+Latin America & Caribbean,LCN,LCN,Latin America & Caribbean,Others,NULL,NULL,NULL
+Latvia,LVA,428,Republic of Latvia,High income,NULL,Europe & Central Asia,Euro
+Lebanon,LBN,422,Lebanese Republic,Upper middle income,IBRD,Middle East & North Africa,Lebanese pound
+Lesotho,LSO,426,Kingdom of Lesotho,Lower middle income,IDA,Sub-Saharan Africa,Lesotho loti
+Liberia,LBR,430,Republic of Liberia,Low income,IDA,Sub-Saharan Africa,U.S. dollar
+Libya,LBY,434,Socialist People's Libyan Arab Jamahiriya,Upper middle income,IBRD,Middle East & North Africa,Libyan dinar
+Lithuania,LTU,440,Republic of Lithuania,High income,NULL,Europe & Central Asia,Euro
+Luxembourg,LUX,442,Grand Duchy of Luxembourg,High income,NULL,Europe & Central Asia,Euro
+Macao,MAC,446,Macao Special Administrative Region of the People's Republic of China,High income,NULL,East Asia & Pacific,Macao pataca
+Madagascar,MDG,450,Republic of Madagascar,Low income,IDA,Sub-Saharan Africa,Malagasy ariary
+Malawi,MWI,454,Republic of Malawi,Low income,IDA,Sub-Saharan Africa,Malawi kwacha
+Malaysia,MYS,458,Malaysia,Upper middle income,IBRD,East Asia & Pacific,Malaysian ringgit
+Maldives,MDV,462,Republic of Maldives,Upper middle income,IDA,South Asia,Maldivian rufiyaa
+Mali,MLI,466,Republic of Mali,Low income,IDA,Sub-Saharan Africa,West African CFA franc
+Malta,MLT,470,Republic of Malta,High income,NULL,Middle East & North Africa,Euro
+Marshall Islands,MHL,584,Republic of the Marshall Islands,Upper middle income,IDA,East Asia & Pacific,U.S. dollar
+Martinique,MTQ,474,NULL,Others,NULL,NULL,NULL
+Mauritania,MRT,478,Islamic Republic of Mauritania,Lower middle income,IDA,Sub-Saharan Africa,Mauritanian ouguiya
+Mauritius,MUS,480,Republic of Mauritius,Upper middle income,IBRD,Sub-Saharan Africa,Mauritian rupee
+Mayotte,MYT,175,NULL,Others,NULL,NULL,NULL
+Mexico,MEX,484,United Mexican States,Upper middle income,IBRD,Latin America & Caribbean,Mexican peso
+"Micronesia, Fed. Sts.",FSM,583,Federated States of Micronesia,Lower middle income,IDA,East Asia & Pacific,U.S. dollar
+Middle East & North Africa,MEA,MEA,Middle East & North Africa,Others,NULL,NULL,NULL
+Moldova,MDA,498,Republic of Moldova,Lower middle income,Blend,Europe & Central Asia,Moldovan leu
+Monaco,MCO,492,Principality of Monaco,High income,NULL,Europe & Central Asia,Euro
+Mongolia,MNG,496,Mongolia,Lower middle income,Blend,East Asia & Pacific,Mongolian tugrik
+Montenegro,MNT,499,NULL,Others,NULL,NULL,NULL
+Montserrat,MSR,500,NULL,Others,NULL,NULL,NULL
+Morocco,MAR,504,Kingdom of Morocco,Lower middle income,IBRD,Middle East & North Africa,Moroccan dirham
+Mozambique,MOZ,508,Republic of Mozambique,Low income,IDA,Sub-Saharan Africa,New Mozambican metical
+Myanmar,MMR,104,Republic of the Union of Myanmar,Lower middle income,IDA,East Asia & Pacific,Myanmar kyat
+Namibia,NAM,516,Republic of Namibia,Upper middle income,IBRD,Sub-Saharan Africa,Namibian dollar
+Nauru,NRU,520,NULL,Others,NULL,NULL,NULL
+Nepal,NPL,524,Nepal,Low income,IDA,South Asia,Nepalese rupee
+Netherlands,NLD,528,Kingdom of the Netherlands,High income,NULL,Europe & Central Asia,Euro
+Netherlands Antilles,ANT,530,NULL,Others,NULL,NULL,NULL
+Neutral Zone,NZE,536,NULL,Others,NULL,NULL,NULL
+New Caledonia,NCL,540,New Caledonia,High income,NULL,East Asia & Pacific,CFP franc
+New Zealand,NZL,554,New Zealand,High income,NULL,East Asia & Pacific,New Zealand dollar
+Nicaragua,NIC,558,Republic of Nicaragua,Lower middle income,IDA,Latin America & Caribbean,Nicaraguan gold cordoba
+Niger,NER,562,Republic of Niger,Low income,IDA,Sub-Saharan Africa,West African CFA franc
+Nigeria,NGA,566,Federal Republic of Nigeria,Lower middle income,Blend,Sub-Saharan Africa,Nigerian naira
+Niue,NIU,570,NULL,Others,NULL,NULL,NULL
+Norfolk Island,NFK,574,NULL,Others,NULL,NULL,NULL
+North America,NAC,NAC,North America,Others,NULL,NULL,NULL
+North Macedonia,MKD,807,Republic of North Macedonia,Upper middle income,IBRD,Europe & Central Asia,Macedonian denar
+Northern Mariana Islands,MNP,580,Commonwealth of the Northern Mariana Islands,High income,NULL,East Asia & Pacific,U.S. dollar
+Norway,NOR,578,Kingdom of Norway,High income,NULL,Europe & Central Asia,Norwegian krone
+Occ.Pal.Terr,PSE,275,NULL,Others,NULL,NULL,NULL
+Oman,OMN,512,Sultanate of Oman,High income,NULL,Middle East & North Africa,Rial Omani
+"Other Asia, nes",OAS,490,NULL,Others,NULL,NULL,NULL
+Pacific Islands,PCE,582,NULL,Others,NULL,NULL,NULL
+Pakistan,PAK,586,Islamic Republic of Pakistan,Lower middle income,Blend,South Asia,Pakistani rupee
+Palau,PLW,585,Republic of Palau,High income,IBRD,East Asia & Pacific,U.S. dollar
+Panama,PAN,591,Republic of Panama,High income,IBRD,Latin America & Caribbean,Panamanian balboa
+Papua New Guinea,PNG,598,The Independent State of Papua New Guinea,Lower middle income,Blend,East Asia & Pacific,Papua New Guinea kina
+Paraguay,PRY,600,Republic of Paraguay,Upper middle income,IBRD,Latin America & Caribbean,Paraguayan guarani
+Peru,PER,604,Republic of Peru,Upper middle income,IBRD,Latin America & Caribbean,Peruvian new sol
+Philippines,PHL,608,Republic of the Philippines,Lower middle income,IBRD,East Asia & Pacific,Philippine peso
+Pitcairn,PCN,612,NULL,Others,NULL,NULL,NULL
+Poland,POL,616,Republic of Poland,High income,IBRD,Europe & Central Asia,Polish zloty
+Portugal,PRT,620,Portuguese Republic,High income,NULL,Europe & Central Asia,Euro
+Qatar,QAT,634,State of Qatar,High income,NULL,Middle East & North Africa,Qatari riyal
+Reunion,REU,638,NULL,Others,NULL,NULL,NULL
+Romania,ROM,642,Romania,Upper middle income,IBRD,Europe & Central Asia,New Romanian leu
+Russian Federation,RUS,643,Russian Federation,Upper middle income,IBRD,Europe & Central Asia,Russian ruble
+Rwanda,RWA,646,Republic of Rwanda,Low income,IDA,Sub-Saharan Africa,Rwandan franc
+Saint Barthélemy,BLM,652,NULL,Others,NULL,NULL,NULL
+Saint Helena,SHN,654,NULL,Others,NULL,NULL,NULL
+Saint Maarten (Dutch part),SXM,534,Sint Maarten (Dutch part),High income,NULL,Latin America & Caribbean,Netherlands Antillean guilder
+Saint Pierre and Miquelon,SPM,666,NULL,Others,NULL,NULL,NULL
+Samoa,WSM,882,Samoa,Upper middle income,IDA,East Asia & Pacific,Samoan tala
+San Marino,SMR,674,Republic of San Marino,High income,NULL,Europe & Central Asia,Euro
+Sao Tome and Principe,STP,678,Democratic Republic of São Tomé and Principe,Lower middle income,IDA,Sub-Saharan Africa,São Tomé and Principe dobra
+Saudi Arabia,SAU,682,Kingdom of Saudi Arabia,High income,NULL,Middle East & North Africa,Saudi Arabian riyal
+Senegal,SEN,686,Republic of Senegal,Lower middle income,IDA,Sub-Saharan Africa,West African CFA franc
+"Serbia, FR(Serbia/Montenegro)",SER,891,NULL,Others,NULL,NULL,NULL
+Seychelles,SYC,690,Republic of Seychelles,High income,IBRD,Sub-Saharan Africa,Seychelles rupee
+Sierra Leone,SLE,694,Republic of Sierra Leone,Low income,IDA,Sub-Saharan Africa,Sierra Leonean leone
+Singapore,SGP,702,Republic of Singapore,High income,NULL,East Asia & Pacific,Singapore dollar
+Slovak Republic,SVK,703,Slovak Republic,High income,NULL,Europe & Central Asia,Euro
+Slovenia,SVN,705,Republic of Slovenia,High income,NULL,Europe & Central Asia,Euro
+Solomon Islands,SLB,090,Solomon Islands,Lower middle income,IDA,East Asia & Pacific,Solomon Islands dollar
+Somalia,SOM,706,Somali Democratic Republic,Low income,IDA,Sub-Saharan Africa,Somali shilling
+South Africa,ZAF,710,Republic of South Africa,Upper middle income,IBRD,Sub-Saharan Africa,South African rand
+South Asia,SAS,SAS,South Asia,Others,NULL,NULL,NULL
+South Georgia and the South Sa,SGS,239,NULL,Others,NULL,NULL,NULL
+South Sudan,SSD,728,Republic of South Sudan,Low income,IDA,Sub-Saharan Africa,South Sudanese Pound
+Soviet Union,SVU,810,NULL,Others,NULL,NULL,NULL
+Spain,ESP,724,Kingdom of Spain,High income,NULL,Europe & Central Asia,Euro
+Special Categories,SPE,839,NULL,Others,NULL,NULL,NULL
+Sri Lanka,LKA,144,Democratic Socialist Republic of Sri Lanka,Upper middle income,IBRD,South Asia,Sri Lankan rupee
+St. Kitts and Nevis,KNA,659,St. Kitts and Nevis,High income,IBRD,Latin America & Caribbean,East Caribbean dollar
+St. Lucia,LCA,662,St. Lucia,Upper middle income,Blend,Latin America & Caribbean,East Caribbean dollar
+St. Vincent and the Grenadines,VCT,670,St. Vincent and the Grenadines,Upper middle income,Blend,Latin America & Caribbean,East Caribbean dollar
+Sub-Saharan Africa,SSF,SSF,Sub-Saharan Africa,Others,NULL,NULL,NULL
+Sudan,SUD,729,NULL,Others,NULL,NULL,NULL
+Suriname,SUR,740,Republic of Suriname,Upper middle income,IBRD,Latin America & Caribbean,Suriname dollar
+Sweden,SWE,752,Kingdom of Sweden,High income,NULL,Europe & Central Asia,Swedish krona
+Switzerland,CHE,756,Switzerland,High income,NULL,Europe & Central Asia,Swiss franc
+Syrian Arab Republic,SYR,760,Syrian Arab Republic,Low income,IDA,Middle East & North Africa,Syrian pound
+Tajikistan,TJK,762,Republic of Tajikistan,Low income,IDA,Europe & Central Asia,Tajik somoni
+Tanzania,TZA,834,United Republic of Tanzania,Low income,IDA,Sub-Saharan Africa,Tanzanian shilling
+Thailand,THA,764,Kingdom of Thailand,Upper middle income,IBRD,East Asia & Pacific,Thai baht
+Togo,TGO,768,Republic of Togo,Low income,IDA,Sub-Saharan Africa,West African CFA franc
+Tokelau,TKL,772,NULL,Others,NULL,NULL,NULL
+Tonga,TON,776,Kingdom of Tonga,Upper middle income,IDA,East Asia & Pacific,Tongan pa'anga
+Trinidad and Tobago,TTO,780,Republic of Trinidad and Tobago,High income,IBRD,Latin America & Caribbean,Trinidad and Tobago dollar
+Tunisia,TUN,788,Republic of Tunisia,Lower middle income,IBRD,Middle East & North Africa,Tunisian dinar
+Turkey,TUR,792,Republic of Turkey,Upper middle income,IBRD,Europe & Central Asia,New Turkish lira
+Turkmenistan,TKM,795,Turkmenistan,Upper middle income,IBRD,Europe & Central Asia,New Turkmen manat
+Turks and Caicos Isl.,TCA,796,Turks and Caicos Islands,High income,NULL,Latin America & Caribbean,U.S. dollar
+Tuvalu,TUV,798,Tuvalu,Upper middle income,IDA,East Asia & Pacific,Australian dollar
+Uganda,UGA,800,Republic of Uganda,Low income,IDA,Sub-Saharan Africa,Ugandan shilling
+Ukraine,UKR,804,Ukraine,Lower middle income,IBRD,Europe & Central Asia,Ukrainian hryvnia
+United Arab Emirates,ARE,784,United Arab Emirates,High income,NULL,Middle East & North Africa,U.A.E. dirham
+United Kingdom,GBR,826,United Kingdom of Great Britain and Northern Ireland,High income,NULL,Europe & Central Asia,Pound sterling
+United States,USA,840,United States of America,High income,NULL,North America,U.S. dollar
+United States Minor Outlying I,UMI,581,NULL,Others,NULL,NULL,NULL
+Unspecified,UNS,898,NULL,Others,NULL,NULL,NULL
+Uruguay,URY,858,Oriental Republic of Uruguay,High income,IBRD,Latin America & Caribbean,Uruguayan peso
+Us Msc.Pac.I,USP,849,NULL,Others,NULL,NULL,NULL
+Uzbekistan,UZB,860,Republic of Uzbekistan,Lower middle income,Blend,Europe & Central Asia,Uzbek sum
+Vanuatu,VUT,548,Republic of Vanuatu,Lower middle income,IDA,East Asia & Pacific,Vanuatu vatu
+Venezuela,VEN,862,República Bolivariana de Venezuela,Upper middle income,IBRD,Latin America & Caribbean,Venezuelan bolivar fuerte
+Vietnam,VNM,704,Socialist Republic of Vietnam,Lower middle income,IBRD,East Asia & Pacific,Vietnamese dong
+Wallis and Futura Isl.,WLF,876,NULL,Others,NULL,NULL,NULL
+Western Sahara,ESH,732,NULL,Others,NULL,NULL,NULL
+World,WLD,000,World,Others,NULL,NULL,NULL
+Yemen,YEM,887,Republic of Yemen,Low income,IDA,Middle East & North Africa,Yemeni rial
+Yemen Democratic,YDR,720,NULL,Others,NULL,NULL,NULL
+"Yugoslavia,FR(Serbia/Montenegr",YUG,890,NULL,Others,NULL,NULL,NULL
+Zambia,ZMB,894,Republic of Zambia,Lower middle income,IDA,Sub-Saharan Africa,New Zambian kwacha
+Zimbabwe,ZWE,716,Republic of Zimbabwe,Lower middle income,Blend,Sub-Saharan Africa,U.S. dollar
