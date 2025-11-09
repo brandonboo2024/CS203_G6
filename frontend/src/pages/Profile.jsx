@@ -36,7 +36,7 @@ export default function Profile() {
       <div className="page">
         <h1 style={{ color: "var(--accent)", marginBottom: "2rem" }}>My Profile</h1>
 
-        <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+        <div className="profile-layout">
           {/* Avatar */}
           <div
             style={{

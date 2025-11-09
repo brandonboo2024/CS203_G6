@@ -1,25 +1,29 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { useState } from "react";
 
 export default function App() {
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const token = localStorage.getItem("token");
   let isAdmin = false;
+  let isLoggedIn = false;
 
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      // Assuming your JWT payload looks like { sub: "user", role: "ADMIN" }
       isAdmin = decoded.role === "ADMIN";
+      isLoggedIn = true;
     } catch (err) {
       console.error("Invalid token:", err);
     }
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // clear JWT
-    navigate("/login"); // redirect to login
+    localStorage.removeItem("token");
+    setMenuOpen(false);
+    navigate("/login");
   };
 
   return (
@@ -31,33 +35,58 @@ export default function App() {
         flexDirection: "column",
       }}
     >
-      {/* Navigation */}
-      <nav className="nav" style={{ display: "flex", gap: "1rem" }}>
-        <Link to="/dashboard">Dashboard</Link>
-        <Link to="/tariffs">Tariff Calc</Link>
-        <Link to="/history">History</Link>
-        <Link to="/simulation">Simulation</Link>
-        <Link to="/profile">Profile</Link>
+      {/* ---------- Navigation ---------- */}
+      <nav className="nav">
+        {/* ---------- Mobile Header ---------- */}
+        <div className="nav-header">
+          <button
+            className={`menu-toggle ${!isLoggedIn ? "disabled" : ""}`}
+            onClick={isLoggedIn ? () => setMenuOpen(!menuOpen) : undefined}
+            title={!isLoggedIn ? "Login to access menu" : ""}
+          >
+            ☰
+          </button>
 
-        {isAdmin && <Link to="/admin/tariffs">Admin</Link>}
+          <div className="logout-btn">
+            {isLoggedIn ? (
+              <button onClick={handleLogout}>Logout</button>
+            ) : (
+              <Link to="/login">Login</Link>
+            )}
+          </div>
+        </div>
 
-        <div style={{ marginLeft: "auto" }}>
-          {localStorage.getItem("token") ? (
-            <button onClick={handleLogout} style={{ cursor: "pointer" }}>
-              Logout
-            </button>
-          ) : (
-            <Link to="/login">Login</Link>
+        {/* ---------- Nav Links ---------- */}
+        <div className={`nav-links ${menuOpen && isLoggedIn ? "open" : ""}`}>
+          <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
+            Dashboard
+          </Link>
+          <Link to="/tariffs" onClick={() => setMenuOpen(false)}>
+            Tariff Calc
+          </Link>
+          <Link to="/history" onClick={() => setMenuOpen(false)}>
+            History
+          </Link>
+          <Link to="/simulation" onClick={() => setMenuOpen(false)}>
+            Simulation
+          </Link>
+          <Link to="/profile" onClick={() => setMenuOpen(false)}>
+            Profile
+          </Link>
+          {isAdmin && (
+            <Link to="/admin/tariffs" onClick={() => setMenuOpen(false)}>
+              Admin
+            </Link>
           )}
         </div>
       </nav>
 
-      {/* Main content */}
+      {/* ---------- Main content ---------- */}
       <main style={{ flex: 1, padding: "2rem", overflowY: "auto" }}>
         <Outlet />
       </main>
 
-      {/* Footer */}
+      {/* ---------- Footer ---------- */}
       <footer
         style={{
           padding: "1rem",
