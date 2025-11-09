@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tariff")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173","https://frontend-production-a446.up.railway.app"})
 public class TariffController {
 
     private final DefaultQuoteService quoteService;

@@ -12,7 +12,7 @@ import com.example.tariffkey.security.*;
 import java.util.Map;
 import java.util.HashMap;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173","https://frontend-production-a446.up.railway.app"})
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
