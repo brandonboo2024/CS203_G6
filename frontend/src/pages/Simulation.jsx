@@ -31,6 +31,14 @@ export default function Simulation() {
   });
   const [compareData, setCompareData] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  // ✅ NEW: Store the context of the last comparison to fix the display issue
+  const [lastComparisonContext, setLastComparisonContext] = useState({
+    productCode: "",
+    toCountry: "",
+    productLabel: "",
+    countryLabel: ""
+  });
 
   // ✅ Use same lookup data structure as TariffCalc
   const [lookups, setLookups] = useState({
@@ -309,6 +317,7 @@ export default function Simulation() {
               origin_country: origin.code,
               origin_label: origin.label || origin.code,
               dest_country: filters.toCountry,
+              product_code: filters.productCode,
               rate_percent: tariffRate,
               label: label,
             });
@@ -324,6 +333,17 @@ export default function Simulation() {
 
       // Sort by lowest rate first
       const validResults = comparisonResults.sort((a, b) => a.rate_percent - b.rate_percent);
+
+      // ✅ FIX: Store the context of this comparison
+      const currentProductLabel = getLabel(filters.productCode, lookups.products);
+      const currentCountryLabel = getLabel(filters.toCountry, lookups.reporters);
+      
+      setLastComparisonContext({
+        productCode: filters.productCode,
+        toCountry: filters.toCountry,
+        productLabel: currentProductLabel,
+        countryLabel: currentCountryLabel
+      });
 
       if (validResults.length === 0) {
         setLookupError("No tariff data found for the selected destination and product.");
@@ -633,10 +653,12 @@ export default function Simulation() {
       ) : compareData.length > 0 ? (
         <div className="result-box">
           <h2 style={{ color: "#fff" }}>Tariff Comparison Results</h2>
+          
+          {/* ✅ FIXED: Use the stored comparison context instead of current filters */}
           <p>
-            Showing tariff rates for <strong>{getLabel(filters.productCode, lookups.products)}</strong> from{" "}
+            Showing tariff rates for <strong>{lastComparisonContext.productLabel}</strong> from{" "}
             <strong>{compareData.length} countries</strong> to{" "}
-            <strong>{getLabel(filters.toCountry, lookups.reporters)}</strong>
+            <strong>{lastComparisonContext.countryLabel}</strong>
           </p>
 
           {/* Best Options Summary */}
@@ -692,7 +714,7 @@ export default function Simulation() {
                   labelFormatter={(label, payload) => {
                     if (payload && payload[0]) {
                       const data = payload[0].payload;
-                      return `From: ${data.origin_label}\nTo: ${getLabel(filters.toCountry, lookups.reporters)}\nRate: ${data.rate_percent}%`;
+                      return `From: ${data.origin_label}\nTo: ${lastComparisonContext.countryLabel}\nRate: ${data.rate_percent}%`;
                     }
                     return label;
                   }}
