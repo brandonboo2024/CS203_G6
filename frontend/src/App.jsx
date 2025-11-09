@@ -1,6 +1,7 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
+import Chatbot from "./components/Chatbot";
 
 export default function App() {
   const navigate = useNavigate();
@@ -96,6 +97,9 @@ export default function App() {
       >
         TARIFF • CS203 Project
       </footer>
+
+      {/* ---------- Chatbot ---------- */}
+      {isLoggedIn && <Chatbot />}
     </div>
   );
 }
