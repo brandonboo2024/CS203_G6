@@ -505,56 +505,56 @@ export default function Simulation() {
             <p>Breakeven Price After Tariff: ${result.breakevenPrice.toFixed(2)} per unit</p>
           </div>
 
-          {/* Profit Comparison Chart */}
-          <div className="chart-wrapper">
-            <h3 style={{ color: "#fff", marginBottom: "1rem" }}>Profit Comparison</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart 
-                data={result.chartData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 30 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                <XAxis 
-                  dataKey="name" 
-                  tick={{ fill: "var(--text-light)" }}
-                />
-                <YAxis 
-                  tick={{ fill: "var(--text-light)" }}
-                  tickFormatter={(value) => `$${value}`}
-                  domain={['auto', 'auto']}
-                />
-                <Tooltip
-                  formatter={(value) => [`$${Number(value).toFixed(2)}`, "Profit"]}
-                  labelFormatter={(label) => `${label}`}
-                  contentStyle={{ 
-                    backgroundColor: "var(--bg-card)", 
-                    borderRadius: "8px",
-                    border: "1px solid #555"
-                  }}
-                />
-                <Bar 
-                  dataKey="profit" 
-                  name="Profit"
-                  fill="#FF8C00"
-                  radius={[4, 4, 0, 0]} 
-                />
-              </BarChart>
-            </ResponsiveContainer>
-            
-            {/* Chart Legend */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              gap: '2rem', 
-              marginTop: '1rem',
-              fontSize: '0.9rem'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '12px', height: '12px', backgroundColor: '#FF8C00', borderRadius: '2px' }}></div>
-                <span style={{ color: 'var(--text-light)' }}>Profit/Loss</span>
-              </div>
-            </div>
-          </div>
+ {/* Profit Comparison Chart */}
+<div className="chart-wrapper">
+  <h3 style={{ color: "#fff", marginBottom: "1rem" }}>Profit Comparison</h3>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart 
+      data={result.chartData} 
+      margin={{ top: 20, right: 30, left: 20, bottom: 30 }}
+    >
+      <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+      <XAxis 
+        dataKey="name" 
+        tick={{ fill: "var(--text-light)" }}
+      />
+      <YAxis 
+        tick={{ fill: "var(--text-light)" }}
+        tickFormatter={(value) => `$${value}`}
+        // Remove domain prop - let Recharts auto-scale
+      />
+      <Tooltip
+        formatter={(value) => [`$${Number(value).toFixed(2)}`, "Profit"]}
+        labelFormatter={(label) => `${label}`}
+        contentStyle={{ 
+          backgroundColor: "var(--bg-card)", 
+          borderRadius: "8px",
+          border: "1px solid #555"
+        }}
+      />
+      <Bar 
+        dataKey="profit" 
+        name="Profit"
+        fill="#FF8C00"
+        radius={[4, 4, 0, 0]} 
+      />
+    </BarChart>
+  </ResponsiveContainer>
+  
+  {/* Chart Legend */}
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    gap: '2rem', 
+    marginTop: '1rem',
+    fontSize: '0.9rem'
+  }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ width: '12px', height: '12px', backgroundColor: '#FF8C00', borderRadius: '2px' }}></div>
+      <span style={{ color: 'var(--text-light)' }}>Profit/Loss</span>
+    </div>
+  </div>
+</div>
 
           {/* Warning for negative profit */}
           {result.profitAfter < 0 && (
