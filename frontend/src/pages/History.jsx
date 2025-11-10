@@ -250,16 +250,47 @@ const generateHistoricalTrend = async () => {
     const availableYears = [2018, 2019, 2020, 2022, 2023];
     const trendData = [];
 
-    // For each available year, calculate the tariff rate using that year's data
-    for (const year of availableYears) {
+    // Determine the user's selected year range
+    const userStartYear = startDate.getFullYear();
+    const userEndYear = endDate.getFullYear();
+    
+    // Create year range based on user selection
+    const userYearRange = [];
+    for (let year = userStartYear; year <= userEndYear; year++) {
+      userYearRange.push(year);
+    }
+    
+    // If user selects more than 6 years, sample to avoid too many points
+    let displayYears = userYearRange;
+    if (userYearRange.length > 6) {
+      // Sample years to get reasonable number of points
+      const step = Math.ceil(userYearRange.length / 6);
+      displayYears = userYearRange.filter((_, index) => index % step === 0);
+      
+      // Always include the first and last year
+      if (!displayYears.includes(userStartYear)) displayYears.unshift(userStartYear);
+      if (!displayYears.includes(userEndYear)) displayYears.push(userEndYear);
+      
+      // Sort and remove duplicates
+      displayYears = [...new Set(displayYears)].sort((a, b) => a - b);
+    }
+
+    // For each display year, find the closest available historical data
+    for (const displayYear of displayYears) {
       try {
-        // Use mid-year for the calculation (July 1st)
-        const calculationDate = new Date(year, 6, 1); // July 1st of the year
-        
-        // Only include years within the selected date range
-        if (calculationDate < startDate || calculationDate > endDate) {
-          continue;
+        // Find the closest available historical year
+        let dataYear = displayYear;
+        if (!availableYears.includes(displayYear)) {
+          // Find the closest available year
+          const availableYear = availableYears.reduce((closest, year) => {
+            if (closest === null) return year;
+            return Math.abs(year - displayYear) < Math.abs(closest - displayYear) ? year : closest;
+          }, null);
+          dataYear = availableYear || availableYears[availableYears.length - 1]; // Fallback to latest
         }
+
+        // Use mid-year for the calculation (July 1st)
+        const calculationDate = new Date(dataYear, 6, 1);
 
         const calculationPayload = {
           fromCountry: filters.fromCountry,
@@ -285,23 +316,24 @@ const generateHistoricalTrend = async () => {
           const tariffRate = data.tariff_rate ?? data.tariffRate ?? 0;
           
           trendData.push({
-            period: year.toString(), // Just show the year
+            period: displayYear.toString(), // Show user's selected year
             tariffRate: tariffRate,
             date: calculationDate.toISOString().split('T')[0],
-            fullDate: calculationDate,
-            year: year
+            fullDate: new Date(displayYear, 6, 1), // Use display year for sorting
+            dataYear: dataYear, // The actual year data came from
+            displayYear: displayYear
           });
         }
       } catch (err) {
-        console.warn(`Failed to get rate for year ${year}:`, err);
+        console.warn(`Failed to get rate for year ${displayYear}:`, err);
       }
 
       // Add small delay to avoid overwhelming the API
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Sort by date
-    trendData.sort((a, b) => a.fullDate - b.fullDate);
+    // Sort by display year
+    trendData.sort((a, b) => a.displayYear - b.displayYear);
     setComparisonHistory(trendData);
     return trendData;
 
@@ -313,8 +345,6 @@ const generateHistoricalTrend = async () => {
     setLoading(false);
   }
 };
-
-// Remove the fake fetchAllHistoricalRates function completely
 
   // Helper function to get label from code
   const getLabel = (code, collection) => {
