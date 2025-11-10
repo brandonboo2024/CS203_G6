@@ -62,9 +62,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/lookups/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/news").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Only ADMIN can access any other endpoints
-              // If your authorities are stored with the ROLE_ prefix, prefer hasRole/AnyhasAnyRole
+
+                // Tariff endpoints (secured)
                 .requestMatchers(HttpMethod.POST, "/api/tariff/calculate").hasAnyAuthority("ADMIN","USER")
                 .requestMatchers(HttpMethod.POST, "/api/tariff/quote").hasAnyAuthority("ADMIN","USER")
                 .requestMatchers(HttpMethod.GET, "/api/tariff/**").hasAnyAuthority("ADMIN","USER")
@@ -72,7 +73,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/tariff/**").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/tariff/**").hasAuthority("ADMIN")
 
-                // Any other request is denied by default
+                // Anything else blocked by default
                 .anyRequest().denyAll()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -81,6 +82,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
