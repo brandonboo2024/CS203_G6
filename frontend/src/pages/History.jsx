@@ -13,13 +13,6 @@ import {
 } from "recharts";
 
 export default function History() {
-  // Summary data
-  const summary = {
-    route: "CN → SG",
-    avgCost: "$2,395.50",
-    saved: "$1,245.00",
-  };
-
   // Sample past calculations
   // const historyData = [
   //   { date: "13/09/25", route: "CN → SG", product: "Electronics", total: "$2,458.00" },
@@ -30,6 +23,7 @@ export default function History() {
 
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [historySummary, setHistorySummary] = useState(null);
   const { history: historyData, clearHistory } = useCalcHistory();
 
   const productLabel = (code) => {
@@ -90,10 +84,17 @@ export default function History() {
       });
       if (!response.ok) throw new Error("Failed to fetch data");
       const result = await response.json();
-      setHistoricalData(Array.isArray(result) ? result : result.data || []);
+      if (Array.isArray(result)) {
+        setHistoricalData(result);
+        setHistorySummary(null);
+      } else {
+        setHistoricalData(result.data || []);
+        setHistorySummary(result.summary || null);
+      }
     } catch (err) {
       console.error(err);
       setHistoricalData([]);
+      setHistorySummary(null);
     } finally {
       setLoading(false);
     }
@@ -172,17 +173,37 @@ export default function History() {
     document.body.removeChild(link);
   };
 
+  const fmtPercent = (value) => {
+    if (value === null || value === undefined) return "-";
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return "-";
+    return `${numeric.toFixed(2)}%`;
+  };
+
   return (
     <div className="history-wrapper">
-      {/* Summary
-      <div className="card summary-card">
-        <h2>Summary</h2>
-        <ul>
-          <li><span>Most Used Route:</span> {summary.route}</li>
-          <li><span>Average Cost:</span> {summary.avgCost}</li>
-          <li><span>Total Saved:</span> {summary.saved}</li>
-        </ul>
-      </div> */}
+      {historySummary && (
+        <div className="card summary-card">
+          <h2>Historical Summary</h2>
+          <ul>
+            <li>
+              <span>Total Points:</span> {historySummary.totalRecords}
+            </li>
+            <li>
+              <span>Average Rate:</span> {fmtPercent(historySummary.averageRate)}
+            </li>
+            <li>
+              <span>Min / Max:</span>{" "}
+              {fmtPercent(historySummary.minRate)} / {fmtPercent(historySummary.maxRate)}
+            </li>
+            <li>
+              <span>Change Over Range:</span>{" "}
+              {fmtPercent(historySummary.deltaRate)} ({fmtPercent(historySummary.startRate)} →{" "}
+              {fmtPercent(historySummary.endRate)})
+            </li>
+          </ul>
+        </div>
+      )}
 
       {/* Tariff History Graph */}
       <div className="card">

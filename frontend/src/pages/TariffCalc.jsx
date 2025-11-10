@@ -31,6 +31,7 @@ export default function TariffCalc() {
   const [quantity, setQuantity] = useState("");
   const [calculationFrom, setFrom] = useState("");
   const [calculationTo, setTo] = useState("");
+  const [selectorMode, setSelectorMode] = useState("select");
   const [fees, setFees] = useState({
     handling: false,
     inspection: false,
@@ -67,6 +68,10 @@ export default function TariffCalc() {
     !quantity ||
     !calculationFrom ||
     !calculationTo;
+
+  const toggleSelectorMode = () => {
+    setSelectorMode((prev) => (prev === "select" ? "search" : "select"));
+  };
 
   const fetchLookupJson = async (path) => {
     const response = await fetch(`${apiBaseUrl}${path}`);
@@ -490,6 +495,21 @@ export default function TariffCalc() {
               {lookupError}
             </div>
           )}
+          <div className="form-row selector-mode-row">
+            <label htmlFor="selector-mode-toggle">
+              Selection Mode:
+            </label>
+            <button
+              id="selector-mode-toggle"
+              type="button"
+              onClick={toggleSelectorMode}
+              aria-pressed={selectorMode === "search"}
+            >
+              {selectorMode === "select"
+                ? "Switch to Search Mode"
+                : "Switch to Dropdown Mode"}
+            </button>
+          </div>
           <CountryDropdown
             label="Origin"
             value={fromCountry}
@@ -498,6 +518,7 @@ export default function TariffCalc() {
             disabled={reportersLoading || !!lookupError}
             loading={reportersLoading}
             placeholder="Select origin country"
+            mode={selectorMode}
           />
           <CountryDropdown
             label="Destination"
@@ -514,6 +535,7 @@ export default function TariffCalc() {
             placeholder={
               fromCountry ? "Select destination country" : "Select origin first"
             }
+            mode={selectorMode}
           />
           <ProductDropdown
             value={product}
@@ -531,6 +553,7 @@ export default function TariffCalc() {
             placeholder={
               toCountry ? "Select product" : "Choose countries first"
             }
+            mode={selectorMode}
           />
 
           {/* Quantity */}

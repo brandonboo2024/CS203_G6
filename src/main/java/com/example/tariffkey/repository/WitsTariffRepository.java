@@ -1,6 +1,8 @@
 package com.example.tariffkey.repository;
 
 import com.example.tariffkey.model.WitsTariff;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -49,6 +51,21 @@ public interface WitsTariffRepository extends JpaRepository<WitsTariff, Long> {
             """)
     List<ProductSample> findProductSamplesByRoute(@Param("reporter") String reporter,
                                                   @Param("partner") String partner);
+
+    @Query("""
+            select w
+            from WitsTariff w
+            where (:productCode is null or w.productCode = :productCode)
+              and (:origin is null or w.reporterIso = :origin)
+              and (:dest is null or w.partnerCode = :dest)
+              and w.year between :startYear and :endYear
+            """)
+    Page<WitsTariff> findHistory(@Param("productCode") String productCode,
+                                 @Param("origin") String origin,
+                                 @Param("dest") String dest,
+                                 @Param("startYear") Integer startYear,
+                                 @Param("endYear") Integer endYear,
+                                 Pageable pageable);
 
     interface ReporterSample {
         String getReporterIso();
