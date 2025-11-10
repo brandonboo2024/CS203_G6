@@ -391,7 +391,7 @@ export default function AdminTariffPage() {
 
         <div className="form-row" style={{ alignItems: "center" }}>
           <label>Override overlaps:</label>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "flex-start", flexGrow: 1 }}>
             <input
               type="checkbox"
               checked={newTariff.allowOverride}
@@ -408,7 +408,7 @@ export default function AdminTariffPage() {
       {/* Tariff Table */}
       <div
         className="card"
-        style={{ marginTop: "2rem", width: "100%", maxWidth: "800px" }}
+        style={{ marginTop: "2rem", width: "100%", maxWidth: "1100px" }}
       >
         <h2>Current Tariffs</h2>
 
