@@ -94,7 +94,7 @@ export default function Simulation() {
     loadReporters();
   }, [apiBaseUrl]);
 
-  // CORRECTED: Find all origin countries that have the selected destination as a partner
+  // Find all origin countries that have the selected destination as a partner
   useEffect(() => {
     if (!filters.toCountry) {
       setLookups((prev) => ({ ...prev, validOrigins: [], products: [] }));
@@ -145,7 +145,7 @@ export default function Simulation() {
     findValidOrigins();
   }, [filters.toCountry, lookups.reporters, apiBaseUrl]);
 
-  // CORRECTED: Load products using the first valid origin (they should all have similar products)
+  // Load products using the first valid origin (they should all have similar products)
   useEffect(() => {
     if (!filters.toCountry || lookups.validOrigins.length === 0) {
       setLookups((prev) => ({ ...prev, products: [] }));
@@ -247,7 +247,7 @@ export default function Simulation() {
     });
   };
 
-  // CORRECTED: Compare only the valid origins that have this destination as partner
+  //Compare only the valid origins that have this destination as partner
   const handleCompare = async (e) => {
     e.preventDefault();
     
