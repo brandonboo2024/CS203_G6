@@ -114,13 +114,13 @@ Just click any of these to get started quickly!
 
 ## Tips for Best Results
 
-### Do's ✅
+### Do's
 - Use simple, clear language
 - Mention the feature you want (calculator, simulation, history, profile)
 - Try the quick action buttons for faster access
 - Type "help" if you're not sure what to ask
 
-### Don'ts ❌
+### Don'ts
 - Don't type very long messages
 - Don't use complex sentences
 - Don't expect the chatbot to perform calculations (it guides you to tools)
@@ -130,9 +130,9 @@ Just click any of these to get started quickly!
 
 ### Example 1: New User
 ```
-👤 You: "hello"
+You: "hello"
 
-🤖 Bot: "Hello! I'm your TariffKey assistant. I can help you with:
+Bot: "Hello! I'm your TariffKey assistant. I can help you with:
        • Calculator - Calculate tariff costs
        • Simulation - Compare scenarios
        • History - View past calculations
@@ -142,16 +142,16 @@ Just click any of these to get started quickly!
 
        [Calculate Tariff] [Run Simulation] [View History] [My Profile]
 
-👤 You: [Clicks "Calculate Tariff"]
+You: [Clicks "Calculate Tariff"]
 
 → Navigates to calculator page
 ```
 
 ### Example 2: Quick Question
 ```
-👤 You: "how much does shipping cost?"
+You: "how much does shipping cost?"
 
-🤖 Bot: "I can help you calculate tariffs! Here's how to use the calculator:
+Bot: "I can help you calculate tariffs! Here's how to use the calculator:
        1. Select your origin country
        2. Select your destination country
        3. Choose the product category
@@ -161,16 +161,16 @@ Just click any of these to get started quickly!
 
        [Go to Calculator] [Learn More]
 
-👤 You: [Clicks "Go to Calculator"]
+You: [Clicks "Go to Calculator"]
 
 → Navigates to calculator page
 ```
 
 ### Example 3: Finding Past Work
 ```
-👤 You: "show my previous calculations"
+You: "show my previous calculations"
 
-🤖 Bot: "You can view your past calculations in the History section!
+Bot: "You can view your past calculations in the History section!
 
        Your calculation history includes:
        • All previous tariff calculations
@@ -180,7 +180,7 @@ Just click any of these to get started quickly!
 
        [View History] [Export History]
 
-👤 You: [Clicks "View History"]
+You: [Clicks "View History"]
 
 → Navigates to history page
 ```
@@ -254,6 +254,6 @@ If you need assistance beyond what the chatbot provides:
 
 ---
 
-**Enjoy using your TariffKey assistant!** 🎉
+**Enjoy using your TariffKey assistant!** 
 
 For technical documentation, see [CHATBOT_IMPLEMENTATION.md](CHATBOT_IMPLEMENTATION.md)
