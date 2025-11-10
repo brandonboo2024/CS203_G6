@@ -32,8 +32,10 @@ build/
 ### VS Code ###
 .vscode/
 
+### WITS DATA ###
+2983760_49725EA1-0/
 src/main/resources/application.properties
-
+.env
 
 #MACOS
 .DS_Store

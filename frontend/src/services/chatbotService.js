@@ -1,5 +1,4 @@
 // Local chatbot service for keyword recognition and user guidance
-// No backend API needed - all logic runs in the browser
 
 export class ChatbotService {
   constructor() {

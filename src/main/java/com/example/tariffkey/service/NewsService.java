@@ -6,16 +6,17 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import java.util.*;
 
 @Service
 public class NewsService {
-
-    private static final String API_KEY = "pub_b5a56a0a175447f9b97058eed0c537e0"; 
-    private static final String NEWS_URL =
-        "https://newsdata.io/api/1/news?apikey=" + API_KEY + "&q=tariff+trade+import+export&language=en&country=sg";
-
+    @Value("${NEWS_API_KEY}")
+    String NEWS_API_KEY; 
     private final RestTemplate restTemplate = new RestTemplate();
+    private String getNewsUrl() {
+        return "https://newsdata.io/api/1/news?apikey=" + NEWS_API_KEY + "&q=tariff+trade+import+export&language=en&country=sg";
+    }
     private List<Map<String, String>> cachedNews = new ArrayList<>();
     private long lastFetchTime = 0;
 
@@ -32,7 +33,7 @@ public class NewsService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                    NEWS_URL, HttpMethod.GET, entity, String.class);
+                    getNewsUrl(), HttpMethod.GET, entity, String.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 System.out.println("[NewsService] Failed to fetch news: " + response.getStatusCode());
