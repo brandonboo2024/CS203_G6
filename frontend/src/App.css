@@ -127,6 +127,33 @@ html, body, #root {
 .form-row input:focus,
 .form-row select:focus { border-color: #fff; outline: none; }
 
+.search-select {
+  align-items: center;
+}
+
+.search-select .input-area {
+  width: 100%;
+}
+
+.search-select .input-area .search-mode-wrapper {
+  width: 100%;
+}
+
+.search-select .input-area .input-error {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: #ff6b6b;
+}
+
+.selector-mode-row button {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1.25rem;
+  margin: 0;
+  box-shadow: none;
+}
+
 /* Fees (checkbox grid) */
 .fees {
   display: grid;
