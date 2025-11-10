@@ -159,7 +159,7 @@ export default function History() {
     };
   }, []);
 
-  // Generate historical trend data using current tariff rates for different time periods
+  // Generate historical trend data with smart sampling
   const generateHistoricalTrend = async () => {
     if (!filters.fromCountry || !filters.toCountry || !filters.productCode) {
       return [];
@@ -171,26 +171,47 @@ export default function History() {
       const headers = { "Content-Type": "application/json" };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      // Generate monthly data points between start and end dates
       const startDate = new Date(filters.startDate);
       const endDate = new Date(filters.endDate);
-      const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
       
-      const trendData = [];
-      const dataPoints = Math.min(monthsDiff, 12); // Max 12 data points
+      // Calculate time range in months
+      const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                        (endDate.getMonth() - startDate.getMonth());
+      
+      // Determine sampling interval based on time range
+      let sampleInterval;
+      let maxDataPoints;
+      
+      if (monthsDiff <= 12) {
+        sampleInterval = 1; // Monthly for 1 year
+        maxDataPoints = 12;
+      } else if (monthsDiff <= 60) {
+        sampleInterval = 3; // Quarterly for 1-5 years  
+        maxDataPoints = 20;
+      } else {
+        sampleInterval = 6; // Every 6 months for >5 years
+        maxDataPoints = 10;
+      }
 
-      for (let i = 0; i <= dataPoints; i++) {
+      const trendData = [];
+      const samplePoints = Math.min(Math.floor(monthsDiff / sampleInterval), maxDataPoints);
+
+      for (let i = 0; i <= samplePoints; i++) {
         try {
-          const currentDate = new Date(startDate);
-          currentDate.setMonth(startDate.getMonth() + Math.floor((monthsDiff * i) / dataPoints));
+          // Calculate the sample date
+          const sampleDate = new Date(startDate);
+          sampleDate.setMonth(startDate.getMonth() + (i * sampleInterval));
+
+          // Make sure we don't go beyond end date
+          if (sampleDate > endDate) break;
 
           const calculationPayload = {
             fromCountry: filters.fromCountry,
             toCountry: filters.toCountry,
             product: filters.productCode,
             quantity: 1,
-            calculationFrom: currentDate.toISOString(),
-            calculationTo: new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+            calculationFrom: sampleDate.toISOString(),
+            calculationTo: new Date(sampleDate.getTime() + 24 * 60 * 60 * 1000).toISOString(), // Next day
             handling: false,
             inspection: false,
             processing: false,
@@ -208,24 +229,29 @@ export default function History() {
             const tariffRate = data.tariff_rate ?? data.tariffRate ?? 0;
             
             trendData.push({
-              period: currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+              period: sampleDate.toLocaleDateString('en-US', { 
+                year: 'numeric',
+                month: sampleInterval >= 6 ? 'short' : 'numeric'
+              }),
               tariffRate: tariffRate,
-              date: currentDate.toISOString().split('T')[0],
-              fullDate: currentDate
+              date: sampleDate.toISOString().split('T')[0],
+              fullDate: sampleDate,
+              samplePoint: i
             });
           }
         } catch (err) {
-          console.warn(`Failed to get rate for period ${i}:`, err);
+          console.warn(`Failed to get rate for sample point ${i}:`, err);
         }
 
-        // Small delay to avoid overwhelming the API
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Add delay to avoid overwhelming the API
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
 
       // Sort by date
       trendData.sort((a, b) => a.fullDate - b.fullDate);
       setComparisonHistory(trendData);
       return trendData;
+
     } catch (err) {
       console.error("Error generating historical trend:", err);
       setComparisonHistory([]);
@@ -431,7 +457,7 @@ export default function History() {
         {comparisonHistory.length > 0 ? (
           <div className="chart-wrapper" style={{ marginTop: '2rem' }}>
             <h3 style={{ color: "#fff", marginBottom: "1rem" }}>
-              Tariff Rate Trend
+              Tariff Rate Trend - {comparisonHistory.length} samples
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={comparisonHistory} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
