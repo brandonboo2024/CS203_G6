@@ -10,6 +10,7 @@ import Register from "./pages/RegisterPage.jsx";
 import History from "./pages/History.jsx";
 import Simulation from "./pages/Simulation.jsx";  
 import AdminTariffPage from "./pages/AdminTariffPage.jsx";
+import { CalcHistoryProvider } from "./hooks/useCalcHistory.jsx";
 
 import "./index.css";
 
@@ -87,6 +88,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <CalcHistoryProvider>
+      <RouterProvider router={router} />
+    </CalcHistoryProvider>
   </React.StrictMode>
 );

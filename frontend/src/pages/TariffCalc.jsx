@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "../App.css";
 import { validateForm, sanitizeInput } from "../utils/inputValidation";
+import { useCalcHistory } from "../hooks/useCalcHistory.jsx";
 
 // import your new shared components
 import CountryDropdown from "../components/CountryDropdown.jsx";
@@ -53,6 +54,7 @@ export default function TariffCalc() {
   const [partnersLoading, setPartnersLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(false);
   const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+  const { addEntry } = useCalcHistory();
   const submitDisabled =
     loading ||
     reportersLoading ||
@@ -288,10 +290,7 @@ export default function TariffCalc() {
       tariffTo: requestPayload.calculationTo,
       tariffLabel: tariffMeta.label,
     };
-    const prev = JSON.parse(localStorage.getItem("calcHistory") || "[]");
-    prev.unshift(historyEntry);
-    const trimmed = prev.slice(0, 50);
-    localStorage.setItem("calcHistory", JSON.stringify(trimmed));
+    addEntry(historyEntry);
   };
 
   const handleSubmit = async (e) => {
@@ -876,17 +875,17 @@ export default function TariffCalc() {
                   // Save result functionality
                   const historyEntry = {
                     createdAt: new Date().toISOString(),
-                    route: `${fromCountry} → ${toCountry}`,
-                    product,
+                    route: `${getLabel(fromCountry, lookups.reporters)} → ${getLabel(
+                      toCountry,
+                      lookups.partners
+                    )}`,
+                    product: selectedProduct?.label || product,
                     total: Number(result.breakdown.totalPrice || 0),
                     tariffFrom: result.window.from,
                     tariffTo: result.window.to,
                     breakdown: result.breakdown
                   };
-                  const prev = JSON.parse(localStorage.getItem("calcHistory") || "[]");
-                  prev.unshift(historyEntry);
-                  const trimmed = prev.slice(0, 50);
-                  localStorage.setItem("calcHistory", JSON.stringify(trimmed));
+                  addEntry(historyEntry);
                   alert("Result saved successfully!");
                 }}
                 style={{
