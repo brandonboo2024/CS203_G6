@@ -10,6 +10,7 @@ import Register from "./pages/RegisterPage.jsx";
 import History from "./pages/History.jsx";
 import Simulation from "./pages/Simulation.jsx";  
 import AdminTariffPage from "./pages/AdminTariffPage.jsx";
+import Support from "./pages/Support.jsx";
 import { CalcHistoryProvider } from "./hooks/useCalcHistory.jsx";
 
 import "./index.css";
@@ -81,6 +82,10 @@ const router = createBrowserRouter([
             <AdminTariffPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: "support",
+        element: <Support />,
       },
     ],
   },

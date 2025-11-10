@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCalcHistory } from "../hooks/useCalcHistory.jsx";
 
 export default function Dashboard() {
   const userName = localStorage.getItem("username") || "Guest";
   const [news, setNews] = useState([]);
   const { history } = useCalcHistory();
+  const navigate = useNavigate();
   const recentCalculations = history.slice(0, 3);
 
   const fmtShortDate = (iso) => {
@@ -20,6 +22,22 @@ export default function Dashboard() {
     }
   };
 
+  const totals = useMemo(() => {
+    const totalValue = history.reduce(
+      (sum, calc) => sum + Number(calc.total || 0),
+      0
+    );
+    const uniqueRoutes = new Set(history.map((calc) => calc.route)).size;
+    return {
+      totalRuns: history.length,
+      avgValue: history.length ? totalValue / history.length : 0,
+      routes: uniqueRoutes,
+    };
+  }, [history]);
+
+  const headlineRoute = recentCalculations[0]?.route || "Awaiting route";
+  const highlightNews = news.slice(0, 4);
+
   useEffect(() => {
     // replace with localhost:8080 if testing locally
     fetch("https://cs203g6-production-170f.up.railway.app/api/news")
@@ -27,18 +45,50 @@ export default function Dashboard() {
       .then((data) => setNews(data))
       .catch((err) => console.error("Error fetching news:", err));
   }, []);
-
   return (
     <div className="dashboard-wrapper">
-      <h1>
-        Welcome Back <span className="highlight">{userName}</span>!
-      </h1>
+      <section className="dashboard-hero">
+        <div className="hero-text">
+          <p className="hero-eyebrow">Operations overview</p>
+          <h1 className="hero-title">
+            Welcome back <span className="highlight">{userName}</span>
+          </h1>
+          <p>
+            Track active routes, monitor landed costs, and jump back into the
+            journeys you touched last.
+          </p>
+          <div className="hero-meta">
+            <span className="stat-pill">
+              <span className="pill-dot" />
+              {totals.totalRuns ? `${totals.totalRuns} quotes saved` : "Start your first quote"}
+            </span>
+            <span className="chip">Latest lane: {headlineRoute}</span>
+          </div>
+          <div className="quick-actions">
+            <button className="pill-button" onClick={() => navigate("/tariffs")}>
+              New calculation
+            </button>
+            <button className="pill-button" onClick={() => navigate("/simulation")}>
+              Open simulation
+            </button>
+          </div>
+        </div>
+        <div className="hero-metrics">
+          <div className="metric-card">
+            <span>Avg landed cost</span>
+            <strong>${totals.avgValue.toFixed(2)}</strong>
+            <small className="chip">Last run: {fmtShortDate(recentCalculations[0]?.createdAt)}</small>
+          </div>
+          <div className="metric-card">
+            <span>Routes tracked</span>
+            <strong>{totals.routes}</strong>
+            <small className="chip">Session view</small>
+          </div>
+        </div>
+      </section>
 
-      {/* =========================
-          Recent Calculations
-      ========================= */}
-      <div className="card">
-        <h2>Recent Calculations:</h2>
+      <section className="card">
+        <h2>Recent calculations</h2>
         <table className="calc-table">
           <thead>
             <tr>
@@ -67,19 +117,13 @@ export default function Dashboard() {
             )}
           </tbody>
         </table>
-      </div>
+      </section>
 
-      {/* =========================
-          Latest News
-      ========================= */}
-      <div className="card">
-        <h2>Latest Trade & Tariff News</h2>
+      <section className="card">
+        <h2>Latest trade & tariff news</h2>
         <p className="news-subtext">Curated from global trade and tariff headlines</p>
-
-        {/* 🕒 Last refreshed text */}
         <p className="last-updated">
-          Last updated:{" "}
-          {new Date().toLocaleString("en-US", {
+          Last refreshed {new Date().toLocaleString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
@@ -87,10 +131,9 @@ export default function Dashboard() {
             minute: "2-digit",
           })}
         </p>
-
         <div className="news-list">
-          {news.length > 0 ? (
-            news.map((item, idx) => (
+          {highlightNews.length > 0 ? (
+            highlightNews.map((item, idx) => (
               <div className="news-item" key={idx}>
                 <span className="news-title">{item.title}</span>
                 <div className="news-meta">
@@ -120,7 +163,7 @@ export default function Dashboard() {
             <p>Loading latest news...</p>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

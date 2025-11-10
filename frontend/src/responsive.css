@@ -22,8 +22,9 @@
   .nav {
     display: flex;
     flex-direction: column;
-    background: #000;
+    background: var(--bg-card);
     padding: 0.8rem 1rem;
+    border-radius: 0 0 var(--radius) var(--radius);
   }
 
   /* top bar with ☰ and logout */
@@ -33,26 +34,25 @@
     align-items: center;
     width: 100%;
     margin-bottom: 0.4rem;
-    border-bottom: 1px solid #222;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
     padding-bottom: 0.3rem;
   }
 
   /* hamburger button on the left */
   .menu-toggle {
     display: block;
-    background: none;
+    background: rgba(37, 99, 235, 0.12);
     border: none;
     color: var(--accent);
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     cursor: pointer;
     margin: 0;
     padding: 0;
     line-height: 1;
     text-align: left;
-    width: auto;
-    align-self: center;
-    position: relative;
-    left: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
   }
 
   /* disable state for hamburger menu when not logged in */
@@ -64,13 +64,13 @@
 
   /* logout button on the right */
   .logout-btn button {
-    background: linear-gradient(135deg, var(--accent), #ffb84d);
-    color: #000;
+    background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+    color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    padding: 0.4rem 1.2rem;
     font-weight: 600;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
   }
 
   /* hide nav links by default */
@@ -89,8 +89,8 @@
   }
 
   .nav-links a {
-    color: var(--accent);
-    font-size: 1.1rem;
+    color: var(--text-light);
+    font-size: 1rem;
     text-decoration: none;
     font-weight: 500;
     padding: 0.4rem 0;
