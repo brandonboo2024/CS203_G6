@@ -14,10 +14,12 @@ import {
 // Import the same shared components used in TariffCalc
 import CountryDropdown from "../components/CountryDropdown.jsx";
 import ProductDropdown from "../components/ProductDropdown.jsx";
+import { useCalcHistory } from "../hooks/useCalcHistory.jsx";
 
 export default function History() {
-  const [calculationHistory, setCalculationHistory] = useState([]);
+  const { history: sessionHistory } = useCalcHistory();
   const [comparisonHistory, setComparisonHistory] = useState([]);
+  const [calculationHistory, setCalculationHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   
   // For generating historical trend data
@@ -135,29 +137,10 @@ export default function History() {
     loadProducts();
   }, [filters.fromCountry, filters.toCountry, apiBaseUrl]);
 
-  // Load calculation history from localStorage
+  // Mirror calc history from session provider so dashboard + history stay synced
   useEffect(() => {
-    const loadCalculationHistory = () => {
-      const raw = localStorage.getItem("calcHistory");
-      const rows = JSON.parse(raw || "[]");
-      setCalculationHistory(rows);
-    };
-    
-    loadCalculationHistory();
-
-    const onStorage = (e) => {
-      if (e.key === "calcHistory") loadCalculationHistory();
-    };
-    window.addEventListener("storage", onStorage);
-
-    const onFocus = () => loadCalculationHistory();
-    window.addEventListener("focus", onFocus);
-
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("focus", onFocus);
-    };
-  }, []);
+    setCalculationHistory(sessionHistory);
+  }, [sessionHistory]);
 
   // Fetch all available historical rates for the selected route
   const fetchAllHistoricalRates = async () => {

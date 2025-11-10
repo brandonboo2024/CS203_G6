@@ -1,11 +1,12 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Chatbot from "./components/Chatbot";
 
 export default function App() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("tk-theme") || "daybreak");
 
   const token = localStorage.getItem("token");
   let isAdmin = false;
@@ -25,6 +26,15 @@ export default function App() {
     localStorage.removeItem("token");
     setMenuOpen(false);
     navigate("/login");
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("tk-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "midnight" ? "daybreak" : "midnight"));
   };
 
   return (
@@ -48,12 +58,17 @@ export default function App() {
             ☰
           </button>
 
-          <div className="logout-btn">
-            {isLoggedIn ? (
-              <button onClick={handleLogout}>Logout</button>
-            ) : (
-              <Link to="/login">Login</Link>
-            )}
+          <div className="nav-actions">
+            <button className="theme-toggle" onClick={toggleTheme}>
+              {theme === "midnight" ? "🌙 Midnight" : "🌤 Daybreak"}
+            </button>
+            <div className="logout-btn">
+              {isLoggedIn ? (
+                <button onClick={handleLogout}>Logout</button>
+              ) : (
+                <Link to="/login">Login</Link>
+              )}
+            </div>
           </div>
         </div>
 
@@ -88,15 +103,7 @@ export default function App() {
       </main>
 
       {/* ---------- Footer ---------- */}
-      <footer
-        style={{
-          padding: "1rem",
-          borderTop: "1px solid #ddd",
-          textAlign: "center",
-        }}
-      >
-        TARIFF • CS203 Project
-      </footer>
+      <footer>TARIFF • CS203 Project</footer>
 
       {/* ---------- Chatbot ---------- */}
       {isLoggedIn && <Chatbot />}

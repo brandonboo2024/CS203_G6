@@ -262,7 +262,7 @@ export default function AdminTariffPage() {
       <form
         className="card"
         onSubmit={handleAdd}
-        style={{ width: "100%", maxWidth: "600px" }}
+        style={{ width: "100%", maxWidth: "700px" }}
       >
         <h2>Add New Tariff</h2>
 
@@ -379,7 +379,7 @@ export default function AdminTariffPage() {
             }
             placeholder="Optional context for this tariff"
             style={{
-              width: "100%",
+              width: "90%",
               borderRadius: "var(--radius)",
               border: "2px solid var(--accent)",
               background: "var(--bg-dark)",
@@ -399,9 +399,6 @@ export default function AdminTariffPage() {
                 setNewTariff({ ...newTariff, allowOverride: e.target.checked })
               }
             />
-            <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-              Close existing tariffs automatically
-            </span>
           </div>
         </div>
 

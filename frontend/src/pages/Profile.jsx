@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import "../App.css";
 import { validateFileUpload } from "../utils/inputValidation";
 
@@ -126,7 +127,7 @@ export default function Profile() {
 
         {/* Support */}
         <p style={{ marginTop: "2rem", color: "var(--text-muted)" }}>
-          Need Help? <a href="/support">Support/FAQ</a>
+          Need help? <Link to="/support">Open the Support & FAQ hub</Link>
         </p>
       </div>
     </div>
