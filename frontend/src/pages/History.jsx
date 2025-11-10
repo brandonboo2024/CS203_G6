@@ -1,6 +1,5 @@
 // src/pages/History.jsx
 import React, { useState, useEffect } from "react";
-import { useCalcHistory } from "../hooks/useCalcHistory.jsx";
 import {
   LineChart,
   Line,
@@ -12,323 +11,577 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+// Import the same shared components used in TariffCalc
+import CountryDropdown from "../components/CountryDropdown.jsx";
+import ProductDropdown from "../components/ProductDropdown.jsx";
+
 export default function History() {
-  // Summary data
-  const summary = {
-    route: "CN → SG",
-    avgCost: "$2,395.50",
-    saved: "$1,245.00",
-  };
+  const [calculationHistory, setCalculationHistory] = useState([]);
+  const [comparisonHistory, setComparisonHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  // For generating historical trend data
+  const [filters, setFilters] = useState({
+    fromCountry: "",
+    toCountry: "",
+    productCode: "",
+    startDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year ago
+    endDate: new Date().toISOString().split('T')[0], // today
+  });
 
-  // Sample past calculations
-  // const historyData = [
-  //   { date: "13/09/25", route: "CN → SG", product: "Electronics", total: "$2,458.00" },
-  //   { date: "02/09/25", route: "VN → SG", product: "Textiles", total: "$1,245.00" },
-  //   { date: "30/08/25", route: "US → SG", product: "Machinery", total: "$8,567.00" },
-  //   { date: "29/08/25", route: "CN → SG", product: "Electronics", total: "$100.00" },
-  // ];
+  // Use same lookup data structure as TariffCalc
+  const [lookups, setLookups] = useState({
+    reporters: [],
+    partners: [],
+    products: [],
+  });
+  const [reportersLoading, setReportersLoading] = useState(true);
+  const [partnersLoading, setPartnersLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [lookupError, setLookupError] = useState(null);
 
-  const [historicalData, setHistoricalData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { history: historyData, clearHistory } = useCalcHistory();
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
-  const productLabel = (code) => {
-    const map = {
-      electronics: "Electronics",
-      clothing: "Clothing",
-      furniture: "Furniture",
-      food: "Food",
-      books: "Books",
-      toys: "Toys",
-      tools: "Tools",
-      beauty: "Beauty Products",
-      sports: "Sports Equipment",
-      automotive: "Automotive Parts",
-    };
-    return map[code] || code;
-  };
-
-  const fmtShortDate = (iso) => {
+  // Same data fetching logic as TariffCalc
+  const fetchLookupJson = async (path) => {
     try {
-      // dd/MM/yy (en-GB) to match your UI
-      return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "2-digit" });
-    } catch {
-      return iso ?? "-";
+      const response = await fetch(`${apiBaseUrl}${path}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const payload = await response.json();
+      return payload;
+    } catch (error) {
+      console.error(`Failed to fetch ${path}:`, error);
+      throw error;
     }
   };
 
-  // Filters for country
-  const [graphFilters, setGraphFilters] = useState({
-    productCode: "electronics",
-    originCountry: "",
-    destCountry: "",
-    startDate: "2020-01-01",
-    endDate: new Date().toISOString().split("T")[0],
-  });
+  // Load reporters (origin countries) on mount
+  useEffect(() => {
+    const loadReporters = async () => {
+      setReportersLoading(true);
+      try {
+        const data = await fetchLookupJson("/api/lookups");
+        setLookups((prev) => ({
+          ...prev,
+          reporters: data?.reporters ?? [],
+        }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError("Unable to load country options.");
+        setLookups((prev) => ({ ...prev, reporters: [] }));
+      } finally {
+        setReportersLoading(false);
+      }
+    };
+    loadReporters();
+  }, [apiBaseUrl]);
 
-  const productOptions = [
-    "automotive", "beauty", "books", "clothing", "electronics", "food",
-    "furniture", "sports", "tools", "toys",
-  ];
+  // Load partners when origin country changes
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, toCountry: "", productCode: "" }));
+    if (!filters.fromCountry) {
+      setLookups((prev) => ({ ...prev, partners: [], products: [] }));
+      return;
+    }
 
-  const countryOptions = [
-    "AU", "BR", "CA", "CN", "DE", "ES", "FR", "GB", "IN",
-    "IT", "JP", "KR", "MX", "MY", "PH", "RU", "SG", "TH",
-    "US", "VN", "ZA",
-  ];
-  
-  // Fetch historical tariff data
-  const fetchHistoricalData = async () => {
+    const loadPartners = async () => {
+      setPartnersLoading(true);
+      try {
+        const data = await fetchLookupJson(
+          `/api/lookups/reporters/${filters.fromCountry}/partners`
+        );
+        setLookups((prev) => ({ ...prev, partners: data || [] }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError("Unable to load destination options.");
+        setLookups((prev) => ({ ...prev, partners: [], products: [] }));
+      } finally {
+        setPartnersLoading(false);
+      }
+    };
+
+    loadPartners();
+  }, [filters.fromCountry, apiBaseUrl]);
+
+  // Load products when both countries are selected
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, productCode: "" }));
+    if (!filters.fromCountry || !filters.toCountry) {
+      setLookups((prev) => ({ ...prev, products: [] }));
+      return;
+    }
+
+    const loadProducts = async () => {
+      setProductsLoading(true);
+      try {
+        const data = await fetchLookupJson(
+          `/api/lookups/reporters/${filters.fromCountry}/partners/${filters.toCountry}/products`
+        );
+        setLookups((prev) => ({ ...prev, products: data || [] }));
+        setLookupError(null);
+      } catch (err) {
+        console.error(err);
+        setLookupError("No tariff data exists for that country combination.");
+        setLookups((prev) => ({ ...prev, products: [] }));
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [filters.fromCountry, filters.toCountry, apiBaseUrl]);
+
+  // Load calculation history from localStorage
+  useEffect(() => {
+    const loadCalculationHistory = () => {
+      const raw = localStorage.getItem("calcHistory");
+      const rows = JSON.parse(raw || "[]");
+      setCalculationHistory(rows);
+    };
+    
+    loadCalculationHistory();
+
+    const onStorage = (e) => {
+      if (e.key === "calcHistory") loadCalculationHistory();
+    };
+    window.addEventListener("storage", onStorage);
+
+    const onFocus = () => loadCalculationHistory();
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
+
+  // Generate historical trend data using current tariff rates for different time periods
+  const generateHistoricalTrend = async () => {
+    if (!filters.fromCountry || !filters.toCountry || !filters.productCode) {
+      return [];
+    }
+
+    setLoading(true);
     try {
-      setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/tariff/history`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`},
-        body: JSON.stringify(graphFilters),
-      });
-      if (!response.ok) throw new Error("Failed to fetch data");
-      const result = await response.json();
-      setHistoricalData(Array.isArray(result) ? result : result.data || []);
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      // Generate monthly data points between start and end dates
+      const startDate = new Date(filters.startDate);
+      const endDate = new Date(filters.endDate);
+      const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth());
+      
+      const trendData = [];
+      const dataPoints = Math.min(monthsDiff, 12); // Max 12 data points
+
+      for (let i = 0; i <= dataPoints; i++) {
+        try {
+          const currentDate = new Date(startDate);
+          currentDate.setMonth(startDate.getMonth() + Math.floor((monthsDiff * i) / dataPoints));
+
+          const calculationPayload = {
+            fromCountry: filters.fromCountry,
+            toCountry: filters.toCountry,
+            product: filters.productCode,
+            quantity: 1,
+            calculationFrom: currentDate.toISOString(),
+            calculationTo: new Date(currentDate.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+            handling: false,
+            inspection: false,
+            processing: false,
+            others: false
+          };
+
+          const response = await fetch(`${apiBaseUrl}/api/tariff/calculate`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(calculationPayload),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const tariffRate = data.tariff_rate ?? data.tariffRate ?? 0;
+            
+            trendData.push({
+              period: currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+              tariffRate: tariffRate,
+              date: currentDate.toISOString().split('T')[0],
+              fullDate: currentDate
+            });
+          }
+        } catch (err) {
+          console.warn(`Failed to get rate for period ${i}:`, err);
+        }
+
+        // Small delay to avoid overwhelming the API
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      // Sort by date
+      trendData.sort((a, b) => a.fullDate - b.fullDate);
+      setComparisonHistory(trendData);
+      return trendData;
     } catch (err) {
-      console.error(err);
-      setHistoricalData([]);
+      console.error("Error generating historical trend:", err);
+      setComparisonHistory([]);
+      return [];
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchHistoricalData();
-  }, [graphFilters]);
-
-
-  // Format chart data
-  const formatChartData = () => {
-    if (!Array.isArray(historicalData) || historicalData.length === 0) return [];
-  
-    const formatted = {};
-    const globalStart = new Date(graphFilters.startDate);
-    const globalEnd = new Date(graphFilters.endDate);
-  
-    historicalData.forEach((entry) => {
-      const from = new Date(entry.valid_from);
-      const to = entry.valid_to ? new Date(entry.valid_to) : globalEnd;
-  
-      // Skip entries completely outside the filter range
-      if (to < globalStart || from > globalEnd) return;
-  
-      // Filter by product, origin, and destination
-      if (graphFilters.productCode && entry.product_code !== graphFilters.productCode) return;
-      if (graphFilters.originCountry && entry.origin_country !== graphFilters.originCountry) return;
-      if (graphFilters.destCountry && entry.dest_country !== graphFilters.destCountry) return;
-  
-      const key =
-        entry.origin_country && entry.dest_country
-          ? `${entry.product_code} (${entry.origin_country}→${entry.dest_country})`
-          : entry.product_code;
-  
-      const start = from < globalStart ? globalStart : from;
-      const end = to > globalEnd ? globalEnd : to;
-  
-      const startLabel = start.toLocaleDateString("en-GB");
-      if (!formatted[startLabel]) formatted[startLabel] = { date: startLabel };
-      formatted[startLabel][key] = entry.rate_percent;
-  
-      const endLabel = end.toLocaleDateString("en-GB");
-      if (!formatted[endLabel]) formatted[endLabel] = { date: endLabel };
-      formatted[endLabel][key] = entry.rate_percent;
-    });
-  
-    return Object.values(formatted).sort((a, b) => {
-      const aDate = new Date(a.date.split("/").reverse().join("-"));
-      const bDate = new Date(b.date.split("/").reverse().join("-"));
-      return aDate - bDate;
-    });
+  // Helper function to get label from code
+  const getLabel = (code, collection) => {
+    if (!code || !Array.isArray(collection)) return code;
+    const match = collection.find((entry) => entry.code === code);
+    return match?.label || code;
   };
-  
 
-  const chartData = formatChartData();
-
-  // CSV export
-  const exportToCSV = () => {
-    if (chartData.length === 0) {
-      alert("No data available to export.");
-      return;
+  // Format date for display
+  const fmtShortDate = (iso) => {
+    try {
+      return new Date(iso).toLocaleDateString("en-GB", { 
+        day: "2-digit", 
+        month: "2-digit", 
+        year: "2-digit" 
+      });
+    } catch {
+      return iso ?? "-";
     }
-    const headers = ["Date", ...Object.keys(chartData[0]).filter((k) => k !== "date")];
-    const rows = chartData.map((row) =>
-      [row.date, ...headers.slice(1).map((h) => row[h] ?? "")].join(",")
-    );
-    const csvContent = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "tariff_history.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  };
+
+  // Quick date preset buttons
+  const setDateRange = (months) => {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    
+    setFilters(prev => ({
+      ...prev,
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    }));
   };
 
   return (
     <div className="history-wrapper">
-      {/* Summary
-      <div className="card summary-card">
-        <h2>Summary</h2>
-        <ul>
-          <li><span>Most Used Route:</span> {summary.route}</li>
-          <li><span>Average Cost:</span> {summary.avgCost}</li>
-          <li><span>Total Saved:</span> {summary.saved}</li>
-        </ul>
-      </div> */}
-
-      {/* Tariff History Graph */}
+      {/* Tariff Rate Trend Analysis */}
       <div className="card">
-        <h2>Tariff Rate History</h2>
-        <p>Visualize how tariff rates have changed over time</p>
+        <h2>Tariff Rate History & Trends</h2>
+        <p>Analyze how tariff rates have changed over time for specific trade routes</p>
 
-        {/* Filters */}
-        <div className="filter-bar">
-          <span className="filter-label">Graph Filters:</span>
-          <div className="filter-actions">
-            {/* Product */}
-            <select
-              value={graphFilters.productCode}
-              onChange={(e) =>
-                setGraphFilters({ ...graphFilters, productCode: e.target.value })
-              }
-            >
-              {productOptions.map((product) => (
-                <option key={product} value={product}>
-                  {product.charAt(0).toUpperCase() + product.slice(1)}
-                </option>
-              ))}
-            </select>
-
-            {/* Origin Country */}
-            <select
-              value={graphFilters.originCountry}
-              onChange={(e) =>
-                setGraphFilters({ ...graphFilters, originCountry: e.target.value })
-              }
-            >
-              <option value="">All Origins</option>
-              {countryOptions.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-
-            {/* Destination Country */}
-            <select
-              value={graphFilters.destCountry}
-              onChange={(e) =>
-                setGraphFilters({ ...graphFilters, destCountry: e.target.value })
-              }
-            >
-              <option value="">All Destinations</option>
-              {countryOptions.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-
-            {/* Date filters */}
-            <input
-              type="date"
-              value={graphFilters.startDate}
-              onChange={(e) =>
-                setGraphFilters({ ...graphFilters, startDate: e.target.value })
-              }
-            />
-            <input
-              type="date"
-              value={graphFilters.endDate}
-              onChange={(e) =>
-                setGraphFilters({ ...graphFilters, endDate: e.target.value })
-              }
-            />
+        {lookupError && (
+          <div className="error-banner">
+            {lookupError}
           </div>
-        </div>
-
-        {/* Graph */}
-        {loading ? (
-          <div className="loading">Loading tariff history...</div>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis label={{ value: "Rate %", angle: -90, position: "insideLeft" }} />
-              <Tooltip
-                formatter={(value) => [`${value}%`, "Tariff Rate"]}
-                labelFormatter={(label) => `Date: ${label}`}
-              />
-              <Legend />
-              {chartData.length > 0 &&
-                Object.keys(chartData[0])
-                  .filter((key) => key !== "date")
-                  .map((key, index) => (
-                    <Line
-                      key={key}
-                      type="monotone"
-                      dataKey={key}
-                      stroke={`hsl(${index * 60}, 70%, 50%)`}
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  ))}
-            </LineChart>
-          </ResponsiveContainer>
         )}
 
-        {/* Export CSV */}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-          <button onClick={exportToCSV} className="export-btn">Export CSV</button>
-        </div>
+        {/* Filters - Using same form structure as TariffCalc */}
+        <form onSubmit={(e) => { e.preventDefault(); generateHistoricalTrend(); }} className="calc-form">
+          <CountryDropdown
+            label="Origin Country"
+            value={filters.fromCountry}
+            onChange={(value) => setFilters({ ...filters, fromCountry: value, toCountry: "", productCode: "" })}
+            options={lookups.reporters}
+            disabled={reportersLoading}
+            loading={reportersLoading}
+            placeholder="Select origin country"
+          />
+
+          <CountryDropdown
+            label="Destination Country"
+            value={filters.toCountry}
+            onChange={(value) => setFilters({ ...filters, toCountry: value, productCode: "" })}
+            options={lookups.partners}
+            disabled={partnersLoading || !filters.fromCountry}
+            loading={partnersLoading}
+            placeholder={filters.fromCountry ? "Select destination country" : "Select origin first"}
+          />
+
+          <ProductDropdown
+            label="Product"
+            value={filters.productCode}
+            onChange={(value) => setFilters({ ...filters, productCode: value })}
+            options={lookups.products}
+            disabled={productsLoading || !filters.fromCountry || !filters.toCountry}
+            loading={productsLoading}
+            placeholder={
+              !filters.fromCountry ? "Choose origin first" :
+              !filters.toCountry ? "Choose destination first" :
+              "Select product"
+            }
+          />
+
+          {/* Date Range - Same style as TariffCalc */}
+          <div className="form-row">
+            <label>Date Range:</label>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setDateRange(6)}
+                className="secondary-btn"
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#555',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                6 Months
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateRange(12)}
+                className="secondary-btn"
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#555',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                1 Year
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateRange(24)}
+                className="secondary-btn"
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#555',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                2 Years
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateRange(60)}
+                className="secondary-btn"
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#555',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                5 Years
+              </button>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <label>Start Date:</label>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+              style={{ padding: '0.5rem' }}
+            />
+          </div>
+
+          <div className="form-row">
+            <label>End Date:</label>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+              style={{ padding: '0.5rem' }}
+            />
+          </div>
+
+          <button 
+            type="submit"
+            disabled={loading || !filters.fromCountry || !filters.toCountry || !filters.productCode}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#FF8C00',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              marginTop: '1rem'
+            }}
+          >
+            {loading ? 'Generating Historical Data...' : 'Generate Historical Trend'}
+          </button>
+        </form>
+
+        {/* Trend Chart */}
+        {comparisonHistory.length > 0 ? (
+          <div className="chart-wrapper" style={{ marginTop: '2rem' }}>
+            <h3 style={{ color: "#fff", marginBottom: "1rem" }}>
+              Tariff Rate Trend
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={comparisonHistory} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="period" />
+                <YAxis label={{ value: "Tariff Rate %", angle: -90, position: "insideLeft" }} />
+                <Tooltip
+                  formatter={(value) => [`${value}%`, "Tariff Rate"]}
+                  labelFormatter={(label, payload) => {
+                    if (payload && payload[0]) {
+                      const data = payload[0].payload;
+                      return `Period: ${label}\nDate: ${data.date}\nRate: ${data.tariffRate}%`;
+                    }
+                    return label;
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="tariffRate"
+                  stroke="#FF8C00"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Tariff Rate"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+
+            {/* Data Summary */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+              gap: '1rem', 
+              marginTop: '1rem',
+              padding: '1rem',
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              borderRadius: '8px'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: '#cfd8dc' }}>Current Rate</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#FF8C00' }}>
+                  {comparisonHistory[comparisonHistory.length - 1]?.tariffRate?.toFixed(2)}%
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: '#cfd8dc' }}>Highest Rate</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#ff6b6b' }}>
+                  {Math.max(...comparisonHistory.map(d => d.tariffRate)).toFixed(2)}%
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: '#cfd8dc' }}>Lowest Rate</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#aed581' }}>
+                  {Math.min(...comparisonHistory.map(d => d.tariffRate)).toFixed(2)}%
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: '#cfd8dc' }}>Average Rate</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4fc3f7' }}>
+                  {(comparisonHistory.reduce((sum, d) => sum + d.tariffRate, 0) / comparisonHistory.length).toFixed(2)}%
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          !loading && filters.fromCountry && filters.toCountry && filters.productCode && (
+            <div style={{ 
+              padding: '2rem', 
+              textAlign: 'center', 
+              color: '#cfd8dc',
+              backgroundColor: 'rgba(255,255,255,0.05)',
+              borderRadius: '8px',
+              marginTop: '1rem'
+            }}>
+              Click "Generate Historical Trend" to see tariff rate history for the selected route
+            </div>
+          )
+        )}
       </div>
 
-      {/* History Table */}
+      {/* Recent Calculation History */}
       <div className="card">
-        <h2>Past Calculations</h2>
+        <h2>Recent Calculations</h2>
+        <p>Your most recent tariff calculations</p>
+        
         <table className="history-table">
           <thead>
             <tr>
               <th>Date</th>
               <th>Route</th>
               <th>Product</th>
-              <th>Total</th>
+              <th>Total Cost</th>
+              <th>Tariff Period</th>
             </tr>
           </thead>
           <tbody>
-            {historyData.length === 0 ? (
-              <tr><td colSpan="4" style={{ textAlign: "center" }}>No calculations yet.</td></tr>
+            {calculationHistory.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: "center" }}>
+                  No calculations yet. Use the Tariff Calculator to get started.
+                </td>
+              </tr>
             ) : (
-              historyData.map((row, idx) => (
+              calculationHistory.slice(0, 10).map((row, idx) => (
                 <tr key={idx}>
                   <td>
                     {fmtShortDate(row.createdAt)}
-                    <div className="muted" style={{ fontSize: "0.8em" }}>
-                      {fmtShortDate(row.tariffFrom)} → {fmtShortDate(row.tariffTo)}
-                    </div>
                   </td>
                   <td>{row.route}</td>
-                  <td>{productLabel(row.product)}</td>
+                  <td>{row.product}</td>
                   <td>${Number(row.total || 0).toFixed(2)}</td>
+                  <td>
+                    {row.tariffFrom && row.tariffTo ? (
+                      <>
+                        {fmtShortDate(row.tariffFrom)} → {fmtShortDate(row.tariffTo)}
+                      </>
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-          <button onClick={clearHistory} className="export-btn">
-            Clear History
-          </button>
-        </div>
+        
+        {calculationHistory.length > 0 && (
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => { 
+                if (window.confirm("Are you sure you want to clear all calculation history?")) {
+                  localStorage.removeItem("calcHistory"); 
+                  setCalculationHistory([]); 
+                }
+              }}
+              className="export-btn"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#ff6b6b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Clear History
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
