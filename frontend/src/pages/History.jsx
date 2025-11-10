@@ -1,5 +1,6 @@
 // src/pages/History.jsx
 import React, { useState, useEffect } from "react";
+import { useCalcHistory } from "../hooks/useCalcHistory.jsx";
 import {
   LineChart,
   Line,
@@ -29,9 +30,7 @@ export default function History() {
 
   const [historicalData, setHistoricalData] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Local history (from localStorage)
-  const [historyData, setHistoryData] = useState([]);
+  const { history: historyData, clearHistory } = useCalcHistory();
 
   const productLabel = (code) => {
     const map = {
@@ -103,35 +102,6 @@ export default function History() {
   useEffect(() => {
     fetchHistoricalData();
   }, [graphFilters]);
-
-  useEffect(() => {
-    fetchHistoricalData();
-  }, [graphFilters]);
-
-  // add this as a separate effect (anywhere at top level in the component)
-  useEffect(() => {
-    const load = () => {
-      const raw = localStorage.getItem("calcHistory");
-      const rows = JSON.parse(raw || "[]");
-      setHistoryData(rows);
-    };
-    load();
-
-    // updates if another tab writes to localStorage
-    const onStorage = (e) => {
-      if (e.key === "calcHistory") load();
-    };
-    window.addEventListener("storage", onStorage);
-
-    // optional: also refresh when the tab regains focus (same-tab updates)
-    const onFocus = () => load();
-    window.addEventListener("focus", onFocus);
-
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("focus", onFocus);
-    };
-  }, []); // <- empty deps
 
 
   // Format chart data
@@ -355,10 +325,7 @@ export default function History() {
           </tbody>
         </table>
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-          <button
-            onClick={() => { localStorage.removeItem("calcHistory"); setHistoryData([]); }}
-            className="export-btn"
-          >
+          <button onClick={clearHistory} className="export-btn">
             Clear History
           </button>
         </div>

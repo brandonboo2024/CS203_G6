@@ -1,14 +1,24 @@
 import { useEffect, useState } from "react";
+import { useCalcHistory } from "../hooks/useCalcHistory.jsx";
 
 export default function Dashboard() {
   const userName = localStorage.getItem("username") || "Guest";
   const [news, setNews] = useState([]);
+  const { history } = useCalcHistory();
+  const recentCalculations = history.slice(0, 3);
 
-  const recentCalculations = [
-    { date: "13/09/25", route: "CN → SG", product: "Electronics", total: "$2,458.00" },
-    { date: "02/09/25", route: "VN → SG", product: "Textiles", total: "$1,245.00" },
-    { date: "30/08/25", route: "US → SG", product: "Machinery", total: "$8,567.00" },
-  ];
+  const fmtShortDate = (iso) => {
+    if (!iso) return "-";
+    try {
+      return new Date(iso).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      });
+    } catch {
+      return iso;
+    }
+  };
 
   useEffect(() => {
     // replace with localhost:8080 if testing locally
@@ -39,14 +49,22 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {recentCalculations.map((row, idx) => (
-              <tr key={idx}>
-                <td>{row.date}</td>
-                <td>{row.route}</td>
-                <td>{row.product}</td>
-                <td>{row.total}</td>
+            {recentCalculations.length === 0 ? (
+              <tr>
+                <td colSpan="4" style={{ textAlign: "center" }}>
+                  No calculations yet this session.
+                </td>
               </tr>
-            ))}
+            ) : (
+              recentCalculations.map((row, idx) => (
+                <tr key={`${row.createdAt}-${idx}`}>
+                  <td>{fmtShortDate(row.createdAt)}</td>
+                  <td>{row.route}</td>
+                  <td>{row.product}</td>
+                  <td>${Number(row.total || 0).toFixed(2)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
