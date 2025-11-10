@@ -178,15 +178,15 @@ User: [Clicks button]
 ## Features
 
 ### Current Features
-- ✅ Keyword-based intent recognition
-- ✅ Multi-turn conversations with context
-- ✅ Action buttons for navigation
-- ✅ Quick suggestions for new users
-- ✅ Typing indicator
-- ✅ Chat history (session-based)
-- ✅ Clear chat functionality
-- ✅ Fully responsive design
-- ✅ Dark mode support (automatic)
+- Keyword-based intent recognition
+- Multi-turn conversations with context
+- Action buttons for navigation
+- Quick suggestions for new users
+- Typing indicator
+- Chat history (session-based)
+- Clear chat functionality
+- Fully responsive design
+- Dark mode support (automatic)
 
 ### Limitations
 - No backend integration (purely client-side)
@@ -230,10 +230,10 @@ Try these sample queries:
 
 ## Browser Compatibility
 
-- Chrome/Edge: ✅ Full support
-- Firefox: ✅ Full support
-- Safari: ✅ Full support
-- Mobile browsers: ✅ Full support
+- Chrome/Edge: Full support
+- Firefox: Full support
+- Safari: Full support
+- Mobile browsers: Full support
 
 ## Troubleshooting
 
