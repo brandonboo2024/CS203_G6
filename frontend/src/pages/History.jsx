@@ -231,86 +231,90 @@ export default function History() {
     }
   };
 
-  // Generate historical trend data using client-side filtering
-  const generateHistoricalTrend = async () => {
-    if (!filters.fromCountry || !filters.toCountry || !filters.productCode) {
-      return [];
-    }
+// Generate historical trend data using real backend data
+const generateHistoricalTrend = async () => {
+  if (!filters.fromCountry || !filters.toCountry || !filters.productCode) {
+    return [];
+  }
 
-    setLoading(true);
-    try {
-      const startDate = new Date(filters.startDate);
-      const endDate = new Date(filters.endDate);
-      
-      // First, fetch ALL available years for this route
-      const allYearsData = await fetchAllHistoricalRates();
-      if (!allYearsData.length) {
-        setComparisonHistory([]);
-        return [];
-      }
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
 
-      // Filter data points based on the selected date range
-      const trendData = [];
-      const yearsInRange = new Set();
+    const startDate = new Date(filters.startDate);
+    const endDate = new Date(filters.endDate);
+    
+    // Get available years from your WITS data (2018-2023)
+    const availableYears = [2018, 2019, 2020, 2022, 2023];
+    const trendData = [];
 
-      // Collect unique years within the date range
-      const currentYear = new Date().getFullYear();
-      for (let year = startDate.getFullYear(); year <= Math.min(endDate.getFullYear(), currentYear); year++) {
-        yearsInRange.add(year);
-      }
+    // For each available year, calculate the tariff rate using that year's data
+    for (const year of availableYears) {
+      try {
+        // Use mid-year for the calculation (July 1st)
+        const calculationDate = new Date(year, 6, 1); // July 1st of the year
+        
+        // Only include years within the selected date range
+        if (calculationDate < startDate || calculationDate > endDate) {
+          continue;
+        }
 
-      // Add data points for each year in range
-      yearsInRange.forEach(year => {
-        const yearData = allYearsData.find(d => d.year === year);
-        if (yearData) {
-          const sampleDate = new Date(year, 6, 1); // Use mid-year (July 1st) for display
+        const calculationPayload = {
+          fromCountry: filters.fromCountry,
+          toCountry: filters.toCountry,
+          product: filters.productCode,
+          quantity: 1,
+          calculationFrom: calculationDate.toISOString(),
+          calculationTo: new Date(calculationDate.getTime() + 24 * 60 * 60 * 1000).toISOString(), // Next day
+          handling: false,
+          inspection: false,
+          processing: false,
+          others: false
+        };
+
+        const response = await fetch(`${apiBaseUrl}/api/tariff/calculate`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(calculationPayload),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const tariffRate = data.tariff_rate ?? data.tariffRate ?? 0;
           
           trendData.push({
-            period: sampleDate.toLocaleDateString('en-US', { 
-              year: 'numeric',
-              month: 'short'
-            }),
-            tariffRate: yearData.tariffRate,
-            date: sampleDate.toISOString().split('T')[0],
-            fullDate: sampleDate,
-            year: year,
-            isHistorical: true
+            period: year.toString(), // Just show the year
+            tariffRate: tariffRate,
+            date: calculationDate.toISOString().split('T')[0],
+            fullDate: calculationDate,
+            year: year
           });
         }
-      });
+      } catch (err) {
+        console.warn(`Failed to get rate for year ${year}:`, err);
+      }
 
-      // Sort by date
-      trendData.sort((a, b) => a.fullDate - b.fullDate);
-      setComparisonHistory(trendData);
-      return trendData;
-
-    } catch (err) {
-      console.error("Error generating historical trend:", err);
-      setComparisonHistory([]);
-      return [];
-    } finally {
-      setLoading(false);
+      // Add small delay to avoid overwhelming the API
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
-  };
 
-  // Enhanced debug function
-  const testHistoricalData = async () => {
-    console.log("=== Testing Client-Side Historical Data ===");
-    
-    // Test the new client-side approach
-    const testData = await fetchAllHistoricalRates();
-    console.log("Available historical data:", testData);
-    
-    if (testData.length > 0) {
-      console.log("✓ Client-side historical data loaded");
-      console.log("Years available:", testData.map(d => d.year).join(', '));
-      console.log("Rates:", testData.map(d => d.tariffRate.toFixed(2) + '%').join(', '));
-    } else {
-      console.log("✗ No historical data available");
-    }
-    
-    return testData;
-  };
+    // Sort by date
+    trendData.sort((a, b) => a.fullDate - b.fullDate);
+    setComparisonHistory(trendData);
+    return trendData;
+
+  } catch (err) {
+    console.error("Error generating historical trend:", err);
+    setComparisonHistory([]);
+    return [];
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Remove the fake fetchAllHistoricalRates function completely
 
   // Helper function to get label from code
   const getLabel = (code, collection) => {
@@ -332,25 +336,12 @@ export default function History() {
     }
   };
 
-  // Quick date preset buttons
-  const setDateRange = (months) => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - months);
-    
-    setFilters(prev => ({
-      ...prev,
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
-    }));
-  };
-
   return (
     <div className="history-wrapper">
       {/* Tariff Rate Trend Analysis */}
       <div className="card">
-        <h2>Tariff Rate History & Trends</h2>
-        <p>Analyze how tariff rates have changed over time for specific trade routes</p>
+        <h2 style={{ textAlign: "center" }}>Tariff Rate History & Trends</h2>
+        <p style={{ textAlign: "center" }}>Analyze how tariff rates have changed over time for specific trade routes</p>
 
         {lookupError && (
           <div className="error-banner">
@@ -394,77 +385,6 @@ export default function History() {
             }
           />
 
-          {/* Date Range - Same style as TariffCalc */}
-          <div className="form-row">
-            <label>Date Range:</label>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => setDateRange(6)}
-                className="secondary-btn"
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#555',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                6 Months
-              </button>
-              <button
-                type="button"
-                onClick={() => setDateRange(12)}
-                className="secondary-btn"
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#555',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                1 Year
-              </button>
-              <button
-                type="button"
-                onClick={() => setDateRange(24)}
-                className="secondary-btn"
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#555',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                2 Years
-              </button>
-              <button
-                type="button"
-                onClick={() => setDateRange(60)}
-                className="secondary-btn"
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#555',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                5 Years
-              </button>
-            </div>
-          </div>
-
           <div className="form-row">
             <label>Start Date:</label>
             <input
@@ -504,55 +424,30 @@ export default function History() {
           </button>
         </form>
 
-        {/* DEBUG BUTTON */}
-        <button 
-          onClick={testHistoricalData}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: 'blue',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            marginTop: '1rem'
-          }}
-        >
-          DEBUG: Test Historical Data
-        </button>
-
-        {/* Historical Data Notice */}
-        {comparisonHistory.length > 0 && (
-          <div style={{
-            padding: '0.75rem',
-            backgroundColor: 'rgba(255, 193, 7, 0.2)',
-            border: '1px solid #ffc107',
-            borderRadius: '4px',
-            marginTop: '1rem',
-            color: '#ffc107',
-            fontSize: '0.9rem'
-          }}>
-            ⚠️ <strong>Note:</strong> Showing historical trends using available yearly data. 
-            For precise date-based historical rates, backend updates are required.
-          </div>
-        )}
-
         {/* Trend Chart */}
         {comparisonHistory.length > 0 ? (
           <div className="chart-wrapper" style={{ marginTop: '2rem' }}>
-            <h3 style={{ color: "#fff", marginBottom: "1rem" }}>
-              Tariff Rate Trend - {comparisonHistory.length} samples
+            <h3 style={{ color: "#fff", marginBottom: "1rem", textAlign: "center" }}>
+              Tariff Rate Trend
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={comparisonHistory} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="period" />
-                <YAxis label={{ value: "Tariff Rate %", angle: -90, position: "insideLeft" }} />
+                <YAxis 
+                  label={{ 
+                    value: "Tariff Rate %", 
+                    angle: -90, 
+                    position: "insideLeft",
+                    style: { textAnchor: 'middle' }
+                  }} 
+                />
                 <Tooltip
-                  formatter={(value) => [`${value}%`, "Tariff Rate"]}
+                  formatter={(value) => [`${Number(value).toFixed(2)}%`, "Tariff Rate"]}
                   labelFormatter={(label, payload) => {
                     if (payload && payload[0]) {
                       const data = payload[0].payload;
-                      return `Period: ${label}\nDate: ${data.date}\nRate: ${data.tariffRate}%`;
+                      return `Period: ${label}\nDate: ${data.date}\nRate: ${Number(data.tariffRate).toFixed(2)}%`;
                     }
                     return label;
                   }}
@@ -624,8 +519,8 @@ export default function History() {
 
       {/* Recent Calculation History */}
       <div className="card">
-        <h2>Recent Calculations</h2>
-        <p>Your most recent tariff calculations</p>
+        <h2 style={{ textAlign: "center" }}>Recent Calculations</h2>
+        <p style={{ textAlign: "center" }}>Your most recent tariff calculations</p>
         
         <table className="history-table">
           <thead>
