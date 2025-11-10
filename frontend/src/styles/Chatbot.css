@@ -452,6 +452,122 @@
   }
 }
 
-/* Orange Theme - Matches TariffKey branding */
-/* All styles above use the orange (#ff8800) color scheme
-   with dark backgrounds (#111, #1a1a1a) to match the website */
+/* =========================
+   Mobile Optimization – TariffKey Chatbot
+========================= */
+@media (max-width: 768px) {
+  /* Chat window fills most of the viewport but still above footer */
+  .chatbot-window {
+    bottom: 80px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    height: 70vh;
+    max-height: 75vh;
+    border-radius: 14px;
+    border: 1px solid #333;
+    background: var(--bg-card-alt, #1a1a1a);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Floating toggle button */
+  .chatbot-toggle {
+    bottom: 16px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+  }
+
+  /* Header + avatar scaled down slightly */
+  .chatbot-header {
+    padding: 12px 14px;
+  }
+
+  .chatbot-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .chatbot-header h3 {
+    font-size: 15px;
+  }
+
+  /* Messages area tighter */
+  .chatbot-messages {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .message {
+    max-width: 90%;
+  }
+
+  .message-text {
+    font-size: 13.5px;
+  }
+
+  .message-content {
+    padding: 10px 14px;
+  }
+
+  /* Input area simplified */
+  .chatbot-input {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+
+  .chatbot-input input {
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 20px;
+  }
+
+  .chatbot-input button {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Suggestions smaller but spaced evenly */
+  .chatbot-suggestions {
+    padding: 10px 12px;
+  }
+
+  .suggestion-button {
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 14px;
+  }
+}
+
+/* ---------- Ultra small phones (≤480px) ---------- */
+@media (max-width: 480px) {
+  .chatbot-window {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+
+  .chatbot-header {
+    padding: 10px 12px;
+  }
+
+  .chatbot-toggle {
+    bottom: 14px;
+    right: 14px;
+  }
+
+  .message-text {
+    font-size: 13px;
+  }
+
+  .action-button {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}
+
