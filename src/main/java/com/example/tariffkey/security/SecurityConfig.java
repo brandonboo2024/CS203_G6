@@ -68,6 +68,7 @@ public class SecurityConfig {
                 // Tariff endpoints (secured)
                 .requestMatchers(HttpMethod.POST, "/api/tariff/calculate").hasAnyAuthority("ADMIN","USER")
                 .requestMatchers(HttpMethod.POST, "/api/tariff/quote").hasAnyAuthority("ADMIN","USER")
+                .requestMatchers(HttpMethod.POST, "/api/tariff/history").hasAnyAuthority("ADMIN","USER")
                 .requestMatchers(HttpMethod.GET, "/api/tariff/**").hasAnyAuthority("ADMIN","USER")
                 .requestMatchers(HttpMethod.POST, "/api/tariff/**").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/tariff/**").hasAuthority("ADMIN")

@@ -2,6 +2,7 @@ package com.example.tariffkey.controller;
 
 import com.example.tariffkey.model.*;
 import com.example.tariffkey.service.DefaultQuoteService;
+import com.example.tariffkey.service.TariffHistoryService;
 import com.example.tariffkey.service.TariffManagementService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
@@ -16,11 +17,14 @@ public class TariffController {
 
     private final DefaultQuoteService quoteService;
     private final TariffManagementService tariffManagementService;
+    private final TariffHistoryService tariffHistoryService;
 
     public TariffController(DefaultQuoteService quoteService,
-                            TariffManagementService tariffManagementService) {
+                            TariffManagementService tariffManagementService,
+                            TariffHistoryService tariffHistoryService) {
         this.quoteService = quoteService;
         this.tariffManagementService = tariffManagementService;
+        this.tariffHistoryService = tariffHistoryService;
     }
 
     @PostMapping("/calculate")
@@ -48,6 +52,11 @@ public class TariffController {
     @DeleteMapping("/{id}")
     public void deleteTariff(@PathVariable long id) {
         tariffManagementService.deleteTariff(id);
+    }
+
+    @PostMapping("/history")
+    public TariffHistoryResponse getHistory(@Valid @RequestBody TariffHistoryRequest request) {
+        return tariffHistoryService.getHistory(request);
     }
 
     @GetMapping

@@ -366,6 +366,13 @@ const generateHistoricalTrend = async () => {
     }
   };
 
+  const fmtPercent = (value) => {
+    if (value === null || value === undefined) return "-";
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return "-";
+    return `${numeric.toFixed(2)}%`;
+  };
+
   return (
     <div className="history-wrapper">
       {/* Tariff Rate Trend Analysis */}
