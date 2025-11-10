@@ -9,7 +9,7 @@ import {
   CartesianGrid,
 } from "recharts";
 
-// ✅ Import the same shared components used in TariffCalc
+// Import the same shared components used in TariffCalc
 import CountryDropdown from "../components/CountryDropdown.jsx";
 import ProductDropdown from "../components/ProductDropdown.jsx";
 
@@ -32,7 +32,7 @@ export default function Simulation() {
   const [compareData, setCompareData] = useState([]);
   const [loading, setLoading] = useState(false);
   
-  // ✅ NEW: Store the context of the last comparison to fix the display issue
+  // NEW: Store the context of the last comparison to fix the display issue
   const [lastComparisonContext, setLastComparisonContext] = useState({
     productCode: "",
     toCountry: "",
@@ -40,7 +40,7 @@ export default function Simulation() {
     countryLabel: ""
   });
 
-  // ✅ Use same lookup data structure as TariffCalc
+  // Use same lookup data structure as TariffCalc
   const [lookups, setLookups] = useState({
     reporters: [], // All origin countries
     validOrigins: [], // Origins that have the selected destination as partner
@@ -53,7 +53,7 @@ export default function Simulation() {
 
   const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
-  // ✅ Same data fetching logic as TariffCalc
+  // Same data fetching logic as TariffCalc
   const fetchLookupJson = async (path) => {
     try {
       const response = await fetch(`${apiBaseUrl}${path}`);
@@ -70,7 +70,7 @@ export default function Simulation() {
     }
   };
 
-  // ✅ Load reporters (ALL origin countries) on mount
+  // Load reporters (ALL origin countries) on mount
   useEffect(() => {
     const loadReporters = async () => {
       setReportersLoading(true);
@@ -94,7 +94,7 @@ export default function Simulation() {
     loadReporters();
   }, [apiBaseUrl]);
 
-  // ✅ CORRECTED: Find all origin countries that have the selected destination as a partner
+  // CORRECTED: Find all origin countries that have the selected destination as a partner
   useEffect(() => {
     if (!filters.toCountry) {
       setLookups((prev) => ({ ...prev, validOrigins: [], products: [] }));
@@ -145,7 +145,7 @@ export default function Simulation() {
     findValidOrigins();
   }, [filters.toCountry, lookups.reporters, apiBaseUrl]);
 
-  // ✅ CORRECTED: Load products using the first valid origin (they should all have similar products)
+  // CORRECTED: Load products using the first valid origin (they should all have similar products)
   useEffect(() => {
     if (!filters.toCountry || lookups.validOrigins.length === 0) {
       setLookups((prev) => ({ ...prev, products: [] }));
@@ -247,7 +247,7 @@ export default function Simulation() {
     });
   };
 
-  // ✅ CORRECTED: Compare only the valid origins that have this destination as partner
+  // CORRECTED: Compare only the valid origins that have this destination as partner
   const handleCompare = async (e) => {
     e.preventDefault();
     
@@ -334,7 +334,7 @@ export default function Simulation() {
       // Sort by lowest rate first
       const validResults = comparisonResults.sort((a, b) => a.rate_percent - b.rate_percent);
 
-      // ✅ FIX: Store the context of this comparison
+      // FIX: Store the context of this comparison
       const currentProductLabel = getLabel(filters.productCode, lookups.products);
       const currentCountryLabel = getLabel(filters.toCountry, lookups.reporters);
       
