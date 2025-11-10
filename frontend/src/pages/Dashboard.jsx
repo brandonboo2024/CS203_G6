@@ -11,7 +11,8 @@ export default function Dashboard() {
   ];
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/news")
+    // replace with localhost:8080 if testing locally
+    fetch("https://cs203g6-production-170f.up.railway.app/api/news")
       .then((res) => res.json())
       .then((data) => setNews(data))
       .catch((err) => console.error("Error fetching news:", err));
