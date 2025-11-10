@@ -644,6 +644,46 @@ button:hover {
   .filter-actions {
     justify-content: center;
   }
+
+  .logout-btn button {
+    margin-top: -2px !important; 
+    padding: 0.35rem 1rem !important;
+    line-height: 1 !important;
+  }
+
+  .news-list {
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 0 !important; /* prevent double padding */
+  }
+
+  .news-item {
+    width: 100% !important;
+    box-sizing: border-box;
+    margin: 0.5rem 0 !important;
+    padding: 1rem !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    background: #222 !important;
+    overflow: hidden !important;
+  }
+
+  .news-item span {
+    flex: 1 !important;
+    color: var(--text-light) !important;
+    font-weight: 500 !important;
+    word-break: break-word !important;
+  }
+
+  .news-item a {
+    margin-left: auto !important;
+    color: var(--accent) !important;
+    font-weight: bold !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+  }
 }
 
 /* =========================

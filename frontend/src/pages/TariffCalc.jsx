@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "../App.css";
 import { validateForm, sanitizeInput } from "../utils/inputValidation";
 
-// ✅ import your new shared components
+// import your new shared components
 import CountryDropdown from "../components/CountryDropdown.jsx";
 import ProductDropdown from "../components/ProductDropdown.jsx";
 
