@@ -735,29 +735,31 @@ export default function Simulation() {
             </ResponsiveContainer>
           </div>
 
-          <table className="history-table" style={{ marginTop: "1rem" }}>
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Origin Country</th>
-                <th>Tariff Rate (%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {compareData.map((row, i) => (
-                <tr key={i}>
-                  <td>{i + 1}</td>
-                  <td>{row.origin_label}</td>
-                  <td style={{ 
-                    fontWeight: i < 3 ? 'bold' : 'normal',
-                    color: i < 3 ? '#aed581' : 'inherit'
-                  }}>
-                    {row.rate_percent.toFixed(2)}%
-                  </td>
+          <div className="table-scroll">
+            <table className="history-table" style={{ marginTop: "1rem" }}>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Origin Country</th>
+                  <th>Tariff Rate (%)</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {compareData.map((row, i) => (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td>{row.origin_label}</td>
+                    <td style={{ 
+                      fontWeight: i < 3 ? 'bold' : 'normal',
+                      color: i < 3 ? '#aed581' : 'inherit'
+                    }}>
+                      {row.rate_percent.toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         compareData.length === 0 && !loading && filters.toCountry && filters.productCode && (
