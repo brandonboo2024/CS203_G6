@@ -14,10 +14,13 @@ export default function Profile() {
   const [newAvatar, setNewAvatar] = useState(null);
   const [fileError, setFileError] = useState(null);
 
+  const [newName, setNewName] = useState(user.username);
+  const [newEmail, setNewEmail] = useState(user.email);
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setFileError(null);
-    
+
     if (file) {
       // Validate file before processing
       const validation = validateFileUpload(file);
@@ -25,7 +28,7 @@ export default function Profile() {
         setFileError(validation.errors.join(', '));
         return;
       }
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setNewAvatar(reader.result); // temp preview before saving
@@ -35,9 +38,13 @@ export default function Profile() {
   };
 
   const handleSave = () => {
+    const updatedUser = { ...user, username: newName, email: newEmail, avatar: newAvatar || user.avatar }
+    setUser(updatedUser);
+    localStorage.setItem("username", newName);
+    localStorage.setItem("email", newEmail);
     if (newAvatar) {
       localStorage.setItem("avatar", newAvatar);
-      setUser({ ...user, avatar: newAvatar });
+
     }
     setIsEditing(false);
     setNewAvatar(null);
@@ -92,11 +99,35 @@ export default function Profile() {
 
             {isEditing && (
               <>
+                {/* show editable inputs */}
+                <label>
+                  <strong>Name:</strong>
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    style={{ marginLeft: "10px", padding: "6px" }}
+                  />
+                </label>
+
+                <br />
+
+                <label>
+                  <strong>Email:</strong>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    style={{ marginLeft: "10px", padding: "6px" }}
+                  />
+                </label>
+
+                <br />
                 <input type="file" accept="image/*" onChange={handleFileChange} />
                 {fileError && (
-                  <div style={{ 
-                    color: '#d32f2f', 
-                    fontSize: '0.9rem', 
+                  <div style={{
+                    color: '#d32f2f',
+                    fontSize: '0.9rem',
                     marginTop: '0.5rem',
                     padding: '0.5rem',
                     backgroundColor: '#ffebee',
