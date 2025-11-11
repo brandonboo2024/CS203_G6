@@ -248,117 +248,123 @@ export default function Simulation() {
   };
 
   // CORRECTED: Compare only the valid origins that have this destination as partner
-  const handleCompare = async (e) => {
-    e.preventDefault();
-    
-    if (!filters.toCountry || !filters.productCode) {
-      alert("Please select destination country and product to compare tariffs.");
-      return;
+// CORRECTED: Compare only origins that have actual tariff data for this specific product
+const handleCompare = async (e) => {
+  e.preventDefault();
+  
+  if (!filters.toCountry || !filters.productCode) {
+    alert("Please select destination country and product to compare tariffs.");
+    return;
+  }
+
+  setLoading(true);
+  setCompareData([]);
+  setLookupError(null);
+  
+  try {
+    const token = localStorage.getItem("token");
+    const headers = { "Content-Type": "application/json" };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
-    setLoading(true);
-    setCompareData([]);
-    setLookupError(null);
+    const comparisonResults = [];
     
-    try {
-      const token = localStorage.getItem("token");
-      const headers = { "Content-Type": "application/json" };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      const comparisonResults = [];
+    // Only compare origins that are valid (have this destination as partner)
+    for (const origin of lookups.validOrigins) {
+      if (!origin.code) continue;
       
-      // Only compare origins that are valid (have this destination as partner)
-      for (const origin of lookups.validOrigins) {
-        if (!origin.code) continue;
-        
-        try {
-          const calculationPayload = {
-            fromCountry: origin.code,
-            toCountry: filters.toCountry,
-            product: filters.productCode,
-            quantity: 1,
-            calculationFrom: new Date().toISOString(),
-            calculationTo: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            handling: false,
-            inspection: false,
-            processing: false,
-            others: false
-          };
+      try {
+        const calculationPayload = {
+          fromCountry: origin.code,
+          toCountry: filters.toCountry,
+          product: filters.productCode,
+          quantity: 1,
+          calculationFrom: new Date().toISOString(),
+          calculationTo: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          handling: false,
+          inspection: false,
+          processing: false,
+          others: false
+        };
 
-          const res = await fetch(`${apiBaseUrl}/api/tariff/calculate`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify(calculationPayload),
-          });
+        const res = await fetch(`${apiBaseUrl}/api/tariff/calculate`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(calculationPayload),
+        });
 
-          let tariffRate = 0;
-          let label = `Rate from ${origin.label || origin.code}`;
+        let tariffRate = 0;
+        let label = `Rate from ${origin.label || origin.code}`;
 
-          if (res.ok) {
-            const data = await res.json();
-            tariffRate = data.tariff_rate ?? data.tariffRate ?? 0;
-            label = data.label || label;
-          } else {
-            // If calculation fails, try to extract tariff data from error response
-            try {
-              const errorData = await res.json();
-              tariffRate = errorData.tariff_rate ?? errorData.tariffRate ?? 0;
-              label = errorData.label || label;
-            } catch {
-              // If we can't parse error response, skip this origin
-              continue;
-            }
+        if (res.ok) {
+          const data = await res.json();
+          tariffRate = data.tariff_rate ?? data.tariffRate ?? 0;
+          label = data.label || label;
+        } else {
+          // If calculation fails, try to extract tariff data from error response
+          try {
+            const errorData = await res.json();
+            tariffRate = errorData.tariff_rate ?? errorData.tariffRate ?? 0;
+            label = errorData.label || label;
+          } catch {
+            // If we can't parse error response, skip this origin
+            continue;
           }
-
-          if (tariffRate >= 0) { // Allow 0% tariff rates
-            comparisonResults.push({
-              origin_country: origin.code,
-              origin_label: origin.label || origin.code,
-              dest_country: filters.toCountry,
-              product_code: filters.productCode,
-              rate_percent: tariffRate,
-              label: label,
-            });
-          }
-        } catch (err) {
-          console.warn(`Failed to get rate from ${origin.code}:`, err);
-          // Continue with other origins
         }
 
-        // Small delay to avoid overwhelming the API
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // 🔥 CRITICAL FIX: Only include countries that have ACTUAL tariff data
+        // Skip countries that return 0% AND where the API call actually failed
+        // This prevents showing countries that have no data for this specific product
+        const hasValidData = res.ok || (tariffRate > 0);
+        
+        if (hasValidData) {
+          comparisonResults.push({
+            origin_country: origin.code,
+            origin_label: origin.label || origin.code,
+            dest_country: filters.toCountry,
+            product_code: filters.productCode,
+            rate_percent: tariffRate,
+            label: label,
+          });
+        }
+      } catch (err) {
+        console.warn(`Failed to get rate from ${origin.code}:`, err);
+        // Continue with other origins
       }
 
-      // Sort by lowest rate first
-      const validResults = comparisonResults.sort((a, b) => a.rate_percent - b.rate_percent);
-
-      // FIX: Store the context of this comparison
-      const currentProductLabel = getLabel(filters.productCode, lookups.products);
-      const currentCountryLabel = getLabel(filters.toCountry, lookups.reporters);
-      
-      setLastComparisonContext({
-        productCode: filters.productCode,
-        toCountry: filters.toCountry,
-        productLabel: currentProductLabel,
-        countryLabel: currentCountryLabel
-      });
-
-      if (validResults.length === 0) {
-        setLookupError("No tariff data found for the selected destination and product.");
-      } else {
-        setCompareData(validResults);
-        setLookupError(null);
-      }
-
-    } catch (err) {
-      console.error("Comparison error:", err);
-      setLookupError("Failed to load comparison data. Please try again.");
-    } finally {
-      setLoading(false);
+      // Small delay to avoid overwhelming the API
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
-  };
+
+    // Sort by lowest rate first
+    const validResults = comparisonResults.sort((a, b) => a.rate_percent - b.rate_percent);
+
+    // FIX: Store the context of this comparison
+    const currentProductLabel = getLabel(filters.productCode, lookups.products);
+    const currentCountryLabel = getLabel(filters.toCountry, lookups.reporters);
+    
+    setLastComparisonContext({
+      productCode: filters.productCode,
+      toCountry: filters.toCountry,
+      productLabel: currentProductLabel,
+      countryLabel: currentCountryLabel
+    });
+
+    if (validResults.length === 0) {
+      setLookupError("No tariff data found for the selected destination and product.");
+    } else {
+      setCompareData(validResults);
+      setLookupError(null);
+    }
+
+  } catch (err) {
+    console.error("Comparison error:", err);
+    setLookupError("Failed to load comparison data. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Helper function to get label from code
   const getLabel = (code, collection) => {
@@ -705,7 +711,8 @@ export default function Simulation() {
                   label={{
                     value: "Tariff Rate %",
                     angle: -90,
-                    position: "insideLeft",
+                    dx: -10,
+                    position: "middle",
                     fill: "var(--text-light)",
                   }}
                 />
