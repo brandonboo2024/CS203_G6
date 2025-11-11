@@ -337,15 +337,20 @@ button:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 3rem 2rem;
   background: var(--bg-dark);
   color: var(--text-light);
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
 }
 .login-card {
   background: var(--bg-card);
   padding: 2rem;
   border-radius: var(--radius);
-  width: 350px;
+  width: min(420px, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
 }
 .login-card h1 { text-align: center; margin-bottom: 1.5rem; color: var(--accent); font-size: 2rem;}
@@ -364,6 +369,22 @@ button:hover {
 .register-link { margin-top: 1rem; font-size: 0.9rem; color: #ccc; }
 .register-link a { color: var(--accent); text-decoration: none; }
 .register-link a:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .login-wrapper {
+    padding: 2rem 1.25rem;
+  }
+
+  .login-card {
+    padding: 1.5rem;
+    width: 100%;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+  }
+
+  .login-card h1 {
+    font-size: 1.75rem;
+  }
+}
 
 /* =========================
    Dashboard
