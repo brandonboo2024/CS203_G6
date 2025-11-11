@@ -286,15 +286,18 @@
 
   /* ---------- Login/Register ---------- */
   .login-card {
-    width: 90%;
-    max-width: 320px;
-    padding: 1.5rem;
+    flex-direction: column;
+    padding: 1.75rem;
   }
 
-  .login-card h1 {
+  .login-hero,
+  .login-content {
+    padding: 1.25rem;
+  }
+
+  .login-brand h2 {
     font-size: 1.6rem;
   }
-
 }
 
 /* ---------- Profile Page ---------- */
