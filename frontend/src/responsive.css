@@ -38,6 +38,30 @@
     padding-bottom: 0.3rem;
   }
 
+  .nav-actions {
+    flex: 1;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .nav-actions .theme-toggle {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .nav-actions .logout-btn {
+    width: 100%;
+  }
+
+  .nav-actions .logout-btn button,
+  .nav-actions .logout-btn a {
+    width: 100%;
+    text-align: center;
+  }
+
   /* hamburger button on the left */
   .menu-toggle {
     display: block;
@@ -528,92 +552,85 @@
 
 /* ---------- News Article ---------- */
 .news-item {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  background: #1a1a1a !important;
-  padding: 1rem !important;
-  border-radius: 12px !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
-  width: 100% !important;
-  gap: 0.6rem !important;
-  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--bg-card);
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  gap: 0.6rem;
+  box-sizing: border-box;
 }
 
-/* Reset any flex spacing that pushes Read more to the side */
 .news-item > * {
-  margin: 0 auto !important;
+  margin: 0 auto;
 }
 
-/* News title + divider */
 .news-title {
-  color: var(--text-light) !important;
-  font-weight: 600 !important;
-  font-size: 1rem !important;
-  line-height: 1.5 !important;
-  word-break: break-word !important;
-  width: 100% !important;
-  margin-bottom: 0.5rem !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  padding-bottom: 0.5rem !important;
-  text-align: center !important;
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.5;
+  word-break: break-word;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+  text-align: center;
 }
 
-/* Center the meta section */
 .news-meta {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  width: 100% !important;
-  gap: 0.3rem !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  gap: 0.3rem;
 }
 
-/* Make sure Read More sits dead center */
 .news-link {
-  color: var(--accent) !important;
-  font-weight: 700 !important;
-  text-decoration: none !important;
-  font-size: 1rem !important;
-  text-align: center !important;
-  display: block !important;
-  margin: 0 auto !important;
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 1rem;
+  text-align: center;
+  display: block;
+  margin: 0 auto;
 }
 
 .news-date {
-  color: var(--text-muted) !important;
-  font-size: 0.85rem !important;
-  text-align: center !important;
-  display: block !important;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  display: block;
 }
 
-/* Center the subtext and refresh line globally */
 .news-subtext,
 .last-updated {
-  text-align: center !important;
-  display: block !important;
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  text-align: center;
+  display: block;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Styling polish for subtext */
 .news-subtext {
-  font-style: italic !important;
-  color: var(--text-muted) !important;
-  font-size: 0.95rem !important;
-  margin-top: -0.3rem !important;
-  margin-bottom: 0.4rem !important;
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-top: -0.3rem;
+  margin-bottom: 0.4rem;
 }
 
-/* Styling polish for “Last updated” text */
 .last-updated {
-  color: var(--text-muted) !important;
-  font-size: 0.9rem !important;
-  margin-bottom: 1.2rem !important;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.2rem;
 }
 
 
