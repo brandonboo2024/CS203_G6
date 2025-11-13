@@ -31,6 +31,12 @@
   --bg-gradient: #000;
 }
 
+:root[data-theme="midnight"] .login-form input[type="text"]::placeholder,
+:root[data-theme="midnight"] .login-form input[type="password"]::placeholder {
+  color: #000;
+  opacity: 1;
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
