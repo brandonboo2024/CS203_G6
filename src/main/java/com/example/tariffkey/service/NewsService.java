@@ -11,11 +11,11 @@ import java.util.*;
 
 @Service
 public class NewsService {
-    @Value("${NEWS_API_KEY}")
-    String NEWS_API_KEY; 
+    @Value("${news.api.key:${NEWS_API_KEY:}}")
+    private String newsApiKey;
     private final RestTemplate restTemplate = new RestTemplate();
     private String getNewsUrl() {
-        return "https://newsdata.io/api/1/news?apikey=" + NEWS_API_KEY + "&q=tariff+trade+import+export&language=en&country=sg";
+        return "https://newsdata.io/api/1/news?apikey=" + newsApiKey + "&q=tariff+trade+import+export&language=en&country=sg";
     }
     private List<Map<String, String>> cachedNews = new ArrayList<>();
     private long lastFetchTime = 0;
@@ -23,6 +23,11 @@ public class NewsService {
     public List<Map<String, String>> getLatestNews() {
         long now = System.currentTimeMillis();
         if (now - lastFetchTime < 24 * 60 * 60 * 1000 && !cachedNews.isEmpty()) {
+            return cachedNews;
+        }
+
+        if (newsApiKey == null || newsApiKey.isBlank()) {
+            System.out.println("[NewsService] NEWS_API_KEY is not configured; skipping remote fetch.");
             return cachedNews;
         }
 

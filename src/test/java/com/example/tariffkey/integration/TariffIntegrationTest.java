@@ -1,72 +1,75 @@
 package com.example.tariffkey.integration;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
-import static io.restassured.RestAssured.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
+@AutoConfigureMockMvc
 class TariffIntegrationTest {
 
-    @LocalServerPort
-    private int port;
+    @Autowired
+    private MockMvc mockMvc;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private String adminJwtToken;
 
     @BeforeEach
-    void setup() {
-        RestAssured.port = port;
+    void setup() throws Exception {
+        MvcResult result =
+            mockMvc.perform(
+                    post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"admin\",\"password\":\"admin123\"}")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andReturn();
 
-        // Step 1: Login to get a valid JWT token
-        adminJwtToken =
-            given()
-                .contentType(ContentType.JSON)
-                .body("{\"username\":\"admin\",\"password\":\"admin123\"}") 
-            .when()
-                .post("/auth/login")
-            .then()
-                .statusCode(200)
-                .body("token", notNullValue())
-                .extract()
-                .path("token");
+        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+        adminJwtToken = body.path("token").asText();
     }
 
     // Step 2: Test access to protected endpoint with valid JWT
     @Test
-    void adminCanAccessProtectedTariffApi() {
-        given()
-            .header("Authorization", "Bearer " + adminJwtToken)
-        .when()
-            .get("/api/tariff")
-        .then()
-            .statusCode(200)
-            .body(equalTo("TariffController active"));
+    void adminCanAccessProtectedTariffApi() throws Exception {
+        mockMvc.perform(
+                get("/api/tariff")
+                    .header("Authorization", "Bearer " + adminJwtToken)
+            )
+            .andExpect(status().isOk())
+            .andExpect(content().string(equalTo("TariffController active")));
     }
 
     // Step 3: Test unauthorized access (no token)
     @Test
-    void accessWithoutTokenShouldFail() {
-        given()
-        .when()
-            .get("/api/tariff")
-        .then()
-            .statusCode(403); // or 401 depending on your filter
+    void accessWithoutTokenShouldFail() throws Exception {
+        mockMvc.perform(get("/api/tariff"))
+            .andExpect(status().isForbidden());
     }
 
     // Step 4: Test access with invalid token
     @Test
-    void accessWithInvalidTokenShouldFail() {
-        given()
-            .header("Authorization", "Bearer invalidtoken123")
-        .when()
-            .get("/api/tariff")
-        .then()
-            .statusCode(403); // or 401
+    void accessWithInvalidTokenShouldFail() throws Exception {
+        mockMvc.perform(
+                get("/api/tariff")
+                    .header("Authorization", "Bearer invalidtoken123")
+            )
+            .andExpect(status().isForbidden());
     }
 }
