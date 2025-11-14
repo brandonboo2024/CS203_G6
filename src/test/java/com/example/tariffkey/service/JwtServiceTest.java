@@ -117,8 +117,8 @@ public class JwtServiceTest {
 
 
     @Test
-    @DisplayName("Should return a valid Date Object")
-    void extractExpiration_ShouldReturnValidDateObject_WhenTokenGenerated(){
+    @DisplayName("Should return a true when tested via isTokenValid Object")
+    void extractExpiration_ShouldReturnTrueForIsTokenValid_WhenTokenGenerated(){
         //Arrange
         user1 = org.springframework.security.core.userdetails.User
                 .withUsername("testUser1")
