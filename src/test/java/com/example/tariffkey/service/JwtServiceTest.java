@@ -141,7 +141,7 @@ public class JwtServiceTest {
         user1 = org.springframework.security.core.userdetails.User
                 .withUsername("testUser1")
                 .password("pw")
-                .authorities("ROLE_ADMIN")
+                .authorities("ROLE_USER")
                 .build();
         JwtService jwtExpiredService = new JwtService("TEST_SECRET_KEY_123456789012345678901234567890", 0);
 
