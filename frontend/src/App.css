@@ -1374,6 +1374,18 @@ button:hover {
 }
 
 /* =========================
+   Login-only: force input text & placeholder to be black
+========================= */
+.login-form input {
+  color: #000 !important;
+}
+
+.login-form input::placeholder {
+  color: #000 !important;
+  opacity: 1;
+}
+
+/* =========================
    Popup Notifications
 ========================= */
 .popup {
