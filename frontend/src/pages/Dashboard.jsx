@@ -89,34 +89,36 @@ export default function Dashboard() {
 
       <section className="card">
         <h2>Recent calculations</h2>
-        <table className="calc-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Route</th>
-              <th>Product</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recentCalculations.length === 0 ? (
+        <div className="table-scroll">
+          <table className="calc-table">
+            <thead>
               <tr>
-                <td colSpan="4" style={{ textAlign: "center" }}>
-                  No calculations yet this session.
-                </td>
+                <th>Date</th>
+                <th>Route</th>
+                <th>Product</th>
+                <th>Total</th>
               </tr>
-            ) : (
-              recentCalculations.map((row, idx) => (
-                <tr key={`${row.createdAt}-${idx}`}>
-                  <td>{fmtShortDate(row.createdAt)}</td>
-                  <td>{row.route}</td>
-                  <td>{row.product}</td>
-                  <td>${Number(row.total || 0).toFixed(2)}</td>
+            </thead>
+            <tbody>
+              {recentCalculations.length === 0 ? (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: "center" }}>
+                    No calculations yet this session.
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                recentCalculations.map((row, idx) => (
+                  <tr key={`${row.createdAt}-${idx}`}>
+                    <td>{fmtShortDate(row.createdAt)}</td>
+                    <td>{row.route}</td>
+                    <td>{row.product}</td>
+                    <td>${Number(row.total || 0).toFixed(2)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="card">

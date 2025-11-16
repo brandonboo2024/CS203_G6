@@ -1,12 +1,14 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 import Chatbot from "./components/Chatbot";
 
 export default function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem("tk-theme") || "daybreak");
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
   const token = localStorage.getItem("token");
   let isAdmin = false;
@@ -40,73 +42,75 @@ export default function App() {
   return (
     <div
       style={{
-        width: "100vw",
-        height: "100vh",
+        width: "100%",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
       }}
     >
       {/* ---------- Navigation ---------- */}
-      <nav className="nav">
-        {/* ---------- Mobile Header ---------- */}
-        <div className="nav-header">
-          <button
-            className={`menu-toggle ${!isLoggedIn ? "disabled" : ""}`}
-            onClick={isLoggedIn ? () => setMenuOpen(!menuOpen) : undefined}
-            title={!isLoggedIn ? "Login to access menu" : ""}
-          >
-            ☰
-          </button>
-
-          <div className="nav-actions">
-            <button className="theme-toggle" onClick={toggleTheme}>
-              {theme === "midnight" ? "🌙 Midnight" : "🌤 Daybreak"}
+      {!isAuthPage && (
+        <nav className="nav">
+          {/* ---------- Mobile Header ---------- */}
+          <div className="nav-header">
+            <button
+              className={`menu-toggle ${!isLoggedIn ? "disabled" : ""}`}
+              onClick={isLoggedIn ? () => setMenuOpen(!menuOpen) : undefined}
+              title={!isLoggedIn ? "Login to access menu" : ""}
+            >
+              ☰
             </button>
-            <div className="logout-btn">
-              {isLoggedIn ? (
-                <button onClick={handleLogout}>Logout</button>
-              ) : (
-                <Link to="/login">Login</Link>
-              )}
+
+            <div className="nav-actions">
+              <button className="theme-toggle" onClick={toggleTheme}>
+                {theme === "midnight" ? "🌙 Midnight" : "🌤 Daybreak"}
+              </button>
+              <div className="logout-btn">
+                {isLoggedIn ? (
+                  <button onClick={handleLogout}>Logout</button>
+                ) : (
+                  <Link to="/login">Login</Link>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* ---------- Nav Links ---------- */}
-        <div className={`nav-links ${menuOpen && isLoggedIn ? "open" : ""}`}>
-          <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
-            Dashboard
-          </Link>
-          <Link to="/tariffs" onClick={() => setMenuOpen(false)}>
-            Tariff Calc
-          </Link>
-          <Link to="/history" onClick={() => setMenuOpen(false)}>
-            History
-          </Link>
-          <Link to="/simulation" onClick={() => setMenuOpen(false)}>
-            Simulation
-          </Link>
-          <Link to="/profile" onClick={() => setMenuOpen(false)}>
-            Profile
-          </Link>
-          {isAdmin && (
-            <Link to="/admin/tariffs" onClick={() => setMenuOpen(false)}>
-              Admin
+          {/* ---------- Nav Links ---------- */}
+          <div className={`nav-links ${menuOpen && isLoggedIn ? "open" : ""}`}>
+            <Link to="/dashboard" onClick={() => setMenuOpen(false)}>
+              Dashboard
             </Link>
-          )}
-        </div>
-      </nav>
+            <Link to="/tariffs" onClick={() => setMenuOpen(false)}>
+              Tariff Calc
+            </Link>
+            <Link to="/history" onClick={() => setMenuOpen(false)}>
+              History
+            </Link>
+            <Link to="/simulation" onClick={() => setMenuOpen(false)}>
+              Simulation
+            </Link>
+            <Link to="/profile" onClick={() => setMenuOpen(false)}>
+              Profile
+            </Link>
+            {isAdmin && (
+              <Link to="/admin/tariffs" onClick={() => setMenuOpen(false)}>
+                Admin
+              </Link>
+            )}
+          </div>
+        </nav>
+      )}
 
       {/* ---------- Main content ---------- */}
-      <main style={{ flex: 1, padding: "2rem", overflowY: "auto" }}>
+      <main style={{ flex: 1, padding: isAuthPage ? "0" : "2rem", overflow: "visible" }}>
         <Outlet />
       </main>
 
       {/* ---------- Footer ---------- */}
-      <footer>TARIFF • CS203 Project</footer>
+      {!isAuthPage && <footer>TARIFF • CS203 Project</footer>}
 
       {/* ---------- Chatbot ---------- */}
-      {isLoggedIn && <Chatbot />}
+      {!isAuthPage && isLoggedIn && <Chatbot />}
     </div>
   );
 }

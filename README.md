@@ -1,3 +1,7 @@
+Cloud Deployments:
+Frontend: https://frontend-production-a446.up.railway.app
+Backend: https://cs203g6-production-170f.up.railway.app
+
 To test locally:
 
 **REQUIREMENTS**:

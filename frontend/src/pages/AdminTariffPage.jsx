@@ -391,7 +391,7 @@ export default function AdminTariffPage() {
 
         <div className="form-row" style={{ alignItems: "center" }}>
           <label>Override overlaps:</label>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "flex-start", flexGrow: 1 }}>
             <input
               type="checkbox"
               checked={newTariff.allowOverride}
@@ -408,55 +408,57 @@ export default function AdminTariffPage() {
       {/* Tariff Table */}
       <div
         className="card"
-        style={{ marginTop: "2rem", width: "100%", maxWidth: "800px" }}
+        style={{ marginTop: "2rem", width: "100%", maxWidth: "1100px" }}
       >
         <h2>Current Tariffs</h2>
 
         {tariffs.length === 0 ? (
           <p style={{ color: "var(--text-muted)" }}>No tariffs added yet.</p>
         ) : (
-          <table className="calc-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Product</th>
-                <th>Origin</th>
-                <th>Destination</th>
-                <th>Label</th>
-                <th>Valid From</th>
-                <th>Valid To</th>
-                <th>Rate (%)</th>
-                <th>Notes</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tariffs.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.id}</td>
-                  <td>{t.product.charAt(0).toUpperCase() + t.product.slice(1)}</td>
-                  <td>{t.originCountry}</td>
-                  <td>{t.destinationCountry}</td>
-                  <td>{t.label}</td>
-                  <td>{t.validFrom}</td>
-                  <td>{t.validTo}</td>
-                  <td>{Number(t.rate * 100).toFixed(2)}</td>
-                  <td style={{ maxWidth: "200px", whiteSpace: "pre-wrap" }}>
-                    {t.notes || "-"}
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      className="secondary-btn"
-                      style={{ padding: "0.3rem 0.8rem", margin: 0 }}
-                    >
-                      Delete
-                    </button>
-                  </td>
+          <div className="table-scroll">
+            <table className="calc-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product</th>
+                  <th>Origin</th>
+                  <th>Destination</th>
+                  <th>Label</th>
+                  <th>Valid From</th>
+                  <th>Valid To</th>
+                  <th>Rate (%)</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tariffs.map((t) => (
+                  <tr key={t.id}>
+                    <td>{t.id}</td>
+                    <td>{t.product.charAt(0).toUpperCase() + t.product.slice(1)}</td>
+                    <td>{t.originCountry}</td>
+                    <td>{t.destinationCountry}</td>
+                    <td>{t.label}</td>
+                    <td>{t.validFrom}</td>
+                    <td>{t.validTo}</td>
+                    <td>{Number(t.rate * 100).toFixed(2)}</td>
+                    <td style={{ maxWidth: "200px", whiteSpace: "pre-wrap" }}>
+                      {t.notes || "-"}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleDelete(t.id)}
+                        className="secondary-btn"
+                        style={{ padding: "0.3rem 0.8rem", margin: 0 }}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

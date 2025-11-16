@@ -542,46 +542,48 @@ const generateHistoricalTrend = async () => {
         <h2 style={{ textAlign: "center" }}>Recent Calculations</h2>
         <p style={{ textAlign: "center" }}>Your most recent tariff calculations</p>
         
-        <table className="history-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Route</th>
-              <th>Product</th>
-              <th>Total Cost</th>
-              <th>Tariff Period</th>
-            </tr>
-          </thead>
-          <tbody>
-            {calculationHistory.length === 0 ? (
+        <div className="table-scroll">
+          <table className="history-table">
+            <thead>
               <tr>
-                <td colSpan="5" style={{ textAlign: "center" }}>
-                  No calculations yet. Use the Tariff Calculator to get started.
-                </td>
+                <th>Date</th>
+                <th>Route</th>
+                <th>Product</th>
+                <th>Total Cost</th>
+                <th>Tariff Period</th>
               </tr>
-            ) : (
-              calculationHistory.slice(0, 10).map((row, idx) => (
-                <tr key={idx}>
-                  <td>
-                    {fmtShortDate(row.createdAt)}
-                  </td>
-                  <td>{row.route}</td>
-                  <td>{row.product}</td>
-                  <td>${Number(row.total || 0).toFixed(2)}</td>
-                  <td>
-                    {row.tariffFrom && row.tariffTo ? (
-                      <>
-                        {fmtShortDate(row.tariffFrom)} → {fmtShortDate(row.tariffTo)}
-                      </>
-                    ) : (
-                      'N/A'
-                    )}
+            </thead>
+            <tbody>
+              {calculationHistory.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center" }}>
+                    No calculations yet. Use the Tariff Calculator to get started.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                calculationHistory.slice(0, 10).map((row, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      {fmtShortDate(row.createdAt)}
+                    </td>
+                    <td>{row.route}</td>
+                    <td>{row.product}</td>
+                    <td>${Number(row.total || 0).toFixed(2)}</td>
+                    <td>
+                      {row.tariffFrom && row.tariffTo ? (
+                        <>
+                          {fmtShortDate(row.tariffFrom)} → {fmtShortDate(row.tariffTo)}
+                        </>
+                      ) : (
+                        'N/A'
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
         
         {calculationHistory.length > 0 && (
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
