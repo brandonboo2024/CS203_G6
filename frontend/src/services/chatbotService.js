@@ -27,7 +27,7 @@ export class ChatbotService {
         ],
         response: {
           type: 'simulation',
-          message: "I can help you run simulations! Our simulation tool offers:\n\n1. **Profitability Simulation**: Compare costs across different scenarios\n2. **Tariff Rate Comparison**: See side-by-side comparisons of different routes\n\nSimulations help you make better business decisions by visualizing the data.\n\nWould you like to start a simulation?",
+          message: "I can help you run simulations! Our simulation tool offers:\n\n1. Profitability Simulation: Compare costs across different scenarios\n2. Tariff Rate Comparison: See side-by-side comparisons of different routes\n\nSimulations help you make better business decisions by visualizing the data.\n\nWould you like to start a simulation?",
           actions: [
             { label: 'Go to Simulation', path: '/simulation' },
             { label: 'Explain Simulations', action: 'explain_simulation' }
@@ -185,10 +185,10 @@ export class ChatbotService {
     return {
       type: 'greeting',
       message: "Hello! I'm your TariffKey assistant. I can help you with:\n\n" +
-               "• **Calculator** - Calculate tariff costs\n" +
-               "• **Simulation** - Compare scenarios and analyze profitability\n" +
-               "• **History** - View past calculations and tariff trends\n" +
-               "• **Profile** - Manage your account settings\n\n" +
+               "• Calculator - Calculate tariff costs\n" +
+               "• Simulation - Compare scenarios and analyze profitability\n" +
+               "• History - View past calculations and tariff trends\n" +
+               "• Profile - Manage your account settings\n\n" +
                "What would you like to do?",
       actions: [
         { label: 'Calculate Tariff', path: '/tariffs' },
@@ -207,15 +207,15 @@ export class ChatbotService {
     return {
       type: 'help',
       message: "Here's what I can help you with:\n\n" +
-               "**1. Tariff Calculator**\n" +
+               "1. Tariff Calculator\n" +
                "   Try: 'calculate tariff', 'how much does it cost', 'tariff calculator'\n\n" +
-               "**2. Simulation Tools**\n" +
+               "2. Simulation Tools\n" +
                "   Try: 'run simulation', 'compare costs', 'profitability analysis'\n\n" +
-               "**3. Calculation History**\n" +
+               "3. Calculation History\n" +
                "   Try: 'my past calculations', 'calculation history', 'previous calculations'\n\n" +
-               "**4. Tariff Rate History**\n" +
+               "4. Tariff Rate History\n" +
                "   Try: 'tariff history graph', 'rate trends', 'historical rates'\n\n" +
-               "**5. Profile Management**\n" +
+               "5. Profile Management\n" +
                "   Try: 'edit profile', 'my account', 'update profile'\n\n" +
                "Just type what you'd like to do!",
       actions: [
@@ -256,14 +256,14 @@ export class ChatbotService {
     const explanations = {
       explain_calculator: {
         type: 'explanation',
-        message: "**Tariff Calculator Explained**\n\n" +
+        message: "Tariff Calculator Explained\n\n" +
                  "The calculator helps you determine the total cost of importing/exporting goods.\n\n" +
-                 "**Inputs needed:**\n" +
+                 "Inputs needed:\n" +
                  "- Origin Country: Where the goods are coming from\n" +
                  "- Destination Country: Where the goods are going\n" +
                  "- Product Category: Type of goods (electronics, textiles, etc.)\n" +
                  "- Quantity: Amount of goods\n\n" +
-                 "**Optional fees:**\n" +
+                 "Optional fees:\n" +
                  "- Insurance\n" +
                  "- Handling fees\n" +
                  "- Additional customs charges\n\n" +
@@ -274,13 +274,13 @@ export class ChatbotService {
       },
       explain_simulation: {
         type: 'explanation',
-        message: "**Simulation Tools Explained**\n\n" +
+        message: "Simulation Tools Explained\n\n" +
                  "Simulations help you make data-driven decisions by comparing different scenarios.\n\n" +
-                 "**Profitability Simulation:**\n" +
+                 "Profitability Simulation:\n" +
                  "- Compare costs across different routes\n" +
                  "- Factor in various fees and charges\n" +
                  "- See which option maximizes profit\n\n" +
-                 "**Tariff Rate Comparison:**\n" +
+                 "Tariff Rate Comparison:\n" +
                  "- Side-by-side comparison of tariff rates\n" +
                  "- Visual charts for easy analysis\n" +
                  "- Identify the most cost-effective options\n\n" +
@@ -291,13 +291,13 @@ export class ChatbotService {
       },
       explain_graph: {
         type: 'explanation',
-        message: "**Tariff History Graph Explained**\n\n" +
+        message: "Tariff History Graph Explained\n\n" +
                  "The graph shows how tariff rates have changed over time.\n\n" +
-                 "**What you can see:**\n" +
+                 "What you can see:\n" +
                  "- Historical tariff rates for specific routes\n" +
                  "- Trends and patterns in rate changes\n" +
                  "- Comparison across different time periods\n\n" +
-                 "**Why it's useful:**\n" +
+                 "Why it's useful:\n" +
                  "- Identify seasonal patterns\n" +
                  "- Predict future rate changes\n" +
                  "- Plan shipments during low-rate periods\n" +
