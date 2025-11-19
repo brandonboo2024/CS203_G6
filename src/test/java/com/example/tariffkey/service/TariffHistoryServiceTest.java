@@ -316,8 +316,195 @@ class TariffHistoryServiceTest {
         assertEquals(0, new BigDecimal("10.00").compareTo(summary.getDeltaRate()));
     }
 
-    private WitsTariff createWitsTariff(String productCode, String reporterIso, String partnerCode, 
-                                      Integer year, BigDecimal simpleAverage, BigDecimal sumOfRates, 
+    @Test
+    void getHistory_WithLimitBelowMinimum_ShouldUseMinLimit() {
+        // Given
+        TariffHistoryRequest request = new TariffHistoryRequest();
+        request.setProductCode("PROD1");
+        request.setOriginCountry("USA");
+        request.setDestCountry("CHN");
+        request.setLimit(5); // Below MIN_LIMIT (10)
+
+        List<WitsTariff> tariffs = Arrays.asList(tariff1);
+        Page<WitsTariff> page = new PageImpl<>(tariffs);
+
+        when(witsTariffRepository.findHistory(
+            eq("PROD1"), eq("USA"), eq("CHN"), anyInt(), anyInt(),
+            any(Pageable.class))
+        ).thenReturn(page);
+
+        // When
+        TariffHistoryResponse response = tariffHistoryService.getHistory(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+    }
+
+    @Test
+    void getHistory_WithLimitAboveMaximum_ShouldUseMaxLimit() {
+        // Given
+        TariffHistoryRequest request = new TariffHistoryRequest();
+        request.setProductCode("PROD1");
+        request.setOriginCountry("USA");
+        request.setDestCountry("CHN");
+        request.setLimit(2000); // Above MAX_LIMIT (1000)
+
+        List<WitsTariff> tariffs = Arrays.asList(tariff1);
+        Page<WitsTariff> page = new PageImpl<>(tariffs);
+
+        when(witsTariffRepository.findHistory(
+            eq("PROD1"), eq("USA"), eq("CHN"), anyInt(), anyInt(),
+            any(Pageable.class))
+        ).thenReturn(page);
+
+        // When
+        TariffHistoryResponse response = tariffHistoryService.getHistory(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+    }
+
+    @Test
+    void getHistory_WithEmptyStringCodes_ShouldNormalizeToNull() {
+        // Given
+        TariffHistoryRequest request = new TariffHistoryRequest();
+        request.setProductCode("   "); // Empty string after trim
+        request.setOriginCountry("");  // Empty string
+        request.setDestCountry("CHN");
+
+        List<WitsTariff> tariffs = Arrays.asList(tariff1);
+        Page<WitsTariff> page = new PageImpl<>(tariffs);
+
+        when(witsTariffRepository.findHistory(
+            isNull(), isNull(), eq("CHN"), anyInt(), anyInt(),
+            any(Pageable.class))
+        ).thenReturn(page);
+
+        // When
+        TariffHistoryResponse response = tariffHistoryService.getHistory(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+    }
+
+    @Test
+    void getHistory_WithSumOfRatesFallback_ShouldCalculateCorrectly() {
+        // Given - Only sumOfRates and totalNoOfLines available
+        WitsTariff tariffWithSum = createWitsTariff("PROD1", "USA", "CHN", 2020,
+            null, new BigDecimal("60.00"), 4, null, null); // 60/4 = 15
+
+        TariffHistoryRequest request = new TariffHistoryRequest();
+        request.setProductCode("PROD1");
+        request.setOriginCountry("USA");
+        request.setDestCountry("CHN");
+
+        List<WitsTariff> tariffs = Arrays.asList(tariffWithSum);
+        Page<WitsTariff> page = new PageImpl<>(tariffs);
+
+        when(witsTariffRepository.findHistory(
+            eq("PROD1"), eq("USA"), eq("CHN"), anyInt(), anyInt(),
+            any(Pageable.class))
+        ).thenReturn(page);
+
+        // When
+        TariffHistoryResponse response = tariffHistoryService.getHistory(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+        assertEquals(0, new BigDecimal("15.0000").compareTo(response.getData().get(0).getRatePercent()));
+    }
+
+    @Test
+    void getHistory_WithMaxRateFallback_ShouldUseMaxRate() {
+        // Given - Only maxRate available (no simpleAverage or sumOfRates)
+        WitsTariff tariffWithMax = createWitsTariff("PROD1", "USA", "CHN", 2020,
+            null, null, null, new BigDecimal("12.50"), null);
+
+        TariffHistoryRequest request = new TariffHistoryRequest();
+        request.setProductCode("PROD1");
+        request.setOriginCountry("USA");
+        request.setDestCountry("CHN");
+
+        List<WitsTariff> tariffs = Arrays.asList(tariffWithMax);
+        Page<WitsTariff> page = new PageImpl<>(tariffs);
+
+        when(witsTariffRepository.findHistory(
+            eq("PROD1"), eq("USA"), eq("CHN"), anyInt(), anyInt(),
+            any(Pageable.class))
+        ).thenReturn(page);
+
+        // When
+        TariffHistoryResponse response = tariffHistoryService.getHistory(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+        assertEquals(0, new BigDecimal("12.50").compareTo(response.getData().get(0).getRatePercent()));
+    }
+
+    @Test
+    void getHistory_WithMinRateFallback_ShouldUseMinRate() {
+        // Given - Only minRate available (no other rates)
+        WitsTariff tariffWithMin = createWitsTariff("PROD1", "USA", "CHN", 2020,
+            null, null, null, null, new BigDecimal("3.75"));
+
+        TariffHistoryRequest request = new TariffHistoryRequest();
+        request.setProductCode("PROD1");
+        request.setOriginCountry("USA");
+        request.setDestCountry("CHN");
+
+        List<WitsTariff> tariffs = Arrays.asList(tariffWithMin);
+        Page<WitsTariff> page = new PageImpl<>(tariffs);
+
+        when(witsTariffRepository.findHistory(
+            eq("PROD1"), eq("USA"), eq("CHN"), anyInt(), anyInt(),
+            any(Pageable.class))
+        ).thenReturn(page);
+
+        // When
+        TariffHistoryResponse response = tariffHistoryService.getHistory(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+        assertEquals(0, new BigDecimal("3.75").compareTo(response.getData().get(0).getRatePercent()));
+    }
+
+    @Test
+    void getHistory_WithZeroTotalNoOfLines_ShouldSkipSumCalculation() {
+        // Given - sumOfRates present but totalNoOfLines is 0 (division by zero protection)
+        WitsTariff tariffWithZeroLines = createWitsTariff("PROD1", "USA", "CHN", 2020,
+            null, new BigDecimal("100.00"), 0, new BigDecimal("20.00"), null);
+
+        TariffHistoryRequest request = new TariffHistoryRequest();
+        request.setProductCode("PROD1");
+        request.setOriginCountry("USA");
+        request.setDestCountry("CHN");
+
+        List<WitsTariff> tariffs = Arrays.asList(tariffWithZeroLines);
+        Page<WitsTariff> page = new PageImpl<>(tariffs);
+
+        when(witsTariffRepository.findHistory(
+            eq("PROD1"), eq("USA"), eq("CHN"), anyInt(), anyInt(),
+            any(Pageable.class))
+        ).thenReturn(page);
+
+        // When
+        TariffHistoryResponse response = tariffHistoryService.getHistory(request);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(1, response.getData().size());
+        // Should use maxRate fallback since sumOfRates/0 is skipped
+        assertEquals(0, new BigDecimal("20.00").compareTo(response.getData().get(0).getRatePercent()));
+    }
+
+    private WitsTariff createWitsTariff(String productCode, String reporterIso, String partnerCode,
+                                      Integer year, BigDecimal simpleAverage, BigDecimal sumOfRates,
                                       Integer totalNoOfLines, BigDecimal maxRate, BigDecimal minRate) {
         WitsTariff tariff = new WitsTariff();
         tariff.setProductCode(productCode);
